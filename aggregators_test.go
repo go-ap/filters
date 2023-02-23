@@ -1,8 +1,9 @@
 package filters
 
 import (
-	"reflect"
 	"testing"
+
+	vocab "github.com/go-ap/activitypub"
 )
 
 func TestAny(t *testing.T) {
@@ -12,13 +13,18 @@ func TestAny(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want Fn
+		want bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "empty",
+			args: args{},
+			want: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := Any(tt.args.fns...); !reflect.DeepEqual(got, tt.want) {
+			ob := vocab.Object{}
+			if got := Any(tt.args.fns...)(ob); got != tt.want {
 				t.Errorf("Any() = %v, want %v", got, tt.want)
 			}
 		})
