@@ -84,7 +84,10 @@ func ActivityTypesFilter(types ...string) vocab.ActivityVocabularyTypes {
 
 func FromIRI(i vocab.IRI) (Fns, error) {
 	f := make(Fns, 0)
-	u, _ := i.URL()
+	u, err := i.URL()
+	if err != nil {
+		return nil, err
+	}
 
 	if u.User != nil {
 		if us, err := url.Parse(u.User.Username()); err == nil {
