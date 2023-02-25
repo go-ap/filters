@@ -132,7 +132,7 @@ func TestType(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ob := vocab.Object{Type: tt.args.toCheckType}
-			if got := Type(tt.args.checkTypes...)(&ob); got != tt.want {
+			if got := HasType(tt.args.checkTypes...)(&ob); got != tt.want {
 				t.Errorf("Type(%v)(Object.Type=%v) = %v, want %v", tt.args.checkTypes, tt.args.toCheckType, got, tt.want)
 			}
 		})
@@ -399,11 +399,11 @@ func TestIRI(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := IRI(tt.args.checkIRI)(tt.args.toCheckIRI); got != tt.want {
+			if got := SameIRI(tt.args.checkIRI)(tt.args.toCheckIRI); got != tt.want {
 				t.Errorf("IRI(%s)(%s) = %v, want %v", tt.args.checkIRI, tt.args.toCheckIRI, got, tt.want)
 			}
 			ob := vocab.Object{ID: tt.args.toCheckIRI}
-			if got := IRI(tt.args.checkIRI)(ob); got != tt.want {
+			if got := SameIRI(tt.args.checkIRI)(ob); got != tt.want {
 				t.Errorf("IRI(%s)(Object.ID=%s) = %v, want %v", tt.args.checkIRI, tt.args.toCheckIRI, got, tt.want)
 			}
 		})

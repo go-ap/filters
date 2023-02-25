@@ -9,7 +9,7 @@ import (
 // NilID checks if the activitypub.Object's ID property matches any of the two magic values
 // that denote an empty value: activitypub.NilID = "-", or activitypub.EmptyID = ""
 func NilID(it vocab.Item) bool {
-	return Any(IRI(vocab.NilIRI), IRI(vocab.EmptyIRI))(it.GetLink())
+	return Any(SameIRI(vocab.NilIRI), SameIRI(vocab.EmptyIRI))(it.GetLink())
 }
 
 // NotNilID checks if the activitypub.Object's ID property doesn't match any of the two magic values
@@ -25,16 +25,16 @@ func ID(iri vocab.IRI) Fn {
 	}
 }
 
-// IRI checks an activitypub.Object's IRI
-func IRI(iri vocab.IRI) Fn {
+// SameIRI checks an activitypub.Object's IRI
+func SameIRI(iri vocab.IRI) Fn {
 	return func(item vocab.Item) bool {
 		return item.GetLink().Equals(iri, true)
 	}
 }
 
-// Type checks an activitypub.Object's Type property against a series of values.
+// HasType checks an activitypub.Object's Type property against a series of values.
 // If any of the ty values matches, the function returns true.
-func Type(ty ...vocab.ActivityVocabularyType) Fn {
+func HasType(ty ...vocab.ActivityVocabularyType) Fn {
 	types := vocab.ActivityVocabularyTypes(ty)
 	return func(it vocab.Item) bool {
 		result := false

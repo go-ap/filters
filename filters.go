@@ -36,7 +36,7 @@ func Authorized(iri vocab.IRI) Fn {
 	}
 }
 
-func MaxItems(max int) Fn {
+func WithMaxItems(max int) Fn {
 	var OrderedCollectionTypes = vocab.ActivityVocabularyTypes{vocab.OrderedCollectionType, vocab.OrderedCollectionPageType}
 	var CollectionTypes = vocab.ActivityVocabularyTypes{vocab.CollectionType, vocab.CollectionPageType}
 
@@ -105,10 +105,10 @@ func FromIRI(i vocab.IRI) (Fns, error) {
 		f = append(f, ID(vocab.IRI(iri)))
 	}
 	if maxItems, _ := strconv.ParseInt(q.Get("maxItems"), 10, 32); maxItems > 0 {
-		f = append(f, MaxItems(int(maxItems)))
+		f = append(f, WithMaxItems(int(maxItems)))
 	}
 	if typ, ok := q["type"]; ok && len(typ) > 0 {
-		f = append(f, Type(ActivityTypesFilter(typ...)...))
+		f = append(f, HasType(ActivityTypesFilter(typ...)...))
 	}
 	if names, ok := q["name"]; ok && len(names) > 0 {
 		f = append(f, NameIn(names...))
