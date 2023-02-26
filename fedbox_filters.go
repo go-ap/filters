@@ -131,7 +131,7 @@ func ValidObjectCollection(typ vocab.CollectionPath) bool {
 // Filters
 // TODO(marius) we can make some small changes so it's not necessary to export this struct
 type Filters struct {
-	baseURL       vocab.IRI            `qstring:"-"`
+	BaseURL       vocab.IRI            `qstring:"-"`
 	Name          CompStrs             `qstring:"name,omitempty"`
 	Cont          CompStrs             `qstring:"content,omitempty"`
 	Authenticated *vocab.Actor         `qstring:"-"`
@@ -159,7 +159,7 @@ type Filters struct {
 	Actor         *Filters             `qstring:"actor,omitempty"`
 	Target        *Filters             `qstring:"target,omitempty"`
 	Tag           *Filters             `qstring:"tag,omitempty"`
-	CurPage       uint                 `qstring:"page,omitempty"`
+	CurPage       int                  `qstring:"page,omitempty"`
 	MaxItems      int                  `qstring:"maxItems,omitempty"`
 	Req           *http.Request        `qstring:"-"`
 }
@@ -209,7 +209,7 @@ func Type(types ...vocab.ActivityVocabularyType) FilterFn {
 
 func BaseIRI(iri vocab.IRI, col vocab.CollectionPath) FilterFn {
 	return func(f *Filters) error {
-		f.baseURL = iri
+		f.BaseURL = iri
 		f.Collection = col
 		return nil
 	}
@@ -249,7 +249,7 @@ func (f Filters) Context() CompStrs {
 		if u, ok := validURL(k.Str); ok {
 			iri.Str = u.String()
 		} else {
-			iri.Str = fmt.Sprintf("%s/%s/%s", f.baseURL, ObjectsType, k)
+			iri.Str = fmt.Sprintf("%s/%s/%s", f.BaseURL, ObjectsType, k)
 		}
 		if !ret.Contains(iri) {
 			ret = append(ret, iri)
@@ -270,8 +270,8 @@ func IRIf(f Filters, iri string) string {
 			col = ActivitiesType
 		}
 	}
-	if len(f.baseURL) > 0 {
-		if u, err := url.Parse(f.baseURL.String()); err == nil {
+	if len(f.BaseURL) > 0 {
+		if u, err := url.Parse(f.BaseURL.String()); err == nil {
 			if len(col) > 0 {
 				u.Path = "/" + string(col)
 			}
@@ -314,7 +314,7 @@ func (f *Filters) GetLink() vocab.IRI {
 		return ""
 	}
 	if f.IRI == "" {
-		f.IRI = f.baseURL.AddPath(string(f.Collection))
+		f.IRI = f.BaseURL.AddPath(string(f.Collection))
 	}
 	iri := f.IRI
 	if v, err := qstring.Marshal(f); err == nil && len(v) > 0 {
@@ -330,7 +330,7 @@ func (f *Filters) GetLink() vocab.IRI {
 }
 
 // Page
-func (f Filters) Page() uint {
+func (f Filters) Page() int {
 	return f.CurPage
 }
 
@@ -492,9 +492,9 @@ func (f Filters) Targets() vocab.IRIs {
 		} else {
 			// FIXME(marius): we don't really know which type this is
 			iris = vocab.IRIs{
-				ObjectsType.IRI(f.baseURL).AddPath(k.String()),
-				ActorsType.IRI(f.baseURL).AddPath(k.String()),
-				ActivitiesType.IRI(f.baseURL).AddPath(k.String()),
+				ObjectsType.IRI(f.BaseURL).AddPath(k.String()),
+				ActorsType.IRI(f.BaseURL).AddPath(k.String()),
+				ActivitiesType.IRI(f.BaseURL).AddPath(k.String()),
 			}
 		}
 		for _, iri := range iris {
@@ -1209,8 +1209,8 @@ func CacheKey(f *Filters) vocab.IRI {
 func FiltersFromIRI(i vocab.IRI) (*Filters, error) {
 	f := FiltersNew()
 	u, _ := i.URL()
-	if f.baseURL == "" {
-		f.baseURL = vocab.IRI(baseURL(u))
+	if f.BaseURL == "" {
+		f.BaseURL = vocab.IRI(baseURL(u))
 	}
 	if u.User != nil {
 		if us, err := url.Parse(u.User.Username()); err == nil {
@@ -1258,11 +1258,11 @@ func FromRequest(r *http.Request, baseUrl string) *Filters {
 
 	var u *url.URL
 	if baseUrl != "" {
-		f.baseURL = vocab.IRI(baseUrl)
-		u, _ = f.baseURL.URL()
+		f.BaseURL = vocab.IRI(baseUrl)
+		u, _ = f.BaseURL.URL()
 		u.Path = filepath.Clean(r.URL.Path)
 	} else {
-		f.baseURL = vocab.IRI(baseURL(r.URL))
+		f.BaseURL = vocab.IRI(baseURL(r.URL))
 		u = r.URL
 	}
 	if len(f.IRI) == 0 {
