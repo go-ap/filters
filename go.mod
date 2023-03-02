@@ -5,14 +5,14 @@ go 1.20
 require (
 	github.com/go-ap/activitypub v0.0.0-20230301123505-7471bcd90729
 	github.com/go-ap/errors v0.0.0-20221205040414-01c1adfc98ea
-	github.com/go-ap/processing v0.0.0-20230301123739-32448e889e60
+	github.com/go-ap/processing v0.0.0-20230302121732-ed89ba62d187
 	github.com/mariusor/qstring v0.0.0-20200204164351-5a99d46de39d
 )
 
 require (
 	git.sr.ht/~mariusor/go-xsd-duration v0.0.0-20220703122237-02e73435a078 // indirect
 	git.sr.ht/~mariusor/lw v0.0.0-20221202111053-2dd31f3348e7 // indirect
-	github.com/go-ap/client v0.0.0-20230301123545-b7132ac50856 // indirect
+	github.com/go-ap/client v0.0.0-20230302104023-08cd159ca918 // indirect
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73 // indirect
 	github.com/go-fed/httpsig v1.1.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
