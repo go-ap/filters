@@ -355,12 +355,21 @@ var ErrNotFound = func(s string) error {
 	return errors.Errorf("%s not found", s)
 }
 
-func fullURL(u *url.URL) string {
-	return fmt.Sprintf("%s://%s%s", u.Scheme, u.Host, u.Path)
+func fullURL(u *url.URL) vocab.IRI {
+	if len(u.Path) == 0 {
+		return baseURL(u)
+	}
+	return baseURL(u).AddPath(u.Path)
 }
 
-func baseURL(u *url.URL) string {
-	return fmt.Sprintf("%s://%s", u.Scheme, u.Host)
+func baseURL(u *url.URL) vocab.IRI {
+	if len(u.Host) == 0 {
+		return ""
+	}
+	if len(u.Scheme) == 0 {
+		u.Scheme = "https"
+	}
+	return vocab.IRI(fmt.Sprintf("%s://%s", u.Scheme, u.Host))
 }
 
 // Audience returns a filter for audience members.
@@ -1210,7 +1219,7 @@ func FiltersFromIRI(i vocab.IRI) (*Filters, error) {
 	f := FiltersNew()
 	u, _ := i.URL()
 	if f.BaseURL == "" {
-		f.BaseURL = vocab.IRI(baseURL(u))
+		f.BaseURL = baseURL(u)
 	}
 	if u.User != nil {
 		if us, err := url.Parse(u.User.Username()); err == nil {
@@ -1224,7 +1233,7 @@ func FiltersFromIRI(i vocab.IRI) (*Filters, error) {
 		return f, err
 	}
 	if len(f.IRI) == 0 {
-		f.IRI = vocab.IRI(fullURL(u))
+		f.IRI = fullURL(u)
 	}
 	if f.Collection == "" {
 		req := new(http.Request)
@@ -1262,11 +1271,11 @@ func FromRequest(r *http.Request, baseUrl string) *Filters {
 		u, _ = f.BaseURL.URL()
 		u.Path = filepath.Clean(r.URL.Path)
 	} else {
-		f.BaseURL = vocab.IRI(baseURL(r.URL))
+		f.BaseURL = baseURL(r.URL)
 		u = r.URL
 	}
 	if len(f.IRI) == 0 {
-		f.IRI = vocab.IRI(fullURL(u))
+		f.IRI = fullURL(u)
 	}
 	f.Collection = processing.Typer.Type(r)
 	qstring.Unmarshal(r.URL.Query(), f)
