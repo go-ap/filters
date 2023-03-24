@@ -36,6 +36,17 @@ func Authorized(iri vocab.IRI) Fn {
 	}
 }
 
+func WithMaxCount(max int) Fn {
+	count := 0
+	return func(item vocab.Item) bool {
+		if count >= max {
+			return false
+		}
+		count += 1
+		return true
+	}
+}
+
 func WithMaxItems(max int) Fn {
 	var OrderedCollectionTypes = vocab.ActivityVocabularyTypes{vocab.OrderedCollectionType, vocab.OrderedCollectionPageType}
 	var CollectionTypes = vocab.ActivityVocabularyTypes{vocab.CollectionType, vocab.CollectionPageType}
