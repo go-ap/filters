@@ -36,50 +36,6 @@ func Authorized(iri vocab.IRI) Fn {
 	}
 }
 
-func WithMaxCount(max int) Fn {
-	count := 0
-	return func(item vocab.Item) bool {
-		if count >= max {
-			return false
-		}
-		count += 1
-		return true
-	}
-}
-
-func WithMaxItems(max int) Fn {
-	var OrderedCollectionTypes = vocab.ActivityVocabularyTypes{vocab.OrderedCollectionType, vocab.OrderedCollectionPageType}
-	var CollectionTypes = vocab.ActivityVocabularyTypes{vocab.CollectionType, vocab.CollectionPageType}
-
-	return func(it vocab.Item) bool {
-		if vocab.IsItemCollection(it) {
-			vocab.OnItemCollection(it, func(col *vocab.ItemCollection) error {
-				if max < len(*col) {
-					*col = (*col)[0:max]
-				}
-				return nil
-			})
-		}
-		if OrderedCollectionTypes.Contains(it.GetType()) {
-			vocab.OnOrderedCollection(it, func(col *vocab.OrderedCollection) error {
-				if max < len(col.OrderedItems) {
-					col.OrderedItems = col.OrderedItems[0:max]
-				}
-				return nil
-			})
-		}
-		if CollectionTypes.Contains(it.GetType()) {
-			vocab.OnCollection(it, func(col *vocab.Collection) error {
-				if max < len(col.Items) {
-					col.Items = col.Items[0:max]
-				}
-				return nil
-			})
-		}
-		return true
-	}
-}
-
 type Fns []Fn
 
 func ActivityTypesFilter(types ...string) vocab.ActivityVocabularyTypes {
