@@ -2,6 +2,9 @@ package filters
 
 import vocab "github.com/go-ap/activitypub"
 
+// WithMaxCount is used to limit a collection's items count to the max value.
+// It can be used from slicing from the first element of the collection to max.
+// Due to relying on the static max value the function is not reentrant.
 func WithMaxCount(max int) Fn {
 	count := 0
 	return func(item vocab.Item) bool {
@@ -46,6 +49,10 @@ func WithMaxItems(max int) Fn {
 	}
 }
 
+// After checks the Item against a specified IRI.
+// This should be used when iterating over a collection, and it resolves to true
+// after the IRI was found in the list and to false before.
+// Due to relying on the static check IRI value the function is not reentrant.
 func After(iri vocab.IRI) Fn {
 	isAfter := false
 	return func(it vocab.Item) bool {
@@ -60,6 +67,10 @@ func After(iri vocab.IRI) Fn {
 	}
 }
 
+// Before checks the Item against a specified IRI.
+// This should be used when iterating over a collection, and it resolves to true before
+// the IRI was found in the list and to true after.
+// Due to relying on the static check IRI value the function is not reentrant.
 func Before(iri vocab.IRI) Fn {
 	isBefore := true
 	return func(it vocab.Item) bool {
