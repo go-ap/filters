@@ -3,9 +3,9 @@ module github.com/go-ap/filters
 go 1.20
 
 require (
-	github.com/go-ap/activitypub v0.0.0-20230323123728-77b329013634
+	github.com/go-ap/activitypub v0.0.0-20230331173947-f5b96d9450d4
 	github.com/go-ap/errors v0.0.0-20221205040414-01c1adfc98ea
-	github.com/go-ap/processing v0.0.0-20230323123913-b2713df97a32
+	github.com/go-ap/processing v0.0.0-20230402103201-6798993132ff
 	github.com/mariusor/qstring v0.0.0-20200204164351-5a99d46de39d
 )
 
