@@ -3,16 +3,16 @@ module github.com/go-ap/filters
 go 1.20
 
 require (
-	github.com/go-ap/activitypub v0.0.0-20230509081506-c63baa5ec992
+	github.com/go-ap/activitypub v0.0.0-20230514141345-45936cc2f768
 	github.com/go-ap/errors v0.0.0-20221205040414-01c1adfc98ea
-	github.com/go-ap/processing v0.0.0-20230514121831-9ab15e8adc4e
+	github.com/go-ap/processing v0.0.0-20230514143008-e4fefa491f6a
 	github.com/mariusor/qstring v0.0.0-20200204164351-5a99d46de39d
 )
 
 require (
 	git.sr.ht/~mariusor/go-xsd-duration v0.0.0-20220703122237-02e73435a078 // indirect
 	git.sr.ht/~mariusor/lw v0.0.0-20230317075520-07e173563bf8 // indirect
-	github.com/go-ap/client v0.0.0-20230509081643-66f4b336aaef // indirect
+	github.com/go-ap/client v0.0.0-20230514142616-d54d23930714 // indirect
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73 // indirect
 	github.com/go-fed/httpsig v1.1.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
