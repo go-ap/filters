@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/go-ap/activitypub v0.0.0-20230514141345-45936cc2f768
 	github.com/go-ap/errors v0.0.0-20221205040414-01c1adfc98ea
-	github.com/go-ap/processing v0.0.0-20230514143008-e4fefa491f6a
+	github.com/go-ap/processing v0.0.0-20230611142403-7b8178f496f9
 	github.com/mariusor/qstring v0.0.0-20200204164351-5a99d46de39d
 )
 
@@ -18,7 +18,7 @@ require (
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.18 // indirect
+	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/openshift/osin v1.0.1 // indirect
 	github.com/pborman/uuid v1.2.1 // indirect
 	github.com/rs/xid v1.5.0 // indirect
