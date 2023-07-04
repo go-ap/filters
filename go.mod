@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/go-ap/activitypub v0.0.0-20230626173101-16e4163853e3
 	github.com/go-ap/errors v0.0.0-20221205040414-01c1adfc98ea
-	github.com/go-ap/processing v0.0.0-20230704141944-1cf49a853af0
+	github.com/go-ap/processing v0.0.0-20230704143302-2f703964bf38
 	github.com/mariusor/qstring v0.0.0-20200204164351-5a99d46de39d
 )
 
