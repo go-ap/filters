@@ -297,15 +297,25 @@ func (f Filters) IRIs() CompStrs {
 	return ret
 }
 
-func (f *Filters) IsItemIRI() bool {
+func IsItemIRI(f vocab.LinkOrIRI) bool {
+	if f == nil {
+		return false
+	}
 	u, err := f.GetLink().URL()
 	if err != nil {
 		return false
 	}
+	if u.Path == "" || u.Path == "/" {
+		return true
+	}
 	maybeID := vocab.CollectionPath(path.Base(u.Path))
-	maybeCol := vocab.CollectionPath(path.Base(path.Dir(u.Path)))
-	return !(FedBOXCollections.Contains(maybeID) || vocab.OfActor.Contains(maybeID) || vocab.OfObject.Contains(maybeID)) &&
-		(FedBOXCollections.Contains(maybeCol) || vocab.OfActor.Contains(maybeCol) || vocab.OfObject.Contains(maybeCol))
+	maybeCol := vocab.CollectionPath(strings.TrimPrefix(path.Base(path.Dir(u.Path)), string(filepath.Separator)))
+	cols := append(append(FedBOXCollections, vocab.OfActor...), vocab.OfObject...)
+	return !cols.Contains(maybeID) && (maybeCol == "" || cols.Contains(maybeCol))
+}
+
+func (f *Filters) IsItemIRI() bool {
+	return IsItemIRI(f)
 }
 
 // GetLink returns a list of IRIs to filter against

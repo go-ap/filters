@@ -1185,3 +1185,69 @@ func Test_filterNaturalLanguageValues(t *testing.T) {
 		})
 	}
 }
+
+func TestIsItemIRI(t *testing.T) {
+	tests := []struct {
+		name string
+		arg  vocab.LinkOrIRI
+		want bool
+	}{
+		{
+			name: "empty",
+			arg:  nil,
+			want: false,
+		},
+		{
+			name: "example.com",
+			arg:  vocab.IRI("https://example.com"),
+			want: true,
+		},
+		{
+			name: "example.com/",
+			arg:  vocab.IRI("https://example.com/"),
+			want: true,
+		},
+		{
+			name: "example.com/123",
+			arg:  vocab.IRI("https://example.com/123"),
+			want: true,
+		},
+		{
+			name: "example.com/inbox",
+			arg:  vocab.IRI("https://example.com/inbox"),
+			want: false,
+		},
+		{
+			name: "example.com/outbox",
+			arg:  vocab.IRI("https://example.com/outbox"),
+			want: false,
+		},
+		{
+			name: "example.com/followers",
+			arg:  vocab.IRI("https://example.com/followers"),
+			want: false,
+		},
+		{
+			name: "example.com/likes",
+			arg:  vocab.IRI("https://example.com/likes"),
+			want: false,
+		},
+		{
+			name: "example.com/replies",
+			arg:  vocab.IRI("https://example.com/replies"),
+			want: false,
+		},
+		{
+			name: "example.com/actors",
+			arg:  vocab.IRI("https://example.com/actors"),
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsItemIRI(tt.arg); got != tt.want {
+				t.Errorf("IsItemIRI() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
