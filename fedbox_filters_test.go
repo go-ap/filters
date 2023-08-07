@@ -1247,6 +1247,11 @@ func TestIsItemIRI(t *testing.T) {
 			arg:  vocab.IRI("https://example.com/jdoe/123"),
 			want: true,
 		},
+		{
+			name: "example.com/jdoe/inbox/123",
+			arg:  vocab.IRI("https://example.com/jdoe/inbox/123"),
+			want: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

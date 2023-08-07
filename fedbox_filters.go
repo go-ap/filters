@@ -309,9 +309,8 @@ func IsItemIRI(f vocab.LinkOrIRI) bool {
 		return true
 	}
 	maybeID := vocab.CollectionPath(path.Base(u.Path))
-	maybeCol := vocab.CollectionPath(strings.TrimPrefix(path.Base(path.Dir(u.Path)), string(filepath.Separator)))
 	cols := append(append(FedBOXCollections, vocab.OfActor...), vocab.OfObject...)
-	return !cols.Contains(maybeID) && !(maybeCol != "" && cols.Contains(maybeCol))
+	return !cols.Contains(maybeID)
 }
 
 func (f *Filters) IsItemIRI() bool {
