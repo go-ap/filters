@@ -11,9 +11,60 @@ import (
 
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/errors"
-	"github.com/go-ap/processing"
 	"github.com/mariusor/qstring"
 )
+
+type Filterable interface {
+	GetLink() vocab.IRI
+}
+
+type FilterableItems interface {
+	Filterable
+	Types() vocab.ActivityVocabularyTypes
+	IRIs() vocab.IRIs
+}
+
+// FilterableCollection can filter collections
+type FilterableCollection interface {
+	FilterableObject
+	TotalItemsGt() uint
+	TotalItemsLt() uint
+	TotalItemsEq() uint
+	TotalItemsGtE() uint
+	TotalItemsLtE() uint
+	Contains() vocab.IRIs
+}
+
+// FilterableActivity can filter activities
+type FilterableActivity interface {
+	FilterableObject
+	Actors() vocab.IRIs
+	Objects() vocab.IRIs
+	Targets() vocab.IRIs
+}
+
+// FilterableObject can filter objects
+type FilterableObject interface {
+	FilterableItems
+	AttributedTo() vocab.IRIs
+	InReplyTo() vocab.IRIs
+	MediaTypes() []vocab.MimeType
+	Names() []string
+	Content() []string
+	//PublishedBefore() time.Time
+	//PublishedAfter() time.Time
+	URLs() vocab.IRIs
+	// Audience returns the list of IRIs to check against full Audience targeting for the object
+	// It should include all relevant fields: To, CC, BTo, BCC, and Audience
+	// ---
+	// An element of the Audience is used to get its Inbox end-point and then disseminate the current Activity
+	// to it.
+	Audience() vocab.IRIs
+	// Context returns the list of IRIs to check against an Object's Context property.
+	Context() vocab.IRIs
+	// Generator returns the list of IRIs to check against an Object's Generator property.
+	Generator() vocab.IRIs
+}
 
 // Hash
 type Hash string
@@ -1140,7 +1191,7 @@ func LoadItemFilters(f *Filters, auth vocab.Actor) error {
 	return nil
 }
 
-func ValidCollectionCount(col vocab.ItemCollection, f processing.Filterable) bool {
+func ValidCollectionCount(col vocab.ItemCollection, f Filterable) bool {
 	ff, ok := f.(*Filters)
 	if !ok {
 		return true
@@ -1153,7 +1204,7 @@ func ValidCollectionCount(col vocab.ItemCollection, f processing.Filterable) boo
 }
 
 // FilterIt
-func FilterIt(it vocab.Item, f processing.Filterable) (vocab.Item, error) {
+func FilterIt(it vocab.Item, f Filterable) (vocab.Item, error) {
 	if vocab.IsNil(it) {
 		return it, nil
 	}
@@ -1164,14 +1215,14 @@ func FilterIt(it vocab.Item, f processing.Filterable) (vocab.Item, error) {
 			return nil, nil
 		}
 	}
-	if f1, ok := f.(processing.Filterable); ok {
+	if f1, ok := f.(Filterable); ok {
 		if f1.GetLink().Equals(it.GetLink(), false) {
 			return it, nil
 		} else {
 			return nil, nil
 		}
 	}
-	if f1, ok := f.(processing.FilterableItems); ok {
+	if f1, ok := f.(FilterableItems); ok {
 		iris := f1.IRIs()
 		// FIXME(marius): the Contains method returns true for the case where IRIs is empty, we don't want that
 		if len(iris) > 0 && !iris.Contains(it.GetLink()) {
@@ -1187,21 +1238,21 @@ func FilterIt(it vocab.Item, f processing.Filterable) (vocab.Item, error) {
 	return nil, errors.Errorf("Invalid filter %T", f)
 }
 
-func FiltersOnActivityObject(f processing.Filterable) (bool, processing.Filterable) {
+func FiltersOnActivityObject(f Filterable) (bool, Filterable) {
 	if ff, ok := f.(*Filters); ok {
 		return ff.Object != nil, ff.Object
 	}
 	return false, nil
 }
 
-func FiltersOnActivityActor(f processing.Filterable) (bool, processing.Filterable) {
+func FiltersOnActivityActor(f Filterable) (bool, Filterable) {
 	if ff, ok := f.(*Filters); ok {
 		return ff.Actor != nil, ff.Actor
 	}
 	return false, nil
 }
 
-func FiltersOnActivityTarget(f processing.Filterable) (bool, processing.Filterable) {
+func FiltersOnActivityTarget(f Filterable) (bool, Filterable) {
 	if ff, ok := f.(*Filters); ok {
 		return ff.Target != nil, ff.Target
 	}
@@ -1247,7 +1298,7 @@ func FiltersFromIRI(i vocab.IRI) (*Filters, error) {
 	if f.Collection == "" {
 		req := new(http.Request)
 		req.URL = u
-		f.Collection = processing.Typer.Type(req)
+		f.Collection = pathTyper(req)
 	}
 	if f.Object != nil {
 		f.Object.Authenticated = f.Authenticated
@@ -1269,6 +1320,22 @@ func FiltersFromIRI(i vocab.IRI) (*Filters, error) {
 	return f, nil
 }
 
+func pathTyper(r *http.Request) vocab.CollectionPath {
+	if r.URL == nil || len(r.URL.Path) == 0 {
+		return vocab.Unknown
+	}
+	col := vocab.Unknown
+	pathElements := strings.Split(r.URL.Path[1:], "/") // Skip first /
+	for i := len(pathElements) - 1; i >= 0; i-- {
+		col = vocab.CollectionPath(pathElements[i])
+		if vocab.ValidObjectCollection(col) || vocab.ValidActivityCollection(col) {
+			return col
+		}
+	}
+
+	return col
+}
+
 // FromRequest loads the filters we use for generating storage queries from the HTTP request
 func FromRequest(r *http.Request, baseUrl string) *Filters {
 	f := FiltersNew()
@@ -1286,7 +1353,7 @@ func FromRequest(r *http.Request, baseUrl string) *Filters {
 	if len(f.IRI) == 0 {
 		f.IRI = fullURL(u)
 	}
-	f.Collection = processing.Typer.Type(r)
+	f.Collection = pathTyper(r)
 	qstring.Unmarshal(r.URL.Query(), f)
 
 	if f.MaxItems > MaxItems {
