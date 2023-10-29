@@ -1,6 +1,10 @@
 package filters
 
-import vocab "github.com/go-ap/activitypub"
+import (
+	"sync/atomic"
+
+	vocab "github.com/go-ap/activitypub"
+)
 
 // WithMaxCount is used to limit a collection's items count to the max value.
 // It can be used from slicing from the first element of the collection to max.
@@ -55,16 +59,16 @@ func WithMaxItems(max int) Fn {
 //
 // Due to relying on the static check function return value the After is not reentrant.
 func After(fn Fn) Fn {
-	isAfter := false
+	isAfter := atomic.Bool{}
 	return func(it vocab.Item) bool {
 		if vocab.IsNil(it) {
-			return isAfter
+			return isAfter.Load()
 		}
 		if fn(it) {
-			isAfter = true
+			isAfter.Store(true)
 			return false
 		}
-		return isAfter
+		return isAfter.Load()
 	}
 }
 
@@ -74,14 +78,14 @@ func After(fn Fn) Fn {
 //
 // Due to relying on the static check function return value the function is not reentrant.
 func Before(fn Fn) Fn {
-	isBefore := true
+	isBefore := atomic.Bool{}
 	return func(it vocab.Item) bool {
 		if vocab.IsNil(it) {
-			return isBefore
+			return isBefore.Load()
 		}
 		if fn(it) {
-			isBefore = false
+			isBefore.Store(false)
 		}
-		return isBefore
+		return isBefore.Load()
 	}
 }
