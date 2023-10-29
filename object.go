@@ -45,33 +45,3 @@ func HasType(ty ...vocab.ActivityVocabularyType) Fn {
 		return result
 	}
 }
-
-// NameIs checks an activitypub.Object's Name property against the name value.
-// If any of the Language Ref map values match the name, the function returns true.
-func NameIs(name string) Fn {
-	return func(it vocab.Item) bool {
-		valid := false
-		vocab.OnObject(it, func(ob *vocab.Object) error {
-			for _, nn := range ob.Name {
-				if strings.EqualFold(nn.String(), name) {
-					valid = true
-					break
-				}
-			}
-			return nil
-		})
-		if valid {
-			return valid
-		}
-		vocab.OnActor(it, func(act *vocab.Actor) error {
-			for _, nn := range act.PreferredUsername {
-				if strings.EqualFold(nn.String(), name) {
-					valid = true
-					break
-				}
-			}
-			return nil
-		})
-		return valid
-	}
-}
