@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	vocab "github.com/go-ap/activitypub"
+	"golang.org/x/text/unicode/norm"
 )
 
 // NilID checks if the activitypub.Object's ID property matches any of the two magic values
@@ -22,6 +23,13 @@ func NotNilID(it vocab.Item) bool {
 func ID(iri vocab.IRI) Fn {
 	return func(item vocab.Item) bool {
 		return item.GetID().Equals(iri, true)
+	}
+}
+
+func IDLike(frag string) Fn {
+	return func(item vocab.Item) bool {
+		nfc := norm.NFC.String
+		return strings.Contains(nfc(item.GetID().String()), nfc(frag))
 	}
 }
 

@@ -50,7 +50,7 @@ func TestBefore(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			beforeFn := Before(tt.checkIRI)
+			beforeFn := Before(ID(tt.checkIRI))
 			for i, it := range tt.with {
 				t.Run(fmt.Sprintf("it(%d)", i), func(t *testing.T) {
 					if got := beforeFn(it); got != tt.want[i] {
@@ -105,7 +105,7 @@ func TestAfter(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			afterFn := After(tt.checkIRI)
+			afterFn := After(ID(tt.checkIRI))
 			for i, it := range tt.with {
 				t.Run(fmt.Sprintf("it(%d)", i), func(t *testing.T) {
 					if got := afterFn(it); got != tt.want[i] {

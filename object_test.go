@@ -244,8 +244,8 @@ func TestNotNilID(t *testing.T) {
 
 func TestIRI(t *testing.T) {
 	type args struct {
-		checkIRI   vocab.IRI
 		toCheckIRI vocab.IRI
+		checkIRI   vocab.IRI
 	}
 	tests := []struct {
 		name string
@@ -328,6 +328,83 @@ func TestIRI(t *testing.T) {
 			ob := vocab.Object{ID: tt.args.toCheckIRI}
 			if got := SameIRI(tt.args.checkIRI)(ob); got != tt.want {
 				t.Errorf("IRI(%s)(Object.ID=%s) = %v, want %v", tt.args.checkIRI, tt.args.toCheckIRI, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestIDLike(t *testing.T) {
+	type args struct {
+		toCheckIRI vocab.IRI
+		checkFrag  string
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "empty is contained",
+			args: args{
+				checkFrag:  "",
+				toCheckIRI: "https://example.com",
+			},
+			want: true,
+		},
+		{
+			name: "empty is contained by empty",
+			args: args{
+				checkFrag:  "",
+				toCheckIRI: "",
+			},
+			want: true,
+		},
+		{
+			name: "something is not contained by empty",
+			args: args{
+				checkFrag:  "something",
+				toCheckIRI: "",
+			},
+			want: false,
+		},
+		{
+			name: "something is not contained by https://example",
+			args: args{
+				checkFrag:  "something",
+				toCheckIRI: "https://example",
+			},
+			want: false,
+		},
+		{
+			name: "http://example is not contained by https://example",
+			args: args{
+				checkFrag:  "http://example",
+				toCheckIRI: "https://example",
+			},
+			want: false,
+		},
+		{
+			name: "https://example/ is not contained by https://example",
+			args: args{
+				checkFrag:  "https://example/",
+				toCheckIRI: "https://example",
+			},
+			want: false,
+		},
+		{
+			name: "https://example is contained by https://example/test",
+			args: args{
+				checkFrag:  "https://example",
+				toCheckIRI: "https://example/test",
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ob := vocab.Object{ID: tt.args.toCheckIRI}
+			if got := IDLike(tt.args.checkFrag)(ob); got != tt.want {
+				t.Errorf("IDLike(%s)(Object.ID=%v) = %v, want %v", tt.args.checkFrag, tt.args.toCheckIRI, got, tt.want)
 			}
 		})
 	}

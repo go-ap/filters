@@ -53,13 +53,13 @@ func WithMaxItems(max int) Fn {
 // This should be used when iterating over a collection, and it resolves to true
 // after the IRI was found in the list and to false before.
 // Due to relying on the static check IRI value the function is not reentrant.
-func After(iri vocab.IRI) Fn {
+func After(fn Fn) Fn {
 	isAfter := false
 	return func(it vocab.Item) bool {
 		if vocab.IsNil(it) {
 			return isAfter
 		}
-		if it.GetLink().Equals(iri, true) {
+		if fn(it) {
 			isAfter = true
 			return false
 		}
@@ -71,13 +71,13 @@ func After(iri vocab.IRI) Fn {
 // This should be used when iterating over a collection, and it resolves to true before
 // the IRI was found in the list and to true after.
 // Due to relying on the static check IRI value the function is not reentrant.
-func Before(iri vocab.IRI) Fn {
+func Before(fn Fn) Fn {
 	isBefore := true
 	return func(it vocab.Item) bool {
 		if vocab.IsNil(it) {
 			return isBefore
 		}
-		if it.GetLink().Equals(iri, true) {
+		if fn(it) {
 			isBefore = false
 		}
 		return isBefore
