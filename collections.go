@@ -49,10 +49,11 @@ func WithMaxItems(max int) Fn {
 	}
 }
 
-// After checks the Item against a specified IRI.
+// After checks the activitypub.Item against a specified "fn" filter function.
 // This should be used when iterating over a collection, and it resolves to true
-// after the IRI was found in the list and to false before.
-// Due to relying on the static check IRI value the function is not reentrant.
+// after fn returns true and to false before.
+//
+// Due to relying on the static check function return value the After is not reentrant.
 func After(fn Fn) Fn {
 	isAfter := false
 	return func(it vocab.Item) bool {
@@ -67,10 +68,11 @@ func After(fn Fn) Fn {
 	}
 }
 
-// Before checks the Item against a specified IRI.
+// Before checks the activitypub.Item against a specified "fn" filter function.
 // This should be used when iterating over a collection, and it resolves to true before
-// the IRI was found in the list and to true after.
-// Due to relying on the static check IRI value the function is not reentrant.
+// the fn has returned true and to false after.
+//
+// Due to relying on the static check function return value the function is not reentrant.
 func Before(fn Fn) Fn {
 	isBefore := true
 	return func(it vocab.Item) bool {
