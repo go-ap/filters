@@ -85,3 +85,34 @@ func TestAll(t *testing.T) {
 		})
 	}
 }
+
+func TestNot(t *testing.T) {
+	tests := []struct {
+		name string
+		fn   Fn
+		want bool
+	}{
+		{
+			name: "empty is false",
+			want: false,
+		},
+		{
+			name: "not true is false",
+			fn:   _mockTrue,
+			want: false,
+		},
+		{
+			name: "not false is true",
+			fn:   _mockFalse,
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ob := vocab.Object{}
+			if got := Not(tt.fn)(ob); got != tt.want {
+				t.Errorf("Not() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

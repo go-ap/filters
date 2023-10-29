@@ -2,6 +2,14 @@ package filters
 
 import vocab "github.com/go-ap/activitypub"
 
+func Not(fn Fn) Fn {
+	return func(it vocab.Item) bool {
+		if fn == nil {
+			return false
+		}
+		return !fn(it)
+	}
+}
 func Any(fns ...Fn) Fn {
 	return func(it vocab.Item) bool {
 		for _, fn := range fns {
