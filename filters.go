@@ -72,7 +72,17 @@ const (
 func ids(vv []string) []Fn {
 	f := make([]Fn, 0)
 	for _, v := range vv {
-		f = append(f, ID(vocab.IRI(v)))
+		if v == "" {
+			f = append(f, NilID)
+		} else if v == "!" || v == "!-" {
+			f = append(f, Not(NilID))
+		} else if strings.HasPrefix(v, "!") {
+			f = append(f, Not(ID(vocab.IRI(v))))
+		} else if strings.HasPrefix(v, "~") {
+			f = append(f, IDLike(v))
+		} else {
+			f = append(f, ID(vocab.IRI(v)))
+		}
 	}
 	return f
 }
@@ -121,10 +131,12 @@ func accumFiltersFromQuery(q url.Values) []Fn {
 			f = append(f, HasType(ActivityTypesFilter(vv...)...))
 		case keyName:
 			for _, n := range vv {
-				if strings.HasPrefix(n, "!") && n[1] != '-' {
-					f = append(f, Not(NameLike(n)))
-				} else if n == "!-" || n == "!" {
+				if n == "" {
 					f = append(f, NameEmpty())
+				} else if n == "!" || n == "!-" {
+					f = append(f, Not(NameEmpty()))
+				} else if strings.HasPrefix(n, "!") {
+					f = append(f, Not(NameLike(n)))
 				} else if strings.HasPrefix(n, "~") {
 					f = append(f, NameLike(n))
 				} else {
@@ -133,10 +145,12 @@ func accumFiltersFromQuery(q url.Values) []Fn {
 			}
 		case keySummary:
 			for _, n := range vv {
-				if strings.HasPrefix(n, "!") && n[1] != '-' {
-					f = append(f, Not(SummaryLike(n)))
-				} else if n == "!-" || n == "!" {
+				if n == "" {
 					f = append(f, SummaryEmpty())
+				} else if n == "!" || n == "!-" {
+					f = append(f, Not(SummaryEmpty()))
+				} else if strings.HasPrefix(n, "!") {
+					f = append(f, Not(SummaryLike(n)))
 				} else if strings.HasPrefix(n, "~") {
 					f = append(f, SummaryLike(n))
 				} else {
@@ -145,10 +159,12 @@ func accumFiltersFromQuery(q url.Values) []Fn {
 			}
 		case keyContent:
 			for _, n := range vv {
-				if strings.HasPrefix(n, "!") && n[1] != '-' {
-					f = append(f, Not(ContentLike(n)))
-				} else if n == "!-" || n == "!" {
+				if n == "" {
 					f = append(f, ContentEmpty())
+				} else if n == "!" || n == "!-" {
+					f = append(f, Not(ContentEmpty()))
+				} else if strings.HasPrefix(n, "!") && n[1] != '-' {
+					f = append(f, Not(ContentLike(n)))
 				} else if strings.HasPrefix(n, "~") {
 					f = append(f, ContentLike(n))
 				} else {
