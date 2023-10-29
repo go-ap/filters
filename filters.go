@@ -50,6 +50,33 @@ func ActivityTypesFilter(types ...string) vocab.ActivityVocabularyTypes {
 	return r
 }
 
+const (
+	keyID   = "id"
+	keyIRI  = "iri"
+	keyType = "type"
+
+	keyName    = "name"
+	keySummary = "summary"
+	keyContent = "content"
+
+	keyActor  = "actor"
+	keyObject = "object"
+	keyTarget = "target"
+
+	keyAfter  = "after"
+	keyBefore = "before"
+
+	keyMaxItems = "maxItems"
+)
+
+func ids(vv []string) []Fn {
+	f := make([]Fn, 0)
+	for _, v := range vv {
+		f = append(f, ID(vocab.IRI(v)))
+	}
+	return f
+}
+
 func FromIRI(i vocab.IRI) (Fns, error) {
 	f := make(Fns, 0)
 	u, err := i.URL()
@@ -65,22 +92,107 @@ func FromIRI(i vocab.IRI) (Fns, error) {
 		}
 	}
 	q := u.Query()
-
-	if iri := q.Get("iri"); len(iri) > 0 {
-		f = append(f, ID(vocab.IRI(iri)))
-	}
-	if iri := q.Get("id"); len(iri) > 0 {
-		f = append(f, ID(vocab.IRI(iri)))
-	}
-	if maxItems, _ := strconv.ParseInt(q.Get("maxItems"), 10, 32); maxItems > 0 {
-		f = append(f, WithMaxItems(int(maxItems)))
-	}
-	if typ, ok := q["type"]; ok && len(typ) > 0 {
-		f = append(f, HasType(ActivityTypesFilter(typ...)...))
-	}
-	if names, ok := q["name"]; ok && len(names) > 0 {
-		f = append(f, NameIn(names...))
-	}
+	f = append(f, accumFiltersFromQuery(q)...)
 
 	return f, nil
+}
+
+func accumFiltersFromQuery(q url.Values) []Fn {
+	f := make([]Fn, 0)
+	actorQ := make(url.Values)
+	objectQ := make(url.Values)
+	targetQ := make(url.Values)
+	for k, vv := range q {
+		pieces := strings.SplitN(k, ".", 2)
+		piece := k
+		remainder := ""
+		if len(pieces) > 1 {
+			piece = pieces[0]
+			remainder = pieces[1]
+		}
+		switch piece {
+		case keyID, keyIRI:
+			f = append(f, ids(vv)...)
+		case keyMaxItems:
+			if maxItems, _ := strconv.ParseInt(q.Get(keyMaxItems), 10, 32); maxItems > 0 {
+				f = append(f, WithMaxItems(int(maxItems)))
+			}
+		case keyType:
+			f = append(f, HasType(ActivityTypesFilter(vv...)...))
+		case keyName:
+			for _, n := range vv {
+				if strings.HasPrefix(n, "!") && n[1] != '-' {
+					f = append(f, Not(NameLike(n)))
+				} else if n == "!-" || n == "!" {
+					f = append(f, NameEmpty())
+				} else if strings.HasPrefix(n, "~") {
+					f = append(f, NameLike(n))
+				} else {
+					f = append(f, NameIs(n))
+				}
+			}
+		case keySummary:
+			for _, n := range vv {
+				if strings.HasPrefix(n, "!") && n[1] != '-' {
+					f = append(f, Not(SummaryLike(n)))
+				} else if n == "!-" || n == "!" {
+					f = append(f, SummaryEmpty())
+				} else if strings.HasPrefix(n, "~") {
+					f = append(f, SummaryLike(n))
+				} else {
+					f = append(f, SummaryIs(n))
+				}
+			}
+		case keyContent:
+			for _, n := range vv {
+				if strings.HasPrefix(n, "!") && n[1] != '-' {
+					f = append(f, Not(ContentLike(n)))
+				} else if n == "!-" || n == "!" {
+					f = append(f, ContentEmpty())
+				} else if strings.HasPrefix(n, "~") {
+					f = append(f, ContentLike(n))
+				} else {
+					f = append(f, ContentIs(n))
+				}
+			}
+		case keyAfter:
+			if len(vv) > 0 {
+				if _, err := url.ParseRequestURI(vv[0]); err == nil {
+					f = append(f, After(ID(vocab.IRI(vv[0]))))
+				} else {
+					f = append(f, After(IDLike(vv[0])))
+				}
+			}
+		case keyBefore:
+			if len(vv) > 0 {
+				if _, err := url.ParseRequestURI(vv[0]); err == nil {
+					f = append(f, Before(ID(vocab.IRI(vv[0]))))
+				} else {
+					f = append(f, Before(IDLike(vv[0])))
+				}
+			}
+		case keyActor:
+			if len(remainder) > 0 {
+				actorQ[remainder] = vv
+			}
+		case keyObject:
+			if len(remainder) > 0 {
+				objectQ[remainder] = vv
+			}
+		case keyTarget:
+			if len(remainder) > 0 {
+				targetQ[remainder] = vv
+			}
+		}
+	}
+	if len(actorQ) > 0 {
+		f = append(f, Actor(accumFiltersFromQuery(actorQ)...))
+	}
+	if len(objectQ) > 0 {
+		f = append(f, Object(accumFiltersFromQuery(objectQ)...))
+	}
+	if len(targetQ) > 0 {
+		f = append(f, Target(accumFiltersFromQuery(targetQ)...))
+	}
+	return f
 }

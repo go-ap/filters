@@ -102,13 +102,20 @@ type naturalLanguageValuesCheckFn func(vocab.NaturalLanguageValues, string) bool
 
 func nameCheck(name string, checkFn naturalLanguageValuesCheckFn) Fn {
 	return func(it vocab.Item) bool {
+		if vocab.IsNil(it) {
+			return false
+		}
 		toCheck := make(vocab.NaturalLanguageValues, 0)
-		vocab.OnObject(it, func(ob *vocab.Object) error {
-			toCheck = append(toCheck, ob.Name...)
+		_ = vocab.OnObject(it, func(ob *vocab.Object) error {
+			if len(ob.Name) > 0 {
+				toCheck = append(toCheck, ob.Name...)
+			}
 			return nil
 		})
-		vocab.OnActor(it, func(act *vocab.Actor) error {
-			toCheck = append(toCheck, act.PreferredUsername...)
+		_ = vocab.OnActor(it, func(act *vocab.Actor) error {
+			if len(act.PreferredUsername) > 0 {
+				toCheck = append(toCheck, act.PreferredUsername...)
+			}
 			return nil
 		})
 		return checkFn(toCheck, name)
@@ -118,7 +125,7 @@ func nameCheck(name string, checkFn naturalLanguageValuesCheckFn) Fn {
 func contentCheck(content string, checkFn naturalLanguageValuesCheckFn) Fn {
 	return func(it vocab.Item) bool {
 		var toCheck vocab.NaturalLanguageValues
-		vocab.OnObject(it, func(ob *vocab.Object) error {
+		_ = vocab.OnObject(it, func(ob *vocab.Object) error {
 			toCheck = ob.Content
 			return nil
 		})
@@ -129,7 +136,7 @@ func contentCheck(content string, checkFn naturalLanguageValuesCheckFn) Fn {
 func summaryCheck(content string, checkFn naturalLanguageValuesCheckFn) Fn {
 	return func(it vocab.Item) bool {
 		var toCheck vocab.NaturalLanguageValues
-		vocab.OnObject(it, func(ob *vocab.Object) error {
+		_ = vocab.OnObject(it, func(ob *vocab.Object) error {
 			toCheck = ob.Summary
 			return nil
 		})
