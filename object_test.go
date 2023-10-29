@@ -196,52 +196,6 @@ func TestNilID(t *testing.T) {
 	}
 }
 
-func TestNotNilID(t *testing.T) {
-	type args struct {
-		toCheckIRI vocab.IRI
-	}
-	tests := []struct {
-		name string
-		args args
-		want bool
-	}{
-		{
-			name: "empty",
-			args: args{},
-			want: false,
-		},
-		{
-			name: "non nil iri",
-			args: args{
-				toCheckIRI: "http://example.org",
-			},
-			want: true,
-		},
-		{
-			name: "empty IRI",
-			args: args{
-				toCheckIRI: "",
-			},
-			want: false,
-		},
-		{
-			name: "nil IRI",
-			args: args{
-				toCheckIRI: "-",
-			},
-			want: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ob := vocab.Object{ID: tt.args.toCheckIRI}
-			if got := NotNilID(ob); got != tt.want {
-				t.Errorf("NotNilID(Object.ID=%s) = %v, want %v", tt.args.toCheckIRI, got, tt.want)
-			}
-		})
-	}
-}
-
 func TestIRI(t *testing.T) {
 	type args struct {
 		toCheckIRI vocab.IRI

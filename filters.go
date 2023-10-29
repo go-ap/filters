@@ -14,13 +14,14 @@ Example:
 		Type("Create"),
 		Actor(Any(ID("https://example.com/authors/jdoe"), NameIs("JohnDoe")),
 		Object(NotNilID),
-	))
+	)))
 */
 package filters
 
 import (
 	"net/url"
 	"strconv"
+	"strings"
 
 	vocab "github.com/go-ap/activitypub"
 )

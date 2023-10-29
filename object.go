@@ -10,13 +10,8 @@ import (
 // NilID checks if the activitypub.Object's ID property matches any of the two magic values
 // that denote an empty value: activitypub.NilID = "-", or activitypub.EmptyID = ""
 func NilID(it vocab.Item) bool {
-	return Any(SameIRI(vocab.NilIRI), SameIRI(vocab.EmptyIRI))(it.GetLink())
-}
-
-// NotNilID checks if the activitypub.Object's ID property doesn't match any of the two magic values
-// that denote an empty value: activitypub.NilID = "-", or activitypub.EmptyID = ""
-func NotNilID(it vocab.Item) bool {
-	return !NilID(it)
+	// NOTE(marius): I'm not sure that a nil Item returning true, is entirely sane/safe logic
+	return vocab.IsNil(it) || Any(SameIRI(vocab.NilIRI), SameIRI(vocab.EmptyIRI))(it.GetLink())
 }
 
 // ID checks an activitypub.Object's ID property against the received iri.
