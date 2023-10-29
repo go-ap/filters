@@ -180,6 +180,9 @@ func ValidObjectCollection(typ vocab.CollectionPath) bool {
 }
 
 // Filters
+//
+// Deprecated: This is functionality cribbed from the original FedBOX filtering mechanism
+// which we want to move away from in favour of using []Fn
 // TODO(marius) we can make some small changes so it's not necessary to export this struct
 type Filters struct {
 	BaseURL       vocab.IRI            `qstring:"-"`
@@ -1263,11 +1266,15 @@ func FiltersOnActivityTarget(f Filterable) (bool, Filterable) {
 func CacheKey(f *Filters) vocab.IRI {
 	var iri vocab.IRI
 
-	if q, err := qstring.Marshal(f); err == nil && len(q) > 0 {
-		iri = vocab.IRI(fmt.Sprintf("%s?%s", f.GetLink(), q.Encode()))
-	} else {
-		iri = f.GetLink()
+	if u, err := f.GetLink().URL(); err == nil {
+		u.RawQuery = ""
+		iri = vocab.IRI(u.String())
 	}
+
+	if q, err := qstring.Marshal(f); err == nil && len(q) > 0 {
+		iri = vocab.IRI(fmt.Sprintf("%s?%s", iri, q.Encode()))
+	}
+
 	u, _ := iri.URL()
 	if auth := f.Authenticated; auth != nil && !auth.ID.Equals(vocab.PublicNS, true) {
 		u.User = url.User(path.Base(f.Authenticated.ID.String()))
