@@ -36,6 +36,32 @@ func Authorized(iri vocab.IRI) Fn {
 
 type Fns []Fn
 
+func (ff Fns) Run(item vocab.Item) vocab.Item {
+	if len(ff) == 0 {
+		return item
+	}
+	if vocab.IsItemCollection(item) {
+		_ = vocab.OnItemCollection(item, func(col *vocab.ItemCollection) error {
+			item = ff.runOnItems(*col)
+			return nil
+		})
+		return item
+	}
+	if !Any(ff...)(item) {
+		return nil
+	}
+	return item
+}
+
+func (ff Fns) runOnItems(col vocab.ItemCollection) vocab.ItemCollection {
+	result := make(vocab.ItemCollection, 0)
+	for _, it := range col {
+		if Any(ff...)(it) {
+			result = append(result, it)
+		}
+	}
+	return result
+}
 
 func VocabularyTypesFilter(types ...string) vocab.ActivityVocabularyTypes {
 	r := make(vocab.ActivityVocabularyTypes, 0, len(types))
