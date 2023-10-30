@@ -79,6 +79,7 @@ func After(fn Fn) Fn {
 // Due to relying on the static check function return value the function is not reentrant.
 func Before(fn Fn) Fn {
 	isBefore := atomic.Bool{}
+	isBefore.Store(true)
 	return func(it vocab.Item) bool {
 		if vocab.IsNil(it) {
 			return isBefore.Load()
