@@ -10,6 +10,7 @@ func Not(fn Fn) Fn {
 		return !fn(it)
 	}
 }
+
 func Any(fns ...Fn) Fn {
 	return func(it vocab.Item) bool {
 		for _, fn := range fns {

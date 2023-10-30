@@ -39,6 +39,16 @@ func TestAny(t *testing.T) {
 			fns:  []Fn{_mockFalse, _mockFalse},
 			want: false,
 		},
+		{
+			name: "last one true",
+			fns:  []Fn{_mockFalse, _mockFalse, _mockTrue},
+			want: true,
+		},
+		{
+			name: "last one true",
+			fns:  []Fn{_mockFalse, _mockFalse, _mockTrue},
+			want: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -73,6 +83,11 @@ func TestAll(t *testing.T) {
 		{
 			name: "all false",
 			fns:  []Fn{_mockFalse, _mockFalse},
+			want: false,
+		},
+		{
+			name: "last one false",
+			fns:  []Fn{_mockTrue, _mockTrue, _mockFalse},
 			want: false,
 		},
 	}
