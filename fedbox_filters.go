@@ -588,7 +588,7 @@ func fullAudience(it vocab.Item) vocab.ItemCollection {
 	if withRec, ok := it.(vocab.HasRecipients); ok {
 		_ = audience.Append(withRec.Recipients()...)
 	}
-	_ = vocab.OnActivity(it, func(act *vocab.Activity) error {
+	_ = vocab.OnIntransitiveActivity(it, func(act *vocab.IntransitiveActivity) error {
 		if act.Actor != nil {
 			_ = audience.Append(act.Actor)
 		}
