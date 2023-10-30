@@ -41,7 +41,7 @@ func HasType(ty ...vocab.ActivityVocabularyType) Fn {
 	types := vocab.ActivityVocabularyTypes(ty)
 	return func(it vocab.Item) bool {
 		result := false
-		vocab.OnObject(it, func(object *vocab.Object) error {
+		_ = vocab.OnObject(it, func(object *vocab.Object) error {
 			result = types.Contains(it.GetType())
 			return nil
 		})

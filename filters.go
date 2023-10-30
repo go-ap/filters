@@ -36,7 +36,8 @@ func Authorized(iri vocab.IRI) Fn {
 
 type Fns []Fn
 
-func ActivityTypesFilter(types ...string) vocab.ActivityVocabularyTypes {
+
+func VocabularyTypesFilter(types ...string) vocab.ActivityVocabularyTypes {
 	r := make(vocab.ActivityVocabularyTypes, 0, len(types))
 	for _, t := range types {
 		typ := vocab.ActivityVocabularyType(t)
@@ -127,7 +128,7 @@ func FromValues(q url.Values) Fns {
 				f = append(f, WithMaxItems(int(maxItems)))
 			}
 		case keyType:
-			f = append(f, HasType(ActivityTypesFilter(vv...)...))
+			f = append(f, HasType(VocabularyTypesFilter(vv...)...))
 		case keyName:
 			for _, n := range vv {
 				if n == "" {
