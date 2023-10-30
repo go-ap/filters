@@ -77,9 +77,9 @@ func ids(vv []string) []Fn {
 		} else if v == "!" || v == "!-" {
 			f = append(f, Not(NilID))
 		} else if strings.HasPrefix(v, "!") {
-			f = append(f, Not(ID(vocab.IRI(v))))
+			f = append(f, Not(ID(vocab.IRI(v[1:]))))
 		} else if strings.HasPrefix(v, "~") {
-			f = append(f, IDLike(v))
+			f = append(f, IDLike(v[1:]))
 		} else {
 			f = append(f, ID(vocab.IRI(v)))
 		}
@@ -87,28 +87,30 @@ func ids(vv []string) []Fn {
 	return f
 }
 
-func FromIRI(i vocab.IRI) (Fns, error) {
+func FromURL(u url.URL) Fns {
 	f := make(Fns, 0)
-	u, err := i.URL()
-	if err != nil {
-		return nil, err
-	}
 
 	if u.User != nil {
-		if us, err := url.Parse(u.User.Username()); err == nil {
+		if us, err := url.ParseRequestURI(u.User.Username()); err == nil {
 			if id := vocab.IRI(us.String()); id != vocab.PublicNS {
 				f = append(f, Authorized(id))
 			}
 		}
 	}
-	q := u.Query()
-	f = append(f, accumFiltersFromQuery(q)...)
 
-	return f, nil
+	return append(f, FromValues(u.Query())...)
 }
 
-func accumFiltersFromQuery(q url.Values) []Fn {
-	f := make([]Fn, 0)
+func FromIRI(i vocab.IRI) (Fns, error) {
+	u, err := i.URL()
+	if err != nil {
+		return nil, err
+	}
+	return FromURL(*u), nil
+}
+
+func FromValues(q url.Values) Fns {
+	f := make(Fns, 0)
 	actorQ := make(url.Values)
 	objectQ := make(url.Values)
 	targetQ := make(url.Values)
@@ -136,9 +138,9 @@ func accumFiltersFromQuery(q url.Values) []Fn {
 				} else if n == "!" || n == "!-" {
 					f = append(f, Not(NameEmpty()))
 				} else if strings.HasPrefix(n, "!") {
-					f = append(f, Not(NameLike(n)))
+					f = append(f, Not(NameLike(n[1:])))
 				} else if strings.HasPrefix(n, "~") {
-					f = append(f, NameLike(n))
+					f = append(f, NameLike(n[1:]))
 				} else {
 					f = append(f, NameIs(n))
 				}
@@ -150,9 +152,9 @@ func accumFiltersFromQuery(q url.Values) []Fn {
 				} else if n == "!" || n == "!-" {
 					f = append(f, Not(SummaryEmpty()))
 				} else if strings.HasPrefix(n, "!") {
-					f = append(f, Not(SummaryLike(n)))
+					f = append(f, Not(SummaryLike(n[1:])))
 				} else if strings.HasPrefix(n, "~") {
-					f = append(f, SummaryLike(n))
+					f = append(f, SummaryLike(n[1:]))
 				} else {
 					f = append(f, SummaryIs(n))
 				}
@@ -164,9 +166,9 @@ func accumFiltersFromQuery(q url.Values) []Fn {
 				} else if n == "!" || n == "!-" {
 					f = append(f, Not(ContentEmpty()))
 				} else if strings.HasPrefix(n, "!") && n[1] != '-' {
-					f = append(f, Not(ContentLike(n)))
+					f = append(f, Not(ContentLike(n[1:])))
 				} else if strings.HasPrefix(n, "~") {
-					f = append(f, ContentLike(n))
+					f = append(f, ContentLike(n[1:]))
 				} else {
 					f = append(f, ContentIs(n))
 				}
@@ -202,13 +204,13 @@ func accumFiltersFromQuery(q url.Values) []Fn {
 		}
 	}
 	if len(actorQ) > 0 {
-		f = append(f, Actor(accumFiltersFromQuery(actorQ)...))
+		f = append(f, Actor(FromValues(actorQ)...))
 	}
 	if len(objectQ) > 0 {
-		f = append(f, Object(accumFiltersFromQuery(objectQ)...))
+		f = append(f, Object(FromValues(objectQ)...))
 	}
 	if len(targetQ) > 0 {
-		f = append(f, Target(accumFiltersFromQuery(targetQ)...))
+		f = append(f, Target(FromValues(targetQ)...))
 	}
 	return f
 }
