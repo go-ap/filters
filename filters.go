@@ -126,6 +126,9 @@ func FromURL(u url.URL) Fns {
 }
 
 func FromIRI(i vocab.IRI) (Fns, error) {
+	if vocab.IsNil(i) {
+		return nil, nil
+	}
 	u, err := i.URL()
 	if err != nil {
 		return nil, err

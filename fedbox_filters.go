@@ -303,7 +303,7 @@ func (f Filters) Context() CompStrs {
 		if u, ok := validURL(k.Str); ok {
 			iri.Str = u.String()
 		} else {
-			iri.Str = fmt.Sprintf("%s/%s/%s", f.BaseURL, ObjectsType, k)
+			iri.Str = path.Join("/", f.BaseURL.String(), string(ObjectsType), k.String())
 		}
 		if !ret.Contains(iri) {
 			ret = append(ret, iri)
