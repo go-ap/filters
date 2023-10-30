@@ -25,7 +25,7 @@ func Any(fns ...Fn) Fn {
 func All(fns ...Fn) Fn {
 	return func(it vocab.Item) bool {
 		if len(fns) == 0 {
-			return false
+			return true
 		}
 		for _, fn := range fns {
 			if !fn(it) {

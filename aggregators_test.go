@@ -68,7 +68,7 @@ func TestAll(t *testing.T) {
 	}{
 		{
 			name: "empty is false",
-			want: false,
+			want: true,
 		},
 		{
 			name: "one true, one false",

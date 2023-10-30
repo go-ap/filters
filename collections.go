@@ -1,21 +1,25 @@
 package filters
 
 import (
-	"sync/atomic"
-
 	vocab "github.com/go-ap/activitypub"
 )
 
-// WithMaxCount is used to limit a collection's items count to the max value.
+type limit int32
+
+// WithMaxCount is used to limit a collection's items count to the 'max' value.
 // It can be used from slicing from the first element of the collection to max.
 // Due to relying on the static max value the function is not reentrant.
 func WithMaxCount(max int) Fn {
-	count := 0
+	l := limit(0)
+	return l.withMaxCount(max)
+}
+
+func (count *limit) withMaxCount(max int) Fn {
 	return func(item vocab.Item) bool {
-		if count >= max {
+		if int32(max) <= int32(*count) {
 			return false
 		}
-		count += 1
+		*count = *count + 1
 		return true
 	}
 }
@@ -26,7 +30,7 @@ func WithMaxItems(max int) Fn {
 
 	return func(it vocab.Item) bool {
 		if vocab.IsItemCollection(it) {
-			vocab.OnItemCollection(it, func(col *vocab.ItemCollection) error {
+			_ = vocab.OnItemCollection(it, func(col *vocab.ItemCollection) error {
 				if max < len(*col) {
 					*col = (*col)[0:max]
 				}
@@ -34,7 +38,7 @@ func WithMaxItems(max int) Fn {
 			})
 		}
 		if OrderedCollectionTypes.Contains(it.GetType()) {
-			vocab.OnOrderedCollection(it, func(col *vocab.OrderedCollection) error {
+			_ = vocab.OnOrderedCollection(it, func(col *vocab.OrderedCollection) error {
 				if max < len(col.OrderedItems) {
 					col.OrderedItems = col.OrderedItems[0:max]
 				}
@@ -42,7 +46,7 @@ func WithMaxItems(max int) Fn {
 			})
 		}
 		if CollectionTypes.Contains(it.GetType()) {
-			vocab.OnCollection(it, func(col *vocab.Collection) error {
+			_ = vocab.OnCollection(it, func(col *vocab.Collection) error {
 				if max < len(col.Items) {
 					col.Items = col.Items[0:max]
 				}
@@ -59,18 +63,24 @@ func WithMaxItems(max int) Fn {
 //
 // Due to relying on the static check function return value the After is not reentrant.
 func After(fn Fn) Fn {
-	isAfter := atomic.Bool{}
+	p := pagination(false)
+	return p.after(fn)
+}
+
+func (isAfter *pagination) after(fn Fn) Fn {
 	return func(it vocab.Item) bool {
 		if vocab.IsNil(it) {
-			return isAfter.Load()
+			return bool(*isAfter)
 		}
 		if fn(it) {
-			isAfter.Store(true)
+			*isAfter = true
 			return false
 		}
-		return isAfter.Load()
+		return bool(*isAfter)
 	}
 }
+
+type pagination bool
 
 // Before checks the activitypub.Item against a specified "fn" filter function.
 // This should be used when iterating over a collection, and it resolves to true before
@@ -78,15 +88,18 @@ func After(fn Fn) Fn {
 //
 // Due to relying on the static check function return value the function is not reentrant.
 func Before(fn Fn) Fn {
-	isBefore := atomic.Bool{}
-	isBefore.Store(true)
+	p := pagination(true)
+	return p.before(fn)
+}
+
+func (isBefore *pagination) before(fn Fn) Fn {
 	return func(it vocab.Item) bool {
 		if vocab.IsNil(it) {
-			return isBefore.Load()
+			return true
 		}
 		if fn(it) {
-			isBefore.Store(false)
+			*isBefore = false
 		}
-		return isBefore.Load()
+		return bool(*isBefore)
 	}
 }

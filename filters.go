@@ -26,12 +26,19 @@ import (
 	vocab "github.com/go-ap/activitypub"
 )
 
-type Fn = func(vocab.Item) bool
+type Fn func(vocab.Item) bool
 
 func Authorized(iri vocab.IRI) Fn {
 	return func(it vocab.Item) bool {
 		return fullAudience(it).Contains(iri)
 	}
+}
+
+func (f Fn) Run(item vocab.Item) vocab.Item {
+	if f != nil && !f(item) {
+		return nil
+	}
+	return item
 }
 
 type Fns []Fn
@@ -122,7 +129,7 @@ func FromURL(u url.URL) Fns {
 		}
 	}
 
-	return append(f, FromValues(u.Query())...)
+	return append(f, fromValues(u.Query())...)
 }
 
 func FromIRI(i vocab.IRI) (Fns, error) {
@@ -137,10 +144,16 @@ func FromIRI(i vocab.IRI) (Fns, error) {
 }
 
 func FromValues(q url.Values) Fns {
-	f := make(Fns, 0)
+	return fromValues(q)
+}
+
+func fromValues(q url.Values) Fns {
+
 	actorQ := make(url.Values)
 	objectQ := make(url.Values)
 	targetQ := make(url.Values)
+
+	f := make(Fns, 0)
 	for k, vv := range q {
 		pieces := strings.SplitN(k, ".", 2)
 		piece := k
@@ -231,13 +244,13 @@ func FromValues(q url.Values) Fns {
 		}
 	}
 	if len(actorQ) > 0 {
-		f = append(f, Actor(FromValues(actorQ)...))
+		f = append(f, Actor(fromValues(actorQ)...))
 	}
 	if len(objectQ) > 0 {
-		f = append(f, Object(FromValues(objectQ)...))
+		f = append(f, Object(fromValues(objectQ)...))
 	}
 	if len(targetQ) > 0 {
-		f = append(f, Target(FromValues(targetQ)...))
+		f = append(f, Target(fromValues(targetQ)...))
 	}
 	return f
 }
