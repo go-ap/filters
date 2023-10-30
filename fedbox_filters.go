@@ -583,34 +583,24 @@ func (f Filters) Tags() *Filters {
 	return f.Tag
 }
 
-func allRecipients(it vocab.Item) vocab.ItemCollection {
-	if vocab.IsNil(it) || vocab.IsIRI(it) {
-		return nil
+func fullAudience(it vocab.Item) vocab.ItemCollection {
+	audience := make(vocab.ItemCollection, 0)
+	if withRec, ok := it.(vocab.HasRecipients); ok {
+		_ = audience.Append(withRec.Recipients()...)
 	}
-	recipients := make(vocab.ItemCollection, 0)
-	vocab.OnObject(it, func(ob *vocab.Object) error {
-		recipients.Append(ob.Recipients()...)
-		if ob.AttributedTo != nil {
-			recipients.Append(ob.AttributedTo)
-		}
-		return nil
-	})
-	vocab.OnIntransitiveActivity(it, func(act *vocab.IntransitiveActivity) error {
+	_ = vocab.OnActivity(it, func(act *vocab.Activity) error {
 		if act.Actor != nil {
-			recipients.Append(act.Actor.GetLink())
-		}
-		if act.Target != nil {
-			recipients.Append(act.Target)
+			_ = audience.Append(act.Actor)
 		}
 		return nil
 	})
-	vocab.OnActivity(it, func(act *vocab.Activity) error {
-		if act.Object != nil {
-			recipients.Append(act.Object)
+	_ = vocab.OnObject(it, func(ob *vocab.Object) error {
+		if ob.AttributedTo != nil {
+			_ = audience.Append(ob.AttributedTo)
 		}
 		return nil
 	})
-	return recipients
+	return audience
 }
 
 func filterObjectNoNameNoType(ob *vocab.Object, ff *Filters) bool {
@@ -1125,7 +1115,7 @@ func (f *Filters) ItemsMatch(col ...vocab.Item) bool {
 				return nil
 			})
 		} else if it.IsObject() {
-			if !filterAudience(f.Audience(), allRecipients(it)) {
+			if !filterAudience(f.Audience(), fullAudience(it)) {
 				return false
 			}
 			typ := it.GetType()

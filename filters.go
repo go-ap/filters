@@ -30,10 +30,7 @@ type Fn = func(vocab.Item) bool
 
 func Authorized(iri vocab.IRI) Fn {
 	return func(it vocab.Item) bool {
-		if r, ok := it.(vocab.HasRecipients); ok {
-			return r.Recipients().Contains(iri)
-		}
-		return false
+		return fullAudience(it).Contains(iri)
 	}
 }
 
