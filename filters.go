@@ -147,6 +147,37 @@ func FromValues(q url.Values) Fns {
 	return fromValues(q)
 }
 
+func PaginationFromURL(u url.URL) Fns {
+	f := make(Fns, 0)
+	for piece, vv := range u.Query() {
+		switch piece {
+		case keyMaxItems:
+			if len(vv) > 0 {
+				if maxItems, _ := strconv.ParseInt(vv[0], 10, 32); maxItems > 0 {
+					f = append(f, WithMaxCount(int(maxItems)))
+				}
+			}
+		case keyAfter:
+			if len(vv) > 0 {
+				if _, err := url.ParseRequestURI(vv[0]); err == nil {
+					f = append(f, After(ID(vocab.IRI(vv[0]))))
+				} else {
+					f = append(f, After(IDLike(vv[0])))
+				}
+			}
+		case keyBefore:
+			if len(vv) > 0 {
+				if _, err := url.ParseRequestURI(vv[0]); err == nil {
+					f = append(f, Before(ID(vocab.IRI(vv[0]))))
+				} else {
+					f = append(f, Before(IDLike(vv[0])))
+				}
+			}
+		}
+	}
+	return f
+}
+
 func fromValues(q url.Values) Fns {
 
 	actorQ := make(url.Values)
@@ -165,10 +196,6 @@ func fromValues(q url.Values) Fns {
 		switch piece {
 		case keyID, keyIRI:
 			f = append(f, ids(vv)...)
-		case keyMaxItems:
-			if maxItems, _ := strconv.ParseInt(q.Get(keyMaxItems), 10, 32); maxItems > 0 {
-				f = append(f, WithMaxItems(int(maxItems)))
-			}
 		case keyType:
 			f = append(f, HasType(VocabularyTypesFilter(vv...)...))
 		case keyName:
@@ -211,22 +238,6 @@ func fromValues(q url.Values) Fns {
 					f = append(f, ContentLike(n[1:]))
 				} else {
 					f = append(f, ContentIs(n))
-				}
-			}
-		case keyAfter:
-			if len(vv) > 0 {
-				if _, err := url.ParseRequestURI(vv[0]); err == nil {
-					f = append(f, After(ID(vocab.IRI(vv[0]))))
-				} else {
-					f = append(f, After(IDLike(vv[0])))
-				}
-			}
-		case keyBefore:
-			if len(vv) > 0 {
-				if _, err := url.ParseRequestURI(vv[0]); err == nil {
-					f = append(f, Before(ID(vocab.IRI(vv[0]))))
-				} else {
-					f = append(f, Before(IDLike(vv[0])))
 				}
 			}
 		case keyActor:

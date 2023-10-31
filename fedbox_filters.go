@@ -274,7 +274,7 @@ type FilterFn func(f *Filters) error
 func FiltersNew(filters ...FilterFn) *Filters {
 	f := &Filters{}
 	for _, fn := range filters {
-		fn(f)
+		_ = fn(f)
 	}
 	return f
 }

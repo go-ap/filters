@@ -4,22 +4,22 @@ import (
 	vocab "github.com/go-ap/activitypub"
 )
 
-type limit int32
+type counter int32
 
 // WithMaxCount is used to limit a collection's items count to the 'max' value.
 // It can be used from slicing from the first element of the collection to max.
 // Due to relying on the static max value the function is not reentrant.
 func WithMaxCount(max int) Fn {
-	l := limit(0)
-	return l.withMaxCount(max)
+	cnt := counter(0)
+	return cnt.onReachMax(max)
 }
 
-func (count *limit) withMaxCount(max int) Fn {
+func (cnt *counter) onReachMax(max int) Fn {
 	return func(item vocab.Item) bool {
-		if int32(max) <= int32(*count) {
+		if int32(max) <= int32(*cnt) {
 			return false
 		}
-		*count = *count + 1
+		*cnt = *cnt + 1
 		return true
 	}
 }
