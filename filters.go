@@ -148,34 +148,38 @@ func FromValues(q url.Values) Fns {
 }
 
 func PaginationFromURL(u url.URL) Fns {
+	q := u.Query()
+
 	f := make(Fns, 0)
-	for piece, vv := range u.Query() {
-		switch piece {
-		case keyMaxItems:
-			if len(vv) > 0 {
-				if maxItems, _ := strconv.ParseInt(vv[0], 10, 32); maxItems > 0 {
-					f = append(f, WithMaxCount(int(maxItems)))
-				}
-			}
-		case keyAfter:
-			if len(vv) > 0 {
-				if _, err := url.ParseRequestURI(vv[0]); err == nil {
-					f = append(f, After(ID(vocab.IRI(vv[0]))))
-				} else {
-					f = append(f, After(IDLike(vv[0])))
-				}
-			}
-		case keyBefore:
-			if len(vv) > 0 {
-				if _, err := url.ParseRequestURI(vv[0]); err == nil {
-					f = append(f, Before(ID(vocab.IRI(vv[0]))))
-				} else {
-					f = append(f, Before(IDLike(vv[0])))
-				}
+	if q.Has(keyBefore) {
+		vv := q[keyBefore]
+		if len(vv) > 0 {
+			if _, err := url.ParseRequestURI(vv[0]); err == nil {
+				f = append(f, Before(ID(vocab.IRI(vv[0]))))
+			} else {
+				f = append(f, Before(IDLike(vv[0])))
 			}
 		}
 	}
-	return f
+	if q.Has(keyAfter) {
+		vv := q[keyAfter]
+		if len(vv) > 0 {
+			if _, err := url.ParseRequestURI(vv[0]); err == nil {
+				f = append(f, After(ID(vocab.IRI(vv[0]))))
+			} else {
+				f = append(f, After(IDLike(vv[0])))
+			}
+		}
+	}
+	if q.Has(keyMaxItems) {
+		vv := q[keyMaxItems]
+		if len(vv) > 0 {
+			if maxItems, err := strconv.ParseInt(vv[0], 10, 32); err == nil {
+				f = append(f, WithMaxCount(int(maxItems)))
+			}
+		}
+	}
+	return Fns{All(f...)}
 }
 
 func fromValues(q url.Values) Fns {
