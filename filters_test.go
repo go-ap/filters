@@ -271,21 +271,24 @@ func TestFromValues(t *testing.T) {
 	}
 }
 
-func TestPaginationFromURL(t *testing.T) {
+func Test_paginationFromValues(t *testing.T) {
 	t.Parallel()
+
+	parseQuery := func(s string) url.Values {
+		v, _ := url.ParseQuery(s)
+		return v
+	}
 
 	tests := []struct {
 		name string
-		u    url.URL
+		u    url.Values
 		item vocab.Item
 		want vocab.Item
 	}{
 		{name: "empty"},
 		{
 			name: "after: item is last, nothing after",
-			u: url.URL{
-				RawQuery: "after=user",
-			},
+			u:    parseQuery("after=user"),
 			item: vocab.ItemCollection{
 				vocab.Object{ID: "before-user-2"},
 				vocab.Object{ID: "before-user-1"},
@@ -295,9 +298,7 @@ func TestPaginationFromURL(t *testing.T) {
 		},
 		{
 			name: "after: some after items",
-			u: url.URL{
-				RawQuery: "after=user",
-			},
+			u:    parseQuery("after=user"),
 			item: vocab.ItemCollection{
 				vocab.Object{ID: "before-2"},
 				vocab.Object{ID: "before-1"},
@@ -312,9 +313,7 @@ func TestPaginationFromURL(t *testing.T) {
 		},
 		{
 			name: "after: item is first, everything but itself",
-			u: url.URL{
-				RawQuery: "after=user",
-			},
+			u:    parseQuery("after=user"),
 			item: vocab.ItemCollection{
 				vocab.Object{ID: "user"},
 				vocab.Object{ID: "after-1"},
@@ -329,9 +328,7 @@ func TestPaginationFromURL(t *testing.T) {
 		},
 		{
 			name: "before: item is last, everything before",
-			u: url.URL{
-				RawQuery: "before=user",
-			},
+			u:    parseQuery("before=user"),
 			item: vocab.ItemCollection{
 				vocab.Object{ID: "before-2"},
 				vocab.Object{ID: "before-1"},
@@ -344,9 +341,7 @@ func TestPaginationFromURL(t *testing.T) {
 		},
 		{
 			name: "before: some before items",
-			u: url.URL{
-				RawQuery: "before=user",
-			},
+			u:    parseQuery("before=user"),
 			item: vocab.ItemCollection{
 				vocab.Object{ID: "before-2"},
 				vocab.Object{ID: "before-1"},
@@ -361,9 +356,7 @@ func TestPaginationFromURL(t *testing.T) {
 		},
 		{
 			name: "before: item is first, nothing",
-			u: url.URL{
-				RawQuery: "before=user",
-			},
+			u:    parseQuery("before=user"),
 			item: vocab.ItemCollection{
 				vocab.Object{ID: "user"},
 				vocab.Object{ID: "after-1"},
@@ -374,9 +367,7 @@ func TestPaginationFromURL(t *testing.T) {
 		},
 		{
 			name: "before and after",
-			u: url.URL{
-				RawQuery: "before=stop&after=start",
-			},
+			u:    parseQuery("before=stop&after=start"),
 			item: vocab.ItemCollection{
 				vocab.Object{ID: "before-3"},
 				vocab.Object{ID: "before-2"},
@@ -398,9 +389,7 @@ func TestPaginationFromURL(t *testing.T) {
 		},
 		{
 			name: "maxItems=0",
-			u: url.URL{
-				RawQuery: "maxItems=0",
-			},
+			u:    parseQuery("maxItems=0"),
 			item: vocab.ItemCollection{
 				vocab.Object{ID: "maxItems=0"},
 				vocab.Object{ID: "not-1"},
@@ -410,9 +399,7 @@ func TestPaginationFromURL(t *testing.T) {
 		},
 		{
 			name: "maxItems=2",
-			u: url.URL{
-				RawQuery: "maxItems=2",
-			},
+			u:    parseQuery("maxItems=2"),
 			item: vocab.ItemCollection{
 				vocab.Object{ID: "good1"},
 				vocab.Object{ID: "good2"},
@@ -427,9 +414,7 @@ func TestPaginationFromURL(t *testing.T) {
 		},
 		{
 			name: "after=user&maxItems=2",
-			u: url.URL{
-				RawQuery: "after=user&maxItems=2",
-			},
+			u:    parseQuery("after=user&maxItems=2"),
 			item: vocab.ItemCollection{
 				vocab.Object{ID: "not-1"},
 				vocab.Object{ID: "not-2"},
@@ -448,9 +433,7 @@ func TestPaginationFromURL(t *testing.T) {
 		},
 		{
 			name: "before=user&maxItems=2",
-			u: url.URL{
-				RawQuery: "before=user&maxItems=2",
-			},
+			u:    parseQuery("before=user&maxItems=2"),
 			item: vocab.ItemCollection{
 				vocab.Object{ID: "good1"},
 				vocab.Object{ID: "good2"},
@@ -467,9 +450,7 @@ func TestPaginationFromURL(t *testing.T) {
 		},
 		{
 			name: "after=start&before=end&maxItems=2",
-			u: url.URL{
-				RawQuery: "after=start&before=stop&maxItems=2",
-			},
+			u:    parseQuery("after=start&before=stop&maxItems=2"),
 			item: vocab.ItemCollection{
 				vocab.Object{ID: "not-1"},
 				vocab.Object{ID: "not-2"},
@@ -490,9 +471,9 @@ func TestPaginationFromURL(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotFns := PaginationFromURL(tt.u)
+			gotFns := paginationFromValues(tt.u)
 			if got := gotFns.Run(tt.item); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("PaginationFromURL().Run() = %v, want %v", got, tt.want)
+				t.Errorf("paginationFromValues().Run() = %v, want %v", got, tt.want)
 			}
 		})
 	}

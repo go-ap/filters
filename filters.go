@@ -178,7 +178,13 @@ func FromValues(q url.Values) Fns {
 }
 
 func PaginationFromURL(u url.URL) cursor {
-	q := u.Query()
+	return paginationFromValues(u.Query())
+}
+
+func paginationFromValues(q url.Values) cursor {
+	if q == nil {
+		return nil
+	}
 
 	f := make(Fns, 0)
 	if q.Has(keyBefore) {
