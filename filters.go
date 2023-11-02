@@ -26,6 +26,9 @@ import (
 	vocab "github.com/go-ap/activitypub"
 )
 
+type Runnable interface {
+	Run(vocab.Item) vocab.Item
+}
 type Fn func(vocab.Item) bool
 
 func Authorized(iri vocab.IRI) Fn {
@@ -35,10 +38,32 @@ func Authorized(iri vocab.IRI) Fn {
 }
 
 func (f Fn) Run(item vocab.Item) vocab.Item {
-	if f != nil && !f(item) {
+	if f != nil {
 		return nil
 	}
-	return item
+
+	if vocab.IsItemCollection(item) {
+		_ = vocab.OnItemCollection(item, func(col *vocab.ItemCollection) error {
+			item = f.runOnItems(*col)
+			return nil
+		})
+		return item
+	}
+	if f(item) {
+		return item
+	}
+	return nil
+}
+
+func (f Fn) runOnItems(col vocab.ItemCollection) vocab.ItemCollection {
+	result := make(vocab.ItemCollection, 0)
+	for _, it := range col {
+		if !f(it) {
+			continue
+		}
+		result = append(result, it)
+	}
+	return result
 }
 
 type Fns []Fn
@@ -54,18 +79,23 @@ func (ff Fns) Run(item vocab.Item) vocab.Item {
 		})
 		return item
 	}
-	if !Any(ff...)(item) {
-		return nil
+	return ff.runOnItem(item)
+}
+
+func (ff Fns) runOnItem(it vocab.Item) vocab.Item {
+	if Any(ff...)(it) {
+		return it
 	}
-	return item
+	return nil
 }
 
 func (ff Fns) runOnItems(col vocab.ItemCollection) vocab.ItemCollection {
 	result := make(vocab.ItemCollection, 0)
 	for _, it := range col {
-		if Any(ff...)(it) {
-			result = append(result, it)
+		if !Any(ff...)(it) {
+			continue
 		}
+		result = append(result, it)
 	}
 	return result
 }
@@ -147,7 +177,7 @@ func FromValues(q url.Values) Fns {
 	return fromValues(q)
 }
 
-func PaginationFromURL(u url.URL) Fns {
+func PaginationFromURL(u url.URL) cursor {
 	q := u.Query()
 
 	f := make(Fns, 0)
@@ -179,7 +209,7 @@ func PaginationFromURL(u url.URL) Fns {
 			}
 		}
 	}
-	return Fns{All(f...)}
+	return Cursor(f...)
 }
 
 func fromValues(q url.Values) Fns {
