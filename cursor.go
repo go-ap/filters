@@ -11,7 +11,7 @@ func Cursor(fns ...Fn) cursor {
 
 func (c cursor) Run(item vocab.Item) vocab.Item {
 	if len(c) == 0 {
-		return nil
+		return item
 	}
 
 	if vocab.IsItemCollection(item) {
