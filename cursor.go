@@ -9,16 +9,47 @@ func Cursor(fns ...Fn) cursor {
 	return cursor(fns)
 }
 
+var collectionTypes = vocab.ActivityVocabularyTypes{
+	vocab.CollectionType,
+	vocab.CollectionPageType,
+}
+
+var orderedCollectionTypes = vocab.ActivityVocabularyTypes{
+	vocab.OrderedCollectionType,
+	vocab.OrderedCollectionPageType,
+}
+
 func (c cursor) Run(item vocab.Item) vocab.Item {
 	if len(c) == 0 {
 		return item
 	}
 
-	if vocab.IsItemCollection(item) {
-		_ = vocab.OnItemCollection(item, func(col *vocab.ItemCollection) error {
-			item = c.runOnItems(*col)
+	// NOTE(marius): here is the place where we should add pagination iris to the
+	// collections, we can compute first/before/after
+	if item.IsCollection() {
+		var items vocab.ItemCollection
+		var cnt uint
+		_ = vocab.OnCollectionIntf(item, func(col vocab.CollectionInterface) error {
+			cnt = col.Count()
+			items = c.runOnItems(col.Collection())
 			return nil
 		})
+		switch {
+		case collectionTypes.Contains(item.GetType()):
+			_ = vocab.OnCollection(item, func(col *vocab.Collection) error {
+				col.Items = items
+				col.TotalItems = cnt
+				return nil
+			})
+		case orderedCollectionTypes.Contains(item.GetType()):
+			_ = vocab.OnOrderedCollection(item, func(col *vocab.OrderedCollection) error {
+				col.OrderedItems = items
+				col.TotalItems = cnt
+				return nil
+			})
+		case vocab.CollectionOfItems == item.GetType():
+			item = &items
+		}
 		return item
 	}
 
