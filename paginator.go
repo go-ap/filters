@@ -20,7 +20,7 @@ type OffsetPaginator interface {
 	Page() int
 }
 
-func Paginator(q url.Values) OffsetPaginator {
+func PaginatorValues(q url.Values) pagValues {
 	return pagValues(q)
 }
 
