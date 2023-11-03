@@ -149,17 +149,17 @@ func ids(vv []string) []Fn {
 }
 
 func FromURL(u url.URL) Fns {
-	f := make(Fns, 0)
+	fns := make(Fns, 0)
 
 	if u.User != nil {
 		if us, err := url.ParseRequestURI(u.User.Username()); err == nil {
 			if id := vocab.IRI(us.String()); id != vocab.PublicNS {
-				f = append(f, Authorized(id))
+				fns = append(fns, Authorized(id))
 			}
 		}
 	}
-
-	return append(f, fromValues(u.Query())...)
+	fns = append(fns, fromValues(u.Query())...)
+	return Fns{All(fns...)}
 }
 
 func FromIRI(i vocab.IRI) (Fns, error) {
@@ -219,7 +219,6 @@ func paginationFromValues(q url.Values) cursor {
 }
 
 func fromValues(q url.Values) Fns {
-
 	actorQ := make(url.Values)
 	objectQ := make(url.Values)
 	targetQ := make(url.Values)
@@ -303,5 +302,5 @@ func fromValues(q url.Values) Fns {
 	if len(targetQ) > 0 {
 		f = append(f, Target(fromValues(targetQ)...))
 	}
-	return f
+	return Fns{All(f...)}
 }
