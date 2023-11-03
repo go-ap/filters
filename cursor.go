@@ -32,6 +32,9 @@ func (c cursor) Run(item vocab.Item) vocab.Item {
 		return item
 	}
 
+	if vocab.IsNil(item) {
+		return nil
+	}
 	if item.IsCollection() {
 		item, _ = PaginateCollection(item, c...)
 		return item

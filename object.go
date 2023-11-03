@@ -17,6 +17,9 @@ func NilID(it vocab.Item) bool {
 // ID checks an activitypub.Object's ID property against the received iri.
 func ID(iri vocab.IRI) Fn {
 	return func(item vocab.Item) bool {
+		if vocab.IsNil(item) {
+			return false
+		}
 		return item.GetID().Equals(iri, true)
 	}
 }
