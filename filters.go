@@ -145,7 +145,10 @@ func ids(vv []string) []Fn {
 			f = append(f, ID(vocab.IRI(v)))
 		}
 	}
-	return f
+	if len(f) == 1 {
+		return f
+	}
+	return Fns{Any(f...)}
 }
 
 func FromURL(u url.URL) Fns {
@@ -238,46 +241,67 @@ func fromValues(q url.Values) Fns {
 		case keyType:
 			f = append(f, HasType(VocabularyTypesFilter(vv...)...))
 		case keyName:
+			fns := make(Fns, 0)
 			for _, n := range vv {
 				if n == "" {
-					f = append(f, NameEmpty())
+					fns = append(fns, NameEmpty())
 				} else if n == "!" || n == "!-" {
-					f = append(f, Not(NameEmpty()))
+					fns = append(fns, Not(NameEmpty()))
 				} else if strings.HasPrefix(n, "!") {
-					f = append(f, Not(NameLike(n[1:])))
+					fns = append(fns, Not(NameLike(n[1:])))
 				} else if strings.HasPrefix(n, "~") {
-					f = append(f, NameLike(n[1:]))
+					fns = append(fns, NameLike(n[1:]))
 				} else {
-					f = append(f, NameIs(n))
+					fns = append(fns, NameIs(n))
 				}
+			}
+			if len(fns) > 0 {
+				if len(fns) == 1 {
+					f = append(f, fns...)
+				}
+				f = append(f, Any(fns...))
 			}
 		case keySummary:
+			fns := make(Fns, 0)
 			for _, n := range vv {
 				if n == "" {
-					f = append(f, SummaryEmpty())
+					fns = append(fns, SummaryEmpty())
 				} else if n == "!" || n == "!-" {
-					f = append(f, Not(SummaryEmpty()))
+					fns = append(fns, Not(SummaryEmpty()))
 				} else if strings.HasPrefix(n, "!") {
-					f = append(f, Not(SummaryLike(n[1:])))
+					fns = append(fns, Not(SummaryLike(n[1:])))
 				} else if strings.HasPrefix(n, "~") {
-					f = append(f, SummaryLike(n[1:]))
+					fns = append(fns, SummaryLike(n[1:]))
 				} else {
-					f = append(f, SummaryIs(n))
+					fns = append(fns, SummaryIs(n))
 				}
 			}
+			if len(fns) > 0 {
+				if len(fns) == 1 {
+					f = append(f, fns...)
+				}
+				f = append(f, Any(fns...))
+			}
 		case keyContent:
+			fns := make(Fns, 0)
 			for _, n := range vv {
 				if n == "" {
-					f = append(f, ContentEmpty())
+					fns = append(fns, ContentEmpty())
 				} else if n == "!" || n == "!-" {
-					f = append(f, Not(ContentEmpty()))
+					fns = append(fns, Not(ContentEmpty()))
 				} else if strings.HasPrefix(n, "!") && n[1] != '-' {
-					f = append(f, Not(ContentLike(n[1:])))
+					fns = append(fns, Not(ContentLike(n[1:])))
 				} else if strings.HasPrefix(n, "~") {
-					f = append(f, ContentLike(n[1:]))
+					fns = append(fns, ContentLike(n[1:]))
 				} else {
-					f = append(f, ContentIs(n))
+					fns = append(fns, ContentIs(n))
 				}
+			}
+			if len(fns) > 0 {
+				if len(fns) == 1 {
+					f = append(f, fns...)
+				}
+				f = append(f, Any(fns...))
 			}
 		case keyActor:
 			if len(remainder) > 0 {
@@ -301,6 +325,9 @@ func fromValues(q url.Values) Fns {
 	}
 	if len(targetQ) > 0 {
 		f = append(f, Target(fromValues(targetQ)...))
+	}
+	if len(f) == 1 {
+		return f
 	}
 	return Fns{All(f...)}
 }

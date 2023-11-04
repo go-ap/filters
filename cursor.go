@@ -14,7 +14,14 @@ type cursor Fns
 
 // Cursor is an alias for running an All() aggregate filter function on the incoming fns functions
 func Cursor(fns ...Fn) cursor {
-	return cursor(fns)
+	c := make(cursor, 0)
+	for _, f := range fns {
+		if f == nil {
+			continue
+		}
+		c = append(c, f)
+	}
+	return c
 }
 
 var collectionTypes = vocab.ActivityVocabularyTypes{
@@ -71,13 +78,13 @@ func PaginateCollection(it vocab.Item, filters ...Fn) (vocab.Item, error) {
 
 	switch col.GetType() {
 	case vocab.OrderedCollectionType:
-		vocab.OnOrderedCollection(col, func(c *vocab.OrderedCollection) error {
+		_ = vocab.OnOrderedCollection(col, func(c *vocab.OrderedCollection) error {
 			c.First = firstIRI
 			c.Current = curIRI
 			return nil
 		})
 	case vocab.OrderedCollectionPageType:
-		vocab.OnOrderedCollectionPage(col, func(c *vocab.OrderedCollectionPage) error {
+		_ = vocab.OnOrderedCollectionPage(col, func(c *vocab.OrderedCollectionPage) error {
 			c.PartOf = partOfIRI
 			c.First = firstIRI
 			c.Current = curIRI
@@ -86,13 +93,13 @@ func PaginateCollection(it vocab.Item, filters ...Fn) (vocab.Item, error) {
 			return nil
 		})
 	case vocab.CollectionType:
-		vocab.OnCollection(col, func(c *vocab.Collection) error {
+		_ = vocab.OnCollection(col, func(c *vocab.Collection) error {
 			c.First = firstIRI
 			c.Current = curIRI
 			return nil
 		})
 	case vocab.CollectionPageType:
-		vocab.OnCollectionPage(col, func(c *vocab.CollectionPage) error {
+		_ = vocab.OnCollectionPage(col, func(c *vocab.CollectionPage) error {
 			c.PartOf = partOfIRI
 			c.First = firstIRI
 			c.Current = curIRI
