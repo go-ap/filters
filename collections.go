@@ -25,9 +25,6 @@ func (cnt *counter) onReachMax(max int) Fn {
 }
 
 func WithMaxItems(max int) Fn {
-	var OrderedCollectionTypes = vocab.ActivityVocabularyTypes{vocab.OrderedCollectionType, vocab.OrderedCollectionPageType}
-	var CollectionTypes = vocab.ActivityVocabularyTypes{vocab.CollectionType, vocab.CollectionPageType}
-
 	return func(it vocab.Item) bool {
 		if vocab.IsItemCollection(it) {
 			_ = vocab.OnItemCollection(it, func(col *vocab.ItemCollection) error {
@@ -37,7 +34,7 @@ func WithMaxItems(max int) Fn {
 				return nil
 			})
 		}
-		if OrderedCollectionTypes.Contains(it.GetType()) {
+		if orderedCollectionTypes.Contains(it.GetType()) {
 			_ = vocab.OnOrderedCollection(it, func(col *vocab.OrderedCollection) error {
 				if max < len(col.OrderedItems) {
 					col.OrderedItems = col.OrderedItems[0:max]
@@ -45,7 +42,7 @@ func WithMaxItems(max int) Fn {
 				return nil
 			})
 		}
-		if CollectionTypes.Contains(it.GetType()) {
+		if collectionTypes.Contains(it.GetType()) {
 			_ = vocab.OnCollection(it, func(col *vocab.Collection) error {
 				if max < len(col.Items) {
 					col.Items = col.Items[0:max]
