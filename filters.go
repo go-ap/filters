@@ -30,6 +30,15 @@ func Authorized(iri vocab.IRI) Check {
 	return authorized(iri)
 }
 
+var orderedCollectionTypes = vocab.ActivityVocabularyTypes{
+	vocab.OrderedCollectionPageType,
+	vocab.OrderedCollectionType,
+}
+var collectionTypes = vocab.ActivityVocabularyTypes{
+	vocab.CollectionPageType,
+	vocab.CollectionType,
+}
+
 func (ff Checks) Run(item vocab.Item) vocab.Item {
 	if len(ff) == 0 || vocab.IsNil(item) {
 		return item
@@ -44,6 +53,29 @@ func (ff Checks) Run(item vocab.Item) vocab.Item {
 			}
 			return nil
 		})
+
+		switch item.GetType() {
+		case vocab.OrderedCollectionType:
+			_ = vocab.OnOrderedCollection(item, func(c *vocab.OrderedCollection) error {
+				c.TotalItems = c.Count()
+				return nil
+			})
+		case vocab.OrderedCollectionPageType:
+			_ = vocab.OnOrderedCollectionPage(item, func(c *vocab.OrderedCollectionPage) error {
+				c.TotalItems = c.Count()
+				return nil
+			})
+		case vocab.CollectionType:
+			_ = vocab.OnCollection(item, func(c *vocab.Collection) error {
+				c.TotalItems = c.Count()
+				return nil
+			})
+		case vocab.CollectionPageType:
+			_ = vocab.OnCollectionPage(item, func(c *vocab.CollectionPage) error {
+				c.TotalItems = c.Count()
+				return nil
+			})
+		}
 		return PaginateCollection(item, ff...)
 	}
 	return FilterChecks(ff...).runOnItem(item)
@@ -79,6 +111,7 @@ func (ff Checks) runOnItems(col vocab.ItemCollection) vocab.ItemCollection {
 		}
 		result = append(result, it)
 	}
+
 	return result
 }
 
