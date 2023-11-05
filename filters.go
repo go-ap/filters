@@ -31,18 +31,22 @@ func Authorized(iri vocab.IRI) Check {
 }
 
 func (ff Checks) Run(item vocab.Item) vocab.Item {
-	if len(ff) == 0 {
+	if len(ff) == 0 || vocab.IsNil(item) {
 		return item
 	}
-	fil := FilterChecks(ff...)
-	if vocab.IsItemCollection(item) {
+
+	if item.IsCollection() {
 		_ = vocab.OnItemCollection(item, func(col *vocab.ItemCollection) error {
-			item = fil.runOnItems(*col)
+			if vocab.IsItemCollection(item) {
+				item = FilterChecks(ff...).runOnItems(*col)
+			} else {
+				*col = FilterChecks(ff...).runOnItems(*col)
+			}
 			return nil
 		})
 		return PaginateCollection(item, ff...)
 	}
-	return fil.runOnItem(item)
+	return FilterChecks(ff...).runOnItem(item)
 }
 
 func (ff Checks) runOnItem(it vocab.Item) vocab.Item {

@@ -23,9 +23,8 @@ func PaginateCollection(it vocab.Item, filters ...Check) vocab.Item {
 		return col
 	}
 
-	curIRI := it.GetID()
-	partOfIRI := curIRI
-	firstIRI := curIRI
+	partOfIRI := it.GetID()
+	firstIRI := partOfIRI
 	if u, err := it.GetLink().URL(); err == nil {
 		u.RawQuery = ""
 		partOfIRI = vocab.IRI(u.String())
@@ -39,31 +38,35 @@ func PaginateCollection(it vocab.Item, filters ...Check) vocab.Item {
 	case vocab.OrderedCollectionType:
 		_ = vocab.OnOrderedCollection(col, func(c *vocab.OrderedCollection) error {
 			c.First = firstIRI
-			c.Current = curIRI
 			return nil
 		})
 	case vocab.OrderedCollectionPageType:
 		_ = vocab.OnOrderedCollectionPage(col, func(c *vocab.OrderedCollectionPage) error {
 			c.PartOf = partOfIRI
 			c.First = firstIRI
-			c.Current = curIRI
-			c.Next = nextIRI
-			c.Prev = prevIRI
+			if !nextIRI.GetLink().Equals(firstIRI, true) {
+				c.Next = nextIRI
+			}
+			if !prevIRI.GetLink().Equals(firstIRI, true) {
+				c.Prev = prevIRI
+			}
 			return nil
 		})
 	case vocab.CollectionType:
 		_ = vocab.OnCollection(col, func(c *vocab.Collection) error {
 			c.First = firstIRI
-			c.Current = curIRI
 			return nil
 		})
 	case vocab.CollectionPageType:
 		_ = vocab.OnCollectionPage(col, func(c *vocab.CollectionPage) error {
 			c.PartOf = partOfIRI
 			c.First = firstIRI
-			c.Current = curIRI
-			c.Next = nextIRI
-			c.Prev = prevIRI
+			if !nextIRI.GetLink().Equals(firstIRI, true) {
+				c.Next = nextIRI
+			}
+			if !prevIRI.GetLink().Equals(firstIRI, true) {
+				c.Prev = prevIRI
+			}
 			return nil
 		})
 	}
@@ -95,10 +98,7 @@ func collectionPageFromItem(it vocab.Item, filters ...Check) (vocab.Item, vocab.
 	var prevIRI vocab.IRI
 	var nextIRI vocab.IRI
 
-	shouldBePage := false
-	if u, err := it.GetLink().URL(); err == nil {
-		shouldBePage = u.Query().Has(keyMaxItems) || u.Query().Has(keyAfter) || u.Query().Has(keyBefore)
-	}
+	shouldBePage := len(CursorChecks(filters...)) > 0
 
 	switch typ {
 	case vocab.OrderedCollectionPageType:
@@ -194,7 +194,6 @@ func filterCollection(col vocab.ItemCollection, fns ...Check) (vocab.ItemCollect
 	if len(col) == 0 {
 		return col, nil, nil
 	}
-	result := make(vocab.ItemCollection, 0, len(col))
 
 	pp := url.Values{}
 	np := url.Values{}
@@ -209,13 +208,13 @@ func filterCollection(col vocab.ItemCollection, fns ...Check) (vocab.ItemCollect
 	}
 
 	firstPage := col[0:fpEnd]
-	bottomPage := col[bpEnd:]
+	lastPage := col[len(col)-bpEnd:]
 
-	result = Checks(fns).runOnItems(col)
+	result := Checks(fns).runOnItems(col)
 	if len(result) == 0 {
 		return result, pp, np
 	}
-	first := result[0]
+	first := result.First()
 	if len(col) > MaxItems {
 		pp.Add(keyMaxItems, strconv.Itoa(MaxItems))
 		np.Add(keyMaxItems, strconv.Itoa(MaxItems))
@@ -228,17 +227,21 @@ func filterCollection(col vocab.ItemCollection, fns ...Check) (vocab.ItemCollect
 		}
 		if !onFirstPage {
 			pp.Add(keyBefore, first.GetLink().String())
+		} else {
+			pp = nil
 		}
 		if len(result) > 1 && len(col) > MaxItems+1 {
 			last := result[len(result)-1]
 			onLastPage := false
-			for _, bottom := range bottomPage {
+			for _, bottom := range lastPage {
 				if onLastPage = last.GetLink().Equals(bottom.GetLink(), true); onLastPage {
 					break
 				}
 			}
 			if !onLastPage {
 				np.Add(keyAfter, last.GetLink().String())
+			} else {
+				np = nil
 			}
 		}
 	}
