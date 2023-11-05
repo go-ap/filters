@@ -1,16 +1,18 @@
 package filters
 
 import (
-	vocab "github.com/go-ap/activitypub"
+	"reflect"
 	"testing"
+
+	vocab "github.com/go-ap/activitypub"
 )
 
 func TestCursor(t *testing.T) {
 	type args struct {
-		filters Fns
-		after   Fn
-		before  Fn
-		limit   Fn
+		filters Checks
+		after   Check
+		before  Check
+		limit   Check
 	}
 	tests := []struct {
 		name string
@@ -49,7 +51,7 @@ func TestCursor(t *testing.T) {
 			},
 		},
 		{
-			name: "before=https://example.com/1 single item",
+			name: "check=https://example.com/1 single item",
 			args: args{
 				before: ID("https://example.com/1"),
 			},
@@ -59,7 +61,7 @@ func TestCursor(t *testing.T) {
 			want: vocab.ItemCollection{},
 		},
 		{
-			name: "before=https://example.com/1 second item",
+			name: "check=https://example.com/1 second item",
 			args: args{
 				before: ID("https://example.com/1"),
 			},
@@ -100,7 +102,7 @@ func TestCursor(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rgs := tt.args
-			curFns := make(Fns, 0)
+			curFns := make(Checks, 0)
 			if rgs.before != nil {
 				curFns = append(curFns, Before(rgs.before))
 			}
@@ -113,6 +115,37 @@ func TestCursor(t *testing.T) {
 			c := Cursor(curFns...)
 			if got := c.Run(tt.it); !vocab.ItemsEqual(tt.want, got) {
 				t.Errorf("Cursor() = %s, want %s", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCursorFns(t *testing.T) {
+	type args struct {
+	}
+	tests := []struct {
+		name string
+		fns  []Check
+		item vocab.Item
+		want vocab.Item
+	}{
+		{
+			name: "just after",
+			fns:  Checks{After(ID("example.com"))},
+			item: nil,
+			want: nil,
+		},
+		{
+			name: "after with filters",
+			fns:  Checks{ID("example.com"), HasType("Activity"), After(ID("example.com"))},
+			want: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotChecks := CursorFns(tt.fns...)
+			if got := gotChecks.Run(tt.item); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("CursorFns() = %v, want %v", got, tt.want)
 			}
 		})
 	}

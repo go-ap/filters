@@ -7,47 +7,68 @@ import (
 	"golang.org/x/text/unicode/norm"
 )
 
+type idEquals vocab.IRI
+
+func (i idEquals) Apply(item vocab.Item) bool {
+	if vocab.IsNil(item) {
+		return len(i) == 0
+	}
+	return item.GetID().Equals(vocab.IRI(i), true)
+}
+
+type nilId struct{}
+
+func (n nilId) Apply(it vocab.Item) bool {
+	return vocab.IsNil(it) || Any(SameIRI(vocab.NilIRI), SameIRI(vocab.EmptyIRI)).Apply(it.GetLink())
+}
+
 // NilID checks if the activitypub.Object's ID property matches any of the two magic values
 // that denote an empty value: activitypub.NilID = "-", or activitypub.EmptyID = ""
-func NilID(it vocab.Item) bool {
-	// NOTE(marius): I'm not sure that a nil Item returning true, is entirely sane/safe logic
-	return vocab.IsNil(it) || Any(SameIRI(vocab.NilIRI), SameIRI(vocab.EmptyIRI))(it.GetLink())
-}
+var NilID = nilId{}
 
 // ID checks an activitypub.Object's ID property against the received iri.
-func ID(iri vocab.IRI) Fn {
-	return func(item vocab.Item) bool {
-		if vocab.IsNil(item) {
-			return false
-		}
-		return item.GetID().Equals(iri, true)
-	}
+func ID(i vocab.IRI) Check {
+	return idEquals(i)
 }
 
-func IDLike(frag string) Fn {
-	return func(item vocab.Item) bool {
-		nfc := norm.NFC.String
-		return strings.Contains(nfc(item.GetID().String()), nfc(frag))
+type iriLike string
+
+func (frag iriLike) Apply(item vocab.Item) bool {
+	nfc := norm.NFC.String
+	return strings.Contains(nfc(item.GetID().String()), nfc(string(frag)))
+}
+
+func IDLike(frag string) Check {
+	return iriLike(frag)
+}
+
+type iriEquals vocab.IRI
+
+func (i iriEquals) Apply(item vocab.Item) bool {
+	if vocab.IsNil(item) {
+		return len(i) == 0
 	}
+	return item.GetLink().Equals(vocab.IRI(i), true)
 }
 
 // SameIRI checks an activitypub.Object's IRI
-func SameIRI(iri vocab.IRI) Fn {
-	return func(item vocab.Item) bool {
-		return item.GetLink().Equals(iri, true)
-	}
+func SameIRI(iri vocab.IRI) Check {
+	return iriEquals(iri)
+}
+
+type withTypes vocab.ActivityVocabularyTypes
+
+func (types withTypes) Apply(it vocab.Item) bool {
+	result := false
+	_ = vocab.OnObject(it, func(object *vocab.Object) error {
+		result = vocab.ActivityVocabularyTypes(types).Contains(it.GetType())
+		return nil
+	})
+	return result
 }
 
 // HasType checks an activitypub.Object's Type property against a series of values.
 // If any of the ty values matches, the function returns true.
-func HasType(ty ...vocab.ActivityVocabularyType) Fn {
-	types := vocab.ActivityVocabularyTypes(ty)
-	return func(it vocab.Item) bool {
-		result := false
-		_ = vocab.OnObject(it, func(object *vocab.Object) error {
-			result = types.Contains(it.GetType())
-			return nil
-		})
-		return result
-	}
+func HasType(ty ...vocab.ActivityVocabularyType) Check {
+	return withTypes(ty)
 }

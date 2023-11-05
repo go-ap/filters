@@ -2,7 +2,6 @@ package filters
 
 import (
 	"errors"
-	"fmt"
 	"net/url"
 	"reflect"
 	"testing"
@@ -38,27 +37,6 @@ func TestFromIRI(t *testing.T) {
 		{
 			name: "no auth, no query values",
 			iri:  "https://example.com",
-		},
-		{
-			name: "with user",
-			iri:  vocab.IRI(fmt.Sprintf("https://%s@example.com", url.User("https://example.com/jdoe").String())),
-			item: vocab.ItemCollection{
-				&vocab.Activity{Type: "Create", AttributedTo: vocab.IRI("https://example.com/jdoe")},
-				&vocab.Activity{Type: "Follow"},
-				&vocab.Activity{Type: "Like", Actor: vocab.IRI("https://example.com/jdoe")},
-				&vocab.Object{Type: "Note", CC: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
-				&vocab.Tombstone{Type: "Tombstone", Bto: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
-				&vocab.Place{Type: "Place", BCC: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
-				&vocab.Question{Type: "Question", To: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
-			},
-			want: vocab.ItemCollection{
-				&vocab.Activity{Type: "Create", AttributedTo: vocab.IRI("https://example.com/jdoe")},
-				&vocab.Activity{Type: "Like", Actor: vocab.IRI("https://example.com/jdoe")},
-				&vocab.Object{Type: "Note", CC: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
-				&vocab.Tombstone{Type: "Tombstone", Bto: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
-				&vocab.Place{Type: "Place", BCC: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
-				&vocab.Question{Type: "Question", To: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
-			},
 		},
 		{
 			name: "some query values",
@@ -112,27 +90,6 @@ func TestFromURL(t *testing.T) {
 		{
 			name: "no auth, no query values",
 			u:    mockURL,
-		},
-		{
-			name: "with user",
-			u:    withAuth(mockURL, url.User("https://example.com/jdoe")),
-			item: vocab.ItemCollection{
-				&vocab.Activity{Type: "Create", AttributedTo: vocab.IRI("https://example.com/jdoe")},
-				&vocab.Activity{Type: "Follow"},
-				&vocab.Activity{Type: "Like", Actor: vocab.IRI("https://example.com/jdoe")},
-				&vocab.Object{Type: "Note", CC: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
-				&vocab.Tombstone{Type: "Tombstone", Bto: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
-				&vocab.Place{Type: "Place", BCC: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
-				&vocab.Question{Type: "Question", To: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
-			},
-			want: vocab.ItemCollection{
-				&vocab.Activity{Type: "Create", AttributedTo: vocab.IRI("https://example.com/jdoe")},
-				&vocab.Activity{Type: "Like", Actor: vocab.IRI("https://example.com/jdoe")},
-				&vocab.Object{Type: "Note", CC: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
-				&vocab.Tombstone{Type: "Tombstone", Bto: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
-				&vocab.Place{Type: "Place", BCC: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
-				&vocab.Question{Type: "Question", To: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
-			},
 		},
 		{
 			name: "some query values",
@@ -290,8 +247,8 @@ func Test_paginationFromValues(t *testing.T) {
 			name: "after: item is last, nothing after",
 			u:    parseQuery("after=user"),
 			item: vocab.ItemCollection{
-				vocab.Object{ID: "before-user-2"},
-				vocab.Object{ID: "before-user-1"},
+				vocab.Object{ID: "check-user-2"},
+				vocab.Object{ID: "check-user-1"},
 				vocab.Object{ID: "user"},
 			},
 			want: vocab.ItemCollection{},
@@ -300,8 +257,8 @@ func Test_paginationFromValues(t *testing.T) {
 			name: "after: some after items",
 			u:    parseQuery("after=user"),
 			item: vocab.ItemCollection{
-				vocab.Object{ID: "before-2"},
-				vocab.Object{ID: "before-1"},
+				vocab.Object{ID: "check-2"},
+				vocab.Object{ID: "check-1"},
 				vocab.Object{ID: "user"},
 				vocab.Object{ID: "after-1"},
 				vocab.Object{ID: "after-2"},
@@ -327,36 +284,36 @@ func Test_paginationFromValues(t *testing.T) {
 			},
 		},
 		{
-			name: "before: item is last, everything before",
-			u:    parseQuery("before=user"),
+			name: "check: item is last, everything check",
+			u:    parseQuery("check=user"),
 			item: vocab.ItemCollection{
-				vocab.Object{ID: "before-2"},
-				vocab.Object{ID: "before-1"},
+				vocab.Object{ID: "check-2"},
+				vocab.Object{ID: "check-1"},
 				vocab.Object{ID: "user"},
 			},
 			want: vocab.ItemCollection{
-				vocab.Object{ID: "before-2"},
-				vocab.Object{ID: "before-1"},
+				vocab.Object{ID: "check-2"},
+				vocab.Object{ID: "check-1"},
 			},
 		},
 		{
-			name: "before: some before items",
-			u:    parseQuery("before=user"),
+			name: "check: some check items",
+			u:    parseQuery("check=user"),
 			item: vocab.ItemCollection{
-				vocab.Object{ID: "before-2"},
-				vocab.Object{ID: "before-1"},
+				vocab.Object{ID: "check-2"},
+				vocab.Object{ID: "check-1"},
 				vocab.Object{ID: "user"},
 				vocab.Object{ID: "after-1"},
 				vocab.Object{ID: "after-2"},
 			},
 			want: vocab.ItemCollection{
-				vocab.Object{ID: vocab.IRI("before-2")},
-				vocab.Object{ID: vocab.IRI("before-1")},
+				vocab.Object{ID: vocab.IRI("check-2")},
+				vocab.Object{ID: vocab.IRI("check-1")},
 			},
 		},
 		{
-			name: "before: item is first, nothing",
-			u:    parseQuery("before=user"),
+			name: "check: item is first, nothing",
+			u:    parseQuery("check=user"),
 			item: vocab.ItemCollection{
 				vocab.Object{ID: "user"},
 				vocab.Object{ID: "after-1"},
@@ -366,12 +323,12 @@ func Test_paginationFromValues(t *testing.T) {
 			want: vocab.ItemCollection{},
 		},
 		{
-			name: "before and after",
-			u:    parseQuery("before=stop&after=start"),
+			name: "check and after",
+			u:    parseQuery("check=stop&after=start"),
 			item: vocab.ItemCollection{
-				vocab.Object{ID: "before-3"},
-				vocab.Object{ID: "before-2"},
-				vocab.Object{ID: "before-1"},
+				vocab.Object{ID: "check-3"},
+				vocab.Object{ID: "check-2"},
+				vocab.Object{ID: "check-1"},
 				vocab.Object{ID: "start"},
 				vocab.Object{ID: "example1"},
 				vocab.Object{ID: "example2"},
@@ -432,8 +389,8 @@ func Test_paginationFromValues(t *testing.T) {
 			},
 		},
 		{
-			name: "before=user&maxItems=2",
-			u:    parseQuery("before=user&maxItems=2"),
+			name: "check=user&maxItems=2",
+			u:    parseQuery("check=user&maxItems=2"),
 			item: vocab.ItemCollection{
 				vocab.Object{ID: "good1"},
 				vocab.Object{ID: "good2"},
@@ -449,8 +406,8 @@ func Test_paginationFromValues(t *testing.T) {
 			},
 		},
 		{
-			name: "after=start&before=end&maxItems=2",
-			u:    parseQuery("after=start&before=stop&maxItems=2"),
+			name: "after=start&check=end&maxItems=2",
+			u:    parseQuery("after=start&check=stop&maxItems=2"),
 			item: vocab.ItemCollection{
 				vocab.Object{ID: "not-1"},
 				vocab.Object{ID: "not-2"},

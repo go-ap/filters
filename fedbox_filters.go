@@ -182,7 +182,7 @@ func ValidObjectCollection(typ vocab.CollectionPath) bool {
 // Filters
 //
 // Deprecated: This is functionality cribbed from the original FedBOX filtering mechanism
-// which we want to move away from in favour of using []Fn
+// which we want to move away from in favour of using []Check
 // TODO(marius) we can make some small changes so it's not necessary to export this struct
 type Filters struct {
 	BaseURL       vocab.IRI            `qstring:"-"`
@@ -207,7 +207,7 @@ type Filters struct {
 	FollowedBy    []Hash               `qstring:"followedBy,omitempty"` // todo(marius): not really used
 	OlderThan     time.Time            `qstring:"olderThan,omitempty"`
 	NewerThan     time.Time            `qstring:"newerThan,omitempty"`
-	Prev          Hash                 `qstring:"before,omitempty"`
+	Prev          Hash                 `qstring:"check,omitempty"`
 	Next          Hash                 `qstring:"after,omitempty"`
 	Object        *Filters             `qstring:"object,omitempty"`
 	Actor         *Filters             `qstring:"actor,omitempty"`

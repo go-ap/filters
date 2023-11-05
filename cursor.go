@@ -10,10 +10,10 @@ import (
 	"github.com/go-ap/errors"
 )
 
-type cursor Fns
+type cursor Checks
 
 // Cursor is an alias for running an All() aggregate filter function on the incoming fns functions
-func Cursor(fns ...Fn) cursor {
+func Cursor(fns ...Check) cursor {
 	c := make(cursor, 0)
 	for _, f := range fns {
 		if f == nil {
@@ -51,7 +51,7 @@ func (c cursor) Run(item vocab.Item) vocab.Item {
 }
 
 // PaginateCollection is a function that populates the received collection
-func PaginateCollection(it vocab.Item, filters ...Fn) (vocab.Item, error) {
+func PaginateCollection(it vocab.Item, filters ...Check) (vocab.Item, error) {
 	if vocab.IsNil(it) {
 		return it, errors.Newf("unable to paginate nil collection")
 	}
@@ -123,7 +123,7 @@ func getURL(i vocab.IRI, f url.Values) vocab.IRI {
 	return i
 }
 
-func collectionPageFromItem(it vocab.Item, filters ...Fn) (vocab.Item, vocab.Item, vocab.Item) {
+func collectionPageFromItem(it vocab.Item, filters ...Check) (vocab.Item, vocab.Item, vocab.Item) {
 	typ := it.GetType()
 
 	if !vocab.CollectionTypes.Contains(typ) {
@@ -143,7 +143,7 @@ func collectionPageFromItem(it vocab.Item, filters ...Fn) (vocab.Item, vocab.Ite
 
 	switch typ {
 	case vocab.OrderedCollectionPageType:
-		vocab.OnOrderedCollectionPage(it, func(new *vocab.OrderedCollectionPage) error {
+		_ = vocab.OnOrderedCollectionPage(it, func(new *vocab.OrderedCollectionPage) error {
 			new.OrderedItems, prev, next = filterCollection(sortItemsByPublishedUpdated(new.Collection()), filters...)
 			if len(prev) > 0 {
 				prevIRI = getURL(it.GetLink(), prev)
@@ -154,7 +154,7 @@ func collectionPageFromItem(it vocab.Item, filters ...Fn) (vocab.Item, vocab.Ite
 			return nil
 		})
 	case vocab.CollectionPageType:
-		vocab.OnCollectionPage(it, func(new *vocab.CollectionPage) error {
+		_ = vocab.OnCollectionPage(it, func(new *vocab.CollectionPage) error {
 			new.Items, prev, next = filterCollection(new.Collection(), filters...)
 			if len(prev) > 0 {
 				prevIRI = getURL(it.GetLink(), prev)
@@ -184,7 +184,7 @@ func collectionPageFromItem(it vocab.Item, filters ...Fn) (vocab.Item, vocab.Ite
 				it = result
 			}
 		} else {
-			vocab.OnOrderedCollection(it, func(new *vocab.OrderedCollection) error {
+			_ = vocab.OnOrderedCollection(it, func(new *vocab.OrderedCollection) error {
 				new.OrderedItems, prev, next = filterCollection(new.Collection(), filters...)
 				if len(next) > 0 {
 					new.First = getURL(it.GetLink(), next)
@@ -212,7 +212,7 @@ func collectionPageFromItem(it vocab.Item, filters ...Fn) (vocab.Item, vocab.Ite
 				it = result
 			}
 		} else {
-			vocab.OnCollection(it, func(new *vocab.Collection) error {
+			_ = vocab.OnCollection(it, func(new *vocab.Collection) error {
 				new.Items, prev, next = filterCollection(new.Collection(), filters...)
 				if len(next) > 0 {
 					new.First = getURL(it.GetLink(), next)
@@ -221,7 +221,7 @@ func collectionPageFromItem(it vocab.Item, filters ...Fn) (vocab.Item, vocab.Ite
 			})
 		}
 	case vocab.CollectionOfItems:
-		vocab.OnItemCollection(it, func(col *vocab.ItemCollection) error {
+		_ = vocab.OnItemCollection(it, func(col *vocab.ItemCollection) error {
 			it, _, _ = filterCollection(sortItemsByPublishedUpdated(*col), filters...)
 			return nil
 		})
@@ -231,7 +231,7 @@ func collectionPageFromItem(it vocab.Item, filters ...Fn) (vocab.Item, vocab.Ite
 	return it, prevIRI, nextIRI
 }
 
-func filterCollection(col vocab.ItemCollection, fns ...Fn) (vocab.ItemCollection, url.Values, url.Values) {
+func filterCollection(col vocab.ItemCollection, fns ...Check) (vocab.ItemCollection, url.Values, url.Values) {
 	if len(col) == 0 {
 		return col, nil, nil
 	}
@@ -323,7 +323,7 @@ func (c cursor) runOnItem(it vocab.Item) vocab.Item {
 		if fn == nil {
 			continue
 		}
-		if !fn(it) {
+		if !fn.Apply(it) {
 			return nil
 		}
 	}
@@ -339,4 +339,32 @@ func (c cursor) runOnItems(col vocab.ItemCollection) vocab.ItemCollection {
 		result = append(result, it)
 	}
 	return result
+}
+
+func isCursorFn(fn Check) bool {
+	ok := false
+	switch fn.(type) {
+	case *afterCrit:
+		ok = true
+	case *beforeCrit:
+		ok = true
+	case *counter:
+		ok = true
+	}
+	return ok
+}
+
+func isFilterFn(fn Check) bool {
+	_, ok := fn.(runsOnItem)
+	return ok
+}
+
+func CursorFns(fns ...Check) cursor {
+	c := make([]Check, 0)
+	for _, fn := range fns {
+		if isCursorFn(fn) {
+			c = append(c, fn)
+		}
+	}
+	return cursor(c)
 }

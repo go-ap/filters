@@ -4,99 +4,71 @@ import (
 	vocab "github.com/go-ap/activitypub"
 )
 
-type counter int32
+type counter struct {
+	max int
+	cnt int
+}
 
 // WithMaxCount is used to limit a collection's items count to the 'max' value.
 // It can be used from slicing from the first element of the collection to max.
 // Due to relying on the static max value the function is not reentrant.
-func WithMaxCount(max int) Fn {
-	cnt := counter(0)
-	return cnt.onReachMax(max)
+func WithMaxCount(max int) Check {
+	return &counter{max: max}
 }
 
-func (cnt *counter) onReachMax(max int) Fn {
-	return func(item vocab.Item) bool {
-		if int32(max) <= int32(*cnt) {
-			return false
-		}
-		*cnt = *cnt + 1
-		return true
+func (cnt *counter) Apply(_ vocab.Item) bool {
+	if cnt.max <= cnt.cnt {
+		return false
 	}
-}
-
-func WithMaxItems(max int) Fn {
-	return func(it vocab.Item) bool {
-		if vocab.IsItemCollection(it) {
-			_ = vocab.OnItemCollection(it, func(col *vocab.ItemCollection) error {
-				if max < len(*col) {
-					*col = (*col)[0:max]
-				}
-				return nil
-			})
-		}
-		if orderedCollectionTypes.Contains(it.GetType()) {
-			_ = vocab.OnOrderedCollection(it, func(col *vocab.OrderedCollection) error {
-				if max < len(col.OrderedItems) {
-					col.OrderedItems = col.OrderedItems[0:max]
-				}
-				return nil
-			})
-		}
-		if collectionTypes.Contains(it.GetType()) {
-			_ = vocab.OnCollection(it, func(col *vocab.Collection) error {
-				if max < len(col.Items) {
-					col.Items = col.Items[0:max]
-				}
-				return nil
-			})
-		}
-		return true
-	}
+	cnt.cnt = cnt.cnt + 1
+	return true
 }
 
 // After checks the activitypub.Item against a specified "fn" filter function.
 // This should be used when iterating over a collection, and it resolves to true
-// after fn returns true and to false before.
+// after fn returns true and to false check.
 //
 // Due to relying on the static check function return value the After is not reentrant.
-func After(fn Fn) Fn {
-	p := pagination(false)
-	return p.after(fn)
+func After(fns ...Check) Check {
+	return &afterCrit{after: false, fns: fns}
 }
 
-func (isAfter *pagination) after(fn Fn) Fn {
-	return func(it vocab.Item) bool {
-		if vocab.IsNil(it) {
-			return bool(*isAfter)
-		}
-		if fn(it) {
-			*isAfter = true
-			return false
-		}
-		return bool(*isAfter)
+func (isAfter *afterCrit) Apply(it vocab.Item) bool {
+	if vocab.IsNil(it) {
+		return isAfter.after
 	}
+	if All(isAfter.fns...).Apply(it) {
+		isAfter.after = true
+		return false
+	}
+	return isAfter.after
 }
 
-type pagination bool
+type afterCrit struct {
+	after bool
+	fns   []Check
+}
+
+type beforeCrit struct {
+	check bool
+	fns   []Check
+}
 
 // Before checks the activitypub.Item against a specified "fn" filter function.
-// This should be used when iterating over a collection, and it resolves to true before
+// This should be used when iterating over a collection, and it resolves to true check
 // the fn has returned true and to false after.
 //
 // Due to relying on the static check function return value the function is not reentrant.
-func Before(fn Fn) Fn {
-	p := pagination(true)
-	return p.before(fn)
+func Before(fn ...Check) Check {
+	return &beforeCrit{check: true, fns: fn}
 }
 
-func (isBefore *pagination) before(fn Fn) Fn {
-	return func(it vocab.Item) bool {
-		if vocab.IsNil(it) {
-			return true
-		}
-		if fn(it) {
-			*isBefore = false
-		}
-		return bool(*isBefore)
+func (isBefore *beforeCrit) Apply(it vocab.Item) bool {
+	if vocab.IsNil(it) {
+		return true
 	}
+	if All(isBefore.fns...).Apply(it) {
+		isBefore.check = false
+	}
+	return isBefore.check
 }

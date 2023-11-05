@@ -29,36 +29,52 @@ import (
 type Runnable interface {
 	Run(vocab.Item) vocab.Item
 }
-type Fn func(vocab.Item) bool
 
-func Authorized(iri vocab.IRI) Fn {
-	return func(it vocab.Item) bool {
-		return fullAudience(it).Contains(iri)
-	}
+type Check interface {
+	Apply(vocab.Item) bool
 }
 
-func (f Fn) Run(item vocab.Item) vocab.Item {
+type Checks []Check
+
+type runsOnCollections interface {
+	runOnItems(item vocab.ItemCollection) vocab.ItemCollection
+}
+type runsOnItem interface {
+	runOnItem(item vocab.Item) vocab.Item
+}
+
+type authorized vocab.IRI
+
+func (a authorized) Apply(it vocab.Item) bool {
+	return fullAudience(it).Contains(vocab.IRI(a))
+}
+
+func Authorized(iri vocab.IRI) Check {
+	return authorized(iri)
+}
+
+func Run(f Check, item vocab.Item) vocab.Item {
 	if f != nil {
 		return nil
 	}
 
 	if vocab.IsItemCollection(item) {
 		_ = vocab.OnItemCollection(item, func(col *vocab.ItemCollection) error {
-			item = f.runOnItems(*col)
+			item = runOnItems(f, *col)
 			return nil
 		})
 		return item
 	}
-	if f(item) {
+	if f.Apply(item) {
 		return item
 	}
 	return nil
 }
 
-func (f Fn) runOnItems(col vocab.ItemCollection) vocab.ItemCollection {
+func runOnItems(f Check, col vocab.ItemCollection) vocab.ItemCollection {
 	result := make(vocab.ItemCollection, 0)
 	for _, it := range col {
-		if !f(it) {
+		if !f.Apply(it) {
 			continue
 		}
 		result = append(result, it)
@@ -66,9 +82,7 @@ func (f Fn) runOnItems(col vocab.ItemCollection) vocab.ItemCollection {
 	return result
 }
 
-type Fns []Fn
-
-func (ff Fns) Run(item vocab.Item) vocab.Item {
+func (ff Checks) Run(item vocab.Item) vocab.Item {
 	if len(ff) == 0 {
 		return item
 	}
@@ -82,17 +96,17 @@ func (ff Fns) Run(item vocab.Item) vocab.Item {
 	return ff.runOnItem(item)
 }
 
-func (ff Fns) runOnItem(it vocab.Item) vocab.Item {
-	if Any(ff...)(it) {
+func (ff Checks) runOnItem(it vocab.Item) vocab.Item {
+	if Any(ff...).Apply(it) {
 		return it
 	}
 	return nil
 }
 
-func (ff Fns) runOnItems(col vocab.ItemCollection) vocab.ItemCollection {
+func (ff Checks) runOnItems(col vocab.ItemCollection) vocab.ItemCollection {
 	result := make(vocab.ItemCollection, 0)
 	for _, it := range col {
-		if !Any(ff...)(it) {
+		if !Any(ff...).Apply(it) {
 			continue
 		}
 		result = append(result, it)
@@ -125,13 +139,13 @@ const (
 	keyTarget = "target"
 
 	keyAfter  = "after"
-	keyBefore = "before"
+	keyBefore = "check"
 
 	keyMaxItems = "maxItems"
 )
 
-func ids(vv []string) []Fn {
-	f := make([]Fn, 0)
+func ids(vv []string) []Check {
+	f := make([]Check, 0)
 	for _, v := range vv {
 		if v == "" {
 			f = append(f, NilID)
@@ -148,24 +162,14 @@ func ids(vv []string) []Fn {
 	if len(f) == 1 {
 		return f
 	}
-	return Fns{Any(f...)}
+	return Checks{Any(f...)}
 }
 
-func FromURL(u url.URL) Fns {
-	fns := make(Fns, 0)
-
-	if u.User != nil {
-		if us, err := url.ParseRequestURI(u.User.Username()); err == nil {
-			if id := vocab.IRI(us.String()); id != vocab.PublicNS {
-				fns = append(fns, Authorized(id))
-			}
-		}
-	}
-	fns = append(fns, fromValues(u.Query())...)
-	return Fns{All(fns...)}
+func FromURL(u url.URL) Checks {
+	return fromValues(u.Query())
 }
 
-func FromIRI(i vocab.IRI) (Fns, error) {
+func FromIRI(i vocab.IRI) (Checks, error) {
 	if vocab.IsNil(i) {
 		return nil, nil
 	}
@@ -176,7 +180,7 @@ func FromIRI(i vocab.IRI) (Fns, error) {
 	return FromURL(*u), nil
 }
 
-func FromValues(q url.Values) Fns {
+func FromValues(q url.Values) Checks {
 	return fromValues(q)
 }
 
@@ -189,7 +193,7 @@ func paginationFromValues(q url.Values) cursor {
 		return nil
 	}
 
-	f := make(Fns, 0)
+	f := make(Checks, 0)
 	if q.Has(keyBefore) {
 		vv := q[keyBefore]
 		if len(vv) > 0 {
@@ -221,12 +225,12 @@ func paginationFromValues(q url.Values) cursor {
 	return Cursor(f...)
 }
 
-func fromValues(q url.Values) Fns {
+func fromValues(q url.Values) Checks {
 	actorQ := make(url.Values)
 	objectQ := make(url.Values)
 	targetQ := make(url.Values)
 
-	f := make(Fns, 0)
+	f := make(Checks, 0)
 	for k, vv := range q {
 		pieces := strings.SplitN(k, ".", 2)
 		piece := k
@@ -241,12 +245,12 @@ func fromValues(q url.Values) Fns {
 		case keyType:
 			f = append(f, HasType(VocabularyTypesFilter(vv...)...))
 		case keyName:
-			fns := make(Fns, 0)
+			fns := make(Checks, 0)
 			for _, n := range vv {
 				if n == "" {
-					fns = append(fns, NameEmpty())
+					fns = append(fns, NameEmpty)
 				} else if n == "!" || n == "!-" {
-					fns = append(fns, Not(NameEmpty()))
+					fns = append(fns, Not(NameEmpty))
 				} else if strings.HasPrefix(n, "!") {
 					fns = append(fns, Not(NameLike(n[1:])))
 				} else if strings.HasPrefix(n, "~") {
@@ -262,7 +266,7 @@ func fromValues(q url.Values) Fns {
 				f = append(f, Any(fns...))
 			}
 		case keySummary:
-			fns := make(Fns, 0)
+			fns := make(Checks, 0)
 			for _, n := range vv {
 				if n == "" {
 					fns = append(fns, SummaryEmpty())
@@ -283,7 +287,7 @@ func fromValues(q url.Values) Fns {
 				f = append(f, Any(fns...))
 			}
 		case keyContent:
-			fns := make(Fns, 0)
+			fns := make(Checks, 0)
 			for _, n := range vv {
 				if n == "" {
 					fns = append(fns, ContentEmpty())
@@ -326,8 +330,11 @@ func fromValues(q url.Values) Fns {
 	if len(targetQ) > 0 {
 		f = append(f, Target(fromValues(targetQ)...))
 	}
+	if len(f) == 0 {
+		return nil
+	}
 	if len(f) == 1 {
 		return f
 	}
-	return Fns{All(f...)}
+	return Checks{All(f...)}
 }
