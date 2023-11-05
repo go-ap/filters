@@ -238,27 +238,27 @@ func Test_paginationFromValues(t *testing.T) {
 
 	tests := []struct {
 		name string
-		u    url.Values
+		q    url.Values
 		item vocab.Item
 		want vocab.Item
 	}{
 		{name: "empty"},
 		{
 			name: "after: item is last, nothing after",
-			u:    parseQuery("after=user"),
+			q:    parseQuery("after=user"),
 			item: vocab.ItemCollection{
-				vocab.Object{ID: "check-user-2"},
-				vocab.Object{ID: "check-user-1"},
+				vocab.Object{ID: "before-user-2"},
+				vocab.Object{ID: "before-user-1"},
 				vocab.Object{ID: "user"},
 			},
 			want: vocab.ItemCollection{},
 		},
 		{
 			name: "after: some after items",
-			u:    parseQuery("after=user"),
+			q:    parseQuery("after=user"),
 			item: vocab.ItemCollection{
-				vocab.Object{ID: "check-2"},
-				vocab.Object{ID: "check-1"},
+				vocab.Object{ID: "before-2"},
+				vocab.Object{ID: "before-1"},
 				vocab.Object{ID: "user"},
 				vocab.Object{ID: "after-1"},
 				vocab.Object{ID: "after-2"},
@@ -270,7 +270,7 @@ func Test_paginationFromValues(t *testing.T) {
 		},
 		{
 			name: "after: item is first, everything but itself",
-			u:    parseQuery("after=user"),
+			q:    parseQuery("after=user"),
 			item: vocab.ItemCollection{
 				vocab.Object{ID: "user"},
 				vocab.Object{ID: "after-1"},
@@ -284,36 +284,36 @@ func Test_paginationFromValues(t *testing.T) {
 			},
 		},
 		{
-			name: "check: item is last, everything check",
-			u:    parseQuery("check=user"),
+			name: "before: item is last, everything before",
+			q:    parseQuery("before=user"),
 			item: vocab.ItemCollection{
-				vocab.Object{ID: "check-2"},
-				vocab.Object{ID: "check-1"},
+				vocab.Object{ID: "before-2"},
+				vocab.Object{ID: "before-1"},
 				vocab.Object{ID: "user"},
 			},
 			want: vocab.ItemCollection{
-				vocab.Object{ID: "check-2"},
-				vocab.Object{ID: "check-1"},
+				vocab.Object{ID: "before-2"},
+				vocab.Object{ID: "before-1"},
 			},
 		},
 		{
-			name: "check: some check items",
-			u:    parseQuery("check=user"),
+			name: "before: some before items",
+			q:    parseQuery("before=user"),
 			item: vocab.ItemCollection{
-				vocab.Object{ID: "check-2"},
-				vocab.Object{ID: "check-1"},
+				vocab.Object{ID: "before-2"},
+				vocab.Object{ID: "before-1"},
 				vocab.Object{ID: "user"},
 				vocab.Object{ID: "after-1"},
 				vocab.Object{ID: "after-2"},
 			},
 			want: vocab.ItemCollection{
-				vocab.Object{ID: vocab.IRI("check-2")},
-				vocab.Object{ID: vocab.IRI("check-1")},
+				vocab.Object{ID: vocab.IRI("before-2")},
+				vocab.Object{ID: vocab.IRI("before-1")},
 			},
 		},
 		{
-			name: "check: item is first, nothing",
-			u:    parseQuery("check=user"),
+			name: "before: item is first, nothing",
+			q:    parseQuery("before=user"),
 			item: vocab.ItemCollection{
 				vocab.Object{ID: "user"},
 				vocab.Object{ID: "after-1"},
@@ -323,12 +323,12 @@ func Test_paginationFromValues(t *testing.T) {
 			want: vocab.ItemCollection{},
 		},
 		{
-			name: "check and after",
-			u:    parseQuery("check=stop&after=start"),
+			name: "before and after",
+			q:    parseQuery("before=stop&after=start"),
 			item: vocab.ItemCollection{
-				vocab.Object{ID: "check-3"},
-				vocab.Object{ID: "check-2"},
-				vocab.Object{ID: "check-1"},
+				vocab.Object{ID: "before-3"},
+				vocab.Object{ID: "before-2"},
+				vocab.Object{ID: "before-1"},
 				vocab.Object{ID: "start"},
 				vocab.Object{ID: "example1"},
 				vocab.Object{ID: "example2"},
@@ -346,7 +346,7 @@ func Test_paginationFromValues(t *testing.T) {
 		},
 		{
 			name: "maxItems=0",
-			u:    parseQuery("maxItems=0"),
+			q:    parseQuery("maxItems=0"),
 			item: vocab.ItemCollection{
 				vocab.Object{ID: "maxItems=0"},
 				vocab.Object{ID: "not-1"},
@@ -356,7 +356,7 @@ func Test_paginationFromValues(t *testing.T) {
 		},
 		{
 			name: "maxItems=2",
-			u:    parseQuery("maxItems=2"),
+			q:    parseQuery("maxItems=2"),
 			item: vocab.ItemCollection{
 				vocab.Object{ID: "good1"},
 				vocab.Object{ID: "good2"},
@@ -371,7 +371,7 @@ func Test_paginationFromValues(t *testing.T) {
 		},
 		{
 			name: "after=user&maxItems=2",
-			u:    parseQuery("after=user&maxItems=2"),
+			q:    parseQuery("after=user&maxItems=2"),
 			item: vocab.ItemCollection{
 				vocab.Object{ID: "not-1"},
 				vocab.Object{ID: "not-2"},
@@ -389,8 +389,8 @@ func Test_paginationFromValues(t *testing.T) {
 			},
 		},
 		{
-			name: "check=user&maxItems=2",
-			u:    parseQuery("check=user&maxItems=2"),
+			name: "before=user&maxItems=2",
+			q:    parseQuery("before=user&maxItems=2"),
 			item: vocab.ItemCollection{
 				vocab.Object{ID: "good1"},
 				vocab.Object{ID: "good2"},
@@ -406,8 +406,8 @@ func Test_paginationFromValues(t *testing.T) {
 			},
 		},
 		{
-			name: "after=start&check=end&maxItems=2",
-			u:    parseQuery("after=start&check=stop&maxItems=2"),
+			name: "after=start&before=end&maxItems=2",
+			q:    parseQuery("after=start&before=stop&maxItems=2"),
 			item: vocab.ItemCollection{
 				vocab.Object{ID: "not-1"},
 				vocab.Object{ID: "not-2"},
@@ -428,7 +428,7 @@ func Test_paginationFromValues(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotFns := paginationFromValues(tt.u)
+			gotFns := paginationFromValues(tt.q)
 			if got := gotFns.Run(tt.item); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("paginationFromValues().Run() = %v, want %v", got, tt.want)
 			}

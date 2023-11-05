@@ -7,61 +7,20 @@ import (
 	"time"
 
 	vocab "github.com/go-ap/activitypub"
-	"github.com/go-ap/errors"
 )
 
-type cursor Checks
-
-// Cursor is an alias for running an All() aggregate filter function on the incoming fns functions
-func Cursor(fns ...Check) cursor {
-	c := make(cursor, 0)
-	for _, f := range fns {
-		if f == nil {
-			continue
-		}
-		c = append(c, f)
-	}
-	return c
-}
-
-var collectionTypes = vocab.ActivityVocabularyTypes{
-	vocab.CollectionType,
-	vocab.CollectionPageType,
-}
-
-var orderedCollectionTypes = vocab.ActivityVocabularyTypes{
-	vocab.OrderedCollectionType,
-	vocab.OrderedCollectionPageType,
-}
-
-func (c cursor) Run(item vocab.Item) vocab.Item {
-	if len(c) == 0 {
-		return item
-	}
-
-	if vocab.IsNil(item) {
-		return nil
-	}
-	if item.IsCollection() {
-		item, _ = PaginateCollection(item, c...)
-		return item
-	}
-
-	return c.runOnItem(item)
-}
-
 // PaginateCollection is a function that populates the received collection
-func PaginateCollection(it vocab.Item, filters ...Check) (vocab.Item, error) {
+func PaginateCollection(it vocab.Item, filters ...Check) vocab.Item {
 	if vocab.IsNil(it) {
-		return it, errors.Newf("unable to paginate nil collection")
+		return it
 	}
 
-	col, prevIRI, nextIRI := collectionPageFromItem(it, filters...)
+	col, prevIRI, nextIRI := collectionPageFromItem(it, CursorChecks(filters...)...)
 	if vocab.IsNil(col) {
-		return it, errors.Newf("unable to paginate %T[%s] collection", it, it.GetType())
+		return it
 	}
 	if vocab.IsItemCollection(col) {
-		return col, nil
+		return col
 	}
 
 	curIRI := it.GetID()
@@ -109,7 +68,7 @@ func PaginateCollection(it vocab.Item, filters ...Check) (vocab.Item, error) {
 		})
 	}
 
-	return col, nil
+	return col
 }
 
 func getURL(i vocab.IRI, f url.Values) vocab.IRI {
@@ -252,7 +211,7 @@ func filterCollection(col vocab.ItemCollection, fns ...Check) (vocab.ItemCollect
 	firstPage := col[0:fpEnd]
 	bottomPage := col[bpEnd:]
 
-	result = cursor(fns).runOnItems(col)
+	result = Checks(fns).runOnItems(col)
 	if len(result) == 0 {
 		return result, pp, np
 	}
@@ -296,12 +255,12 @@ func sortItemsByPublishedUpdated(col vocab.ItemCollection) vocab.ItemCollection 
 			u1 time.Time
 			u2 time.Time
 		)
-		vocab.OnObject(it1, func(ob *vocab.Object) error {
+		_ = vocab.OnObject(it1, func(ob *vocab.Object) error {
 			p1 = ob.Published
 			u1 = ob.Updated
 			return nil
 		})
-		vocab.OnObject(it2, func(ob *vocab.Object) error {
+		_ = vocab.OnObject(it2, func(ob *vocab.Object) error {
 			p2 = ob.Published
 			u2 = ob.Updated
 			return nil
@@ -318,29 +277,6 @@ func sortItemsByPublishedUpdated(col vocab.ItemCollection) vocab.ItemCollection 
 	return col
 }
 
-func (c cursor) runOnItem(it vocab.Item) vocab.Item {
-	for _, fn := range c {
-		if fn == nil {
-			continue
-		}
-		if !fn.Apply(it) {
-			return nil
-		}
-	}
-	return it
-}
-
-func (c cursor) runOnItems(col vocab.ItemCollection) vocab.ItemCollection {
-	result := make(vocab.ItemCollection, 0)
-	for _, it := range col {
-		if it = c.runOnItem(it); vocab.IsNil(it) {
-			continue
-		}
-		result = append(result, it)
-	}
-	return result
-}
-
 func isCursorFn(fn Check) bool {
 	ok := false
 	switch fn.(type) {
@@ -355,16 +291,95 @@ func isCursorFn(fn Check) bool {
 }
 
 func isFilterFn(fn Check) bool {
-	_, ok := fn.(runsOnItem)
-	return ok
+	return !isCursorFn(fn)
 }
 
-func CursorFns(fns ...Check) cursor {
+func FilterChecks(fns ...Check) Checks {
+	c := make([]Check, 0)
+	for _, fn := range fns {
+		if isFilterFn(fn) {
+			c = append(c, fn)
+		}
+	}
+	return c
+}
+
+func CursorChecks(fns ...Check) Checks {
 	c := make([]Check, 0)
 	for _, fn := range fns {
 		if isCursorFn(fn) {
 			c = append(c, fn)
 		}
 	}
-	return cursor(c)
+	return c
+}
+
+func ObjectChecks(fns ...Check) Checks {
+	c := make([]Check, 0)
+	for _, fn := range fns {
+		switch fns := fn.(type) {
+		case authorized:
+			c = append(c, fn)
+		case objectChecks:
+			c = append(c, fns...)
+		}
+	}
+	return c
+}
+
+func ActorChecks(fns ...Check) Checks {
+	c := make([]Check, 0)
+	for _, fn := range fns {
+		switch fns := fn.(type) {
+		case authorized:
+			c = append(c, fn)
+		case actorChecks:
+			c = append(c, fns...)
+		}
+	}
+	return c
+}
+
+func TargetChecks(fns ...Check) Checks {
+	c := make([]Check, 0)
+	for _, fn := range fns {
+		switch fns := fn.(type) {
+		case authorized:
+			c = append(c, fn)
+		case targetChecks:
+			c = append(c, fns...)
+		}
+	}
+	return c
+}
+
+func ActivityChecks(fns ...Check) Checks {
+	c := make([]Check, 0)
+	for _, fn := range fns {
+		switch fns := fn.(type) {
+		case authorized:
+			c = append(c, fn)
+		case targetChecks:
+			c = append(c, fns...)
+		case objectChecks:
+			c = append(c, fns...)
+		case actorChecks:
+			c = append(c, fns...)
+		}
+	}
+	return c
+}
+func IntransitiveActivityChecks(fns ...Check) Checks {
+	c := make([]Check, 0)
+	for _, fn := range fns {
+		switch fns := fn.(type) {
+		case authorized:
+			c = append(c, fn)
+		case targetChecks:
+			c = append(c, fns...)
+		case actorChecks:
+			c = append(c, fns...)
+		}
+	}
+	return c
 }

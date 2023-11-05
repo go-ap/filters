@@ -37,7 +37,8 @@ func (isAfter *afterCrit) Apply(it vocab.Item) bool {
 	if vocab.IsNil(it) {
 		return isAfter.after
 	}
-	if All(isAfter.fns...).Apply(it) {
+
+	if checkFn(isAfter.fns)(it) {
 		isAfter.after = true
 		return false
 	}
@@ -67,7 +68,7 @@ func (isBefore *beforeCrit) Apply(it vocab.Item) bool {
 	if vocab.IsNil(it) {
 		return true
 	}
-	if All(isBefore.fns...).Apply(it) {
+	if checkFn(isBefore.fns)(it) {
 		isBefore.check = false
 	}
 	return isBefore.check

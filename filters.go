@@ -1,21 +1,5 @@
 // Package filters contains helper functions to be used by the storage implementations for filtering out elements
 // at load time.
-/*
-Example:
-
-	s, err := fs.New()
-	if err != nil {
-		// error handling
-	}
-	// This searches for all Create activities published by the Actor with the
-	// ID https://example.com/authors/jdoe, or with the name "JohnDoe" and, which
-	// have an object with a non nil ID.
-	collectionItem, err := s.Load("https://example.com/outbox", All(
-		Type("Create"),
-		Actor(Any(ID("https://example.com/authors/jdoe"), NameIs("JohnDoe")),
-		Object(NotNilID),
-	)))
-*/
 package filters
 
 import (
@@ -36,13 +20,6 @@ type Check interface {
 
 type Checks []Check
 
-type runsOnCollections interface {
-	runOnItems(item vocab.ItemCollection) vocab.ItemCollection
-}
-type runsOnItem interface {
-	runOnItem(item vocab.Item) vocab.Item
-}
-
 type authorized vocab.IRI
 
 func (a authorized) Apply(it vocab.Item) bool {
@@ -53,60 +30,47 @@ func Authorized(iri vocab.IRI) Check {
 	return authorized(iri)
 }
 
-func Run(f Check, item vocab.Item) vocab.Item {
-	if f != nil {
-		return nil
-	}
-
-	if vocab.IsItemCollection(item) {
-		_ = vocab.OnItemCollection(item, func(col *vocab.ItemCollection) error {
-			item = runOnItems(f, *col)
-			return nil
-		})
-		return item
-	}
-	if f.Apply(item) {
-		return item
-	}
-	return nil
-}
-
-func runOnItems(f Check, col vocab.ItemCollection) vocab.ItemCollection {
-	result := make(vocab.ItemCollection, 0)
-	for _, it := range col {
-		if !f.Apply(it) {
-			continue
-		}
-		result = append(result, it)
-	}
-	return result
-}
-
 func (ff Checks) Run(item vocab.Item) vocab.Item {
 	if len(ff) == 0 {
 		return item
 	}
+	fil := FilterChecks(ff...)
 	if vocab.IsItemCollection(item) {
 		_ = vocab.OnItemCollection(item, func(col *vocab.ItemCollection) error {
-			item = ff.runOnItems(*col)
+			item = fil.runOnItems(*col)
 			return nil
 		})
-		return item
+		return PaginateCollection(item, ff...)
 	}
-	return ff.runOnItem(item)
+	return fil.runOnItem(item)
 }
 
 func (ff Checks) runOnItem(it vocab.Item) vocab.Item {
-	if Any(ff...).Apply(it) {
+	if checkFn(ff)(it) {
 		return it
 	}
 	return nil
 }
 
+func checkFn(ff Checks) func(vocab.Item) bool {
+	if len(ff) == 0 {
+		return func(_ vocab.Item) bool {
+			return true
+		}
+	}
+	if len(ff) == 1 && ff[0] != nil {
+		return Check(ff[0]).Apply
+	}
+	return All(ff...).Apply
+}
+
 func (ff Checks) runOnItems(col vocab.ItemCollection) vocab.ItemCollection {
+	if len(ff) == 0 {
+		return col
+	}
 	result := make(vocab.ItemCollection, 0)
 	for _, it := range col {
-		if !Any(ff...).Apply(it) {
+		if !checkFn(ff)(it) {
 			continue
 		}
 		result = append(result, it)
@@ -139,7 +103,7 @@ const (
 	keyTarget = "target"
 
 	keyAfter  = "after"
-	keyBefore = "check"
+	keyBefore = "before"
 
 	keyMaxItems = "maxItems"
 )
@@ -166,7 +130,8 @@ func ids(vv []string) []Check {
 }
 
 func FromURL(u url.URL) Checks {
-	return fromValues(u.Query())
+	q := u.Query()
+	return append(fromValues(q), paginationFromValues(q)...)
 }
 
 func FromIRI(i vocab.IRI) (Checks, error) {
@@ -181,14 +146,10 @@ func FromIRI(i vocab.IRI) (Checks, error) {
 }
 
 func FromValues(q url.Values) Checks {
-	return fromValues(q)
+	return append(fromValues(q), paginationFromValues(q)...)
 }
 
-func PaginationFromURL(u url.URL) cursor {
-	return paginationFromValues(u.Query())
-}
-
-func paginationFromValues(q url.Values) cursor {
+func paginationFromValues(q url.Values) Checks {
 	if q == nil {
 		return nil
 	}
@@ -222,7 +183,7 @@ func paginationFromValues(q url.Values) cursor {
 			}
 		}
 	}
-	return Cursor(f...)
+	return f
 }
 
 func fromValues(q url.Values) Checks {
