@@ -26,10 +26,16 @@ func PaginateCollection(it vocab.Item, filters ...Check) vocab.Item {
 	partOfIRI := it.GetID()
 	firstIRI := partOfIRI
 	if u, err := it.GetLink().URL(); err == nil {
-		u.RawQuery = ""
+		q := u.Query()
+		for k := range q {
+			if k == keyMaxItems || k == keyAfter || k == keyBefore {
+				q.Del(k)
+			}
+		}
 		partOfIRI = vocab.IRI(u.String())
-		q := make(url.Values)
-		q.Set(keyMaxItems, strconv.Itoa(MaxItems))
+		if !q.Has(keyMaxItems) {
+			q.Set(keyMaxItems, strconv.Itoa(MaxItems))
+		}
 		u.RawQuery = q.Encode()
 		firstIRI = vocab.IRI(u.String())
 	}
@@ -79,7 +85,14 @@ func getURL(i vocab.IRI, f url.Values) vocab.IRI {
 		return i
 	}
 	if u, err := i.URL(); err == nil {
-		u.RawQuery = f.Encode()
+		q := u.Query()
+		for k, v := range f {
+			q.Del(k)
+			for _, vv := range v {
+				q.Add(k, vv)
+			}
+		}
+		u.RawQuery = q.Encode()
 		i = vocab.IRI(u.String())
 	}
 	return i
@@ -100,6 +113,9 @@ func collectionPageFromItem(it vocab.Item, filters ...Check) (vocab.Item, vocab.
 
 	shouldBePage := len(CursorChecks(filters...)) > 0
 
+	if MaxCountChecks(filters...) == nil {
+		filters = append(filters, WithMaxCount(MaxItems))
+	}
 	switch typ {
 	case vocab.OrderedCollectionPageType:
 		_ = vocab.OnOrderedCollectionPage(it, func(new *vocab.OrderedCollectionPage) error {
@@ -204,11 +220,11 @@ func filterCollection(col vocab.ItemCollection, fns ...Check) (vocab.ItemCollect
 	}
 	bpEnd := 0
 	if len(col) > MaxItems {
-		bpEnd = len(col) - MaxItems
+		bpEnd = (len(col) / MaxItems) * MaxItems
 	}
 
 	firstPage := col[0:fpEnd]
-	lastPage := col[len(col)-bpEnd:]
+	lastPage := col[bpEnd:]
 
 	result := Checks(fns).runOnItems(col)
 	if len(result) == 0 {
@@ -315,6 +331,15 @@ func CursorChecks(fns ...Check) Checks {
 		}
 	}
 	return c
+}
+
+func MaxCountChecks(fns ...Check) Check {
+	for _, fn := range fns {
+		if f, ok := fn.(*counter); ok {
+			return f
+		}
+	}
+	return nil
 }
 
 func ObjectChecks(fns ...Check) Checks {
