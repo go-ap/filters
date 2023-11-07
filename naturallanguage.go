@@ -1,6 +1,7 @@
 package filters
 
 import (
+	"net/url"
 	"strings"
 
 	vocab "github.com/go-ap/activitypub"
@@ -98,6 +99,8 @@ func naturalLanguageEmpty(check vocab.NaturalLanguageValues, _ string) bool {
 
 func naturalLanguageValuesLike(check vocab.NaturalLanguageValues, val string) bool {
 	nfc := norm.NFC.String
+
+	val, _ = url.QueryUnescape(val)
 	for _, c := range check {
 		if strings.Contains(nfc(c.String()), nfc(val)) {
 			return true

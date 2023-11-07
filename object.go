@@ -1,6 +1,7 @@
 package filters
 
 import (
+	"net/url"
 	"strings"
 
 	vocab "github.com/go-ap/activitypub"
@@ -35,7 +36,8 @@ type iriLike string
 
 func (frag iriLike) Apply(item vocab.Item) bool {
 	nfc := norm.NFC.String
-	return strings.Contains(nfc(item.GetID().String()), nfc(string(frag)))
+	fragStr, _ := url.QueryUnescape(string(frag))
+	return strings.Contains(nfc(item.GetID().String()), nfc(fragStr))
 }
 
 func IDLike(frag string) Check {
@@ -106,7 +108,6 @@ func SameURL(iri vocab.IRI) Check {
 type urlLike string
 
 func (frag urlLike) Apply(item vocab.Item) bool {
-	nfc := norm.NFC.String
 	urls := make(vocab.IRIs, 0)
 	if vocab.LinkTypes.Contains(item.GetType()) {
 		_ = vocab.OnLink(item, func(lnk *vocab.Link) error {
@@ -126,8 +127,10 @@ func (frag urlLike) Apply(item vocab.Item) bool {
 			return nil
 		})
 	}
+	nfc := norm.NFC.String
+	fragStr, _ := url.QueryUnescape(string(frag))
 	for _, u := range urls {
-		if strings.Contains(nfc(u.String()), nfc(string(frag))) {
+		if strings.Contains(nfc(u.String()), nfc(fragStr)) {
 			return true
 		}
 	}
