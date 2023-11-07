@@ -20,16 +20,6 @@ type Check interface {
 
 type Checks []Check
 
-type authorized vocab.IRI
-
-func (a authorized) Apply(it vocab.Item) bool {
-	return fullAudience(it).Contains(vocab.IRI(a))
-}
-
-func Authorized(iri vocab.IRI) Check {
-	return authorized(iri)
-}
-
 var orderedCollectionTypes = vocab.ActivityVocabularyTypes{
 	vocab.OrderedCollectionPageType,
 	vocab.OrderedCollectionType,
