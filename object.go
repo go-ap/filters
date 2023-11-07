@@ -59,12 +59,7 @@ func SameIRI(iri vocab.IRI) Check {
 type withTypes vocab.ActivityVocabularyTypes
 
 func (types withTypes) Apply(it vocab.Item) bool {
-	result := false
-	_ = vocab.OnObject(it, func(object *vocab.Object) error {
-		result = vocab.ActivityVocabularyTypes(types).Contains(it.GetType())
-		return nil
-	})
-	return result
+	return vocab.ActivityVocabularyTypes(types).Contains(it.GetType())
 }
 
 // HasType checks an activitypub.Object's Type property against a series of values.
