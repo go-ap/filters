@@ -70,15 +70,8 @@ func HasType(ty ...vocab.ActivityVocabularyType) Check {
 	return withTypes(ty)
 }
 
-type urlEquals vocab.IRI
-
-func (i urlEquals) Apply(item vocab.Item) bool {
-	if vocab.IsNil(item) {
-		return len(i) == 0
-	}
-
+func accumURLs(item vocab.Item) vocab.IRIs {
 	urls := make(vocab.IRIs, 0)
-
 	if vocab.LinkTypes.Contains(item.GetType()) {
 		_ = vocab.OnLink(item, func(lnk *vocab.Link) error {
 			urls = append(urls, lnk.Href)
@@ -86,6 +79,9 @@ func (i urlEquals) Apply(item vocab.Item) bool {
 		})
 	} else {
 		_ = vocab.OnObject(item, func(ob *vocab.Object) error {
+			if vocab.IsNil(ob.URL) {
+				return nil
+			}
 			if ob.URL.IsObject() {
 				_ = vocab.OnObject(ob.URL, func(url *vocab.Object) error {
 					urls = append(urls, url.GetLink())
@@ -97,7 +93,16 @@ func (i urlEquals) Apply(item vocab.Item) bool {
 			return nil
 		})
 	}
-	return urls.Contains(vocab.IRI(i))
+	return urls
+}
+
+type urlEquals vocab.IRI
+
+func (i urlEquals) Apply(item vocab.Item) bool {
+	if vocab.IsNil(item) {
+		return len(i) == 0
+	}
+	return accumURLs(item).Contains(vocab.IRI(i))
 }
 
 // SameURL checks an activitypub.Object's IRI
@@ -108,28 +113,9 @@ func SameURL(iri vocab.IRI) Check {
 type urlLike string
 
 func (frag urlLike) Apply(item vocab.Item) bool {
-	urls := make(vocab.IRIs, 0)
-	if vocab.LinkTypes.Contains(item.GetType()) {
-		_ = vocab.OnLink(item, func(lnk *vocab.Link) error {
-			urls = append(urls, lnk.Href)
-			return nil
-		})
-	} else {
-		_ = vocab.OnObject(item, func(ob *vocab.Object) error {
-			if ob.URL.IsObject() {
-				_ = vocab.OnObject(ob.URL, func(url *vocab.Object) error {
-					urls = append(urls, url.GetLink())
-					return nil
-				})
-			} else {
-				urls = append(urls, ob.URL.GetLink())
-			}
-			return nil
-		})
-	}
 	nfc := norm.NFC.String
 	fragStr, _ := url.QueryUnescape(string(frag))
-	for _, u := range urls {
+	for _, u := range accumURLs(item) {
 		if strings.Contains(nfc(u.String()), nfc(fragStr)) {
 			return true
 		}
