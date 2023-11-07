@@ -260,8 +260,9 @@ func fromValues(q url.Values) Checks {
 			if len(fns) > 0 {
 				if len(fns) == 1 {
 					f = append(f, fns...)
+				} else {
+					f = append(f, Any(fns...))
 				}
-				f = append(f, Any(fns...))
 			}
 		case keySummary:
 			fns := make(Checks, 0)
@@ -281,8 +282,9 @@ func fromValues(q url.Values) Checks {
 			if len(fns) > 0 {
 				if len(fns) == 1 {
 					f = append(f, fns...)
+				} else {
+					f = append(f, Any(fns...))
 				}
-				f = append(f, Any(fns...))
 			}
 		case keyContent:
 			fns := make(Checks, 0)
@@ -302,8 +304,9 @@ func fromValues(q url.Values) Checks {
 			if len(fns) > 0 {
 				if len(fns) == 1 {
 					f = append(f, fns...)
+				} else {
+					f = append(f, Any(fns...))
 				}
-				f = append(f, Any(fns...))
 			}
 		case keyActor:
 			if len(remainder) > 0 {
