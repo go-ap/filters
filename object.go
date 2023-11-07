@@ -67,3 +67,83 @@ func (types withTypes) Apply(it vocab.Item) bool {
 func HasType(ty ...vocab.ActivityVocabularyType) Check {
 	return withTypes(ty)
 }
+
+type urlEquals vocab.IRI
+
+func (i urlEquals) Apply(item vocab.Item) bool {
+	if vocab.IsNil(item) {
+		return len(i) == 0
+	}
+
+	urls := make(vocab.IRIs, 0)
+
+	if vocab.LinkTypes.Contains(item.GetType()) {
+		_ = vocab.OnLink(item, func(lnk *vocab.Link) error {
+			urls = append(urls, lnk.Href)
+			return nil
+		})
+	} else {
+		_ = vocab.OnObject(item, func(ob *vocab.Object) error {
+			if ob.URL.IsObject() {
+				_ = vocab.OnObject(ob.URL, func(url *vocab.Object) error {
+					urls = append(urls, url.GetLink())
+					return nil
+				})
+			} else {
+				urls = append(urls, ob.URL.GetLink())
+			}
+			return nil
+		})
+	}
+	return urls.Contains(vocab.IRI(i))
+}
+
+// SameURL checks an activitypub.Object's IRI
+func SameURL(iri vocab.IRI) Check {
+	return urlEquals(iri)
+}
+
+type urlLike string
+
+func (frag urlLike) Apply(item vocab.Item) bool {
+	nfc := norm.NFC.String
+	urls := make(vocab.IRIs, 0)
+	if vocab.LinkTypes.Contains(item.GetType()) {
+		_ = vocab.OnLink(item, func(lnk *vocab.Link) error {
+			urls = append(urls, lnk.Href)
+			return nil
+		})
+	} else {
+		_ = vocab.OnObject(item, func(ob *vocab.Object) error {
+			if ob.URL.IsObject() {
+				_ = vocab.OnObject(ob.URL, func(url *vocab.Object) error {
+					urls = append(urls, url.GetLink())
+					return nil
+				})
+			} else {
+				urls = append(urls, ob.URL.GetLink())
+			}
+			return nil
+		})
+	}
+	for _, u := range urls {
+		if strings.Contains(nfc(u.String()), nfc(string(frag))) {
+			return true
+		}
+	}
+	return false
+}
+
+func URLLike(frag string) Check {
+	return urlLike(frag)
+}
+
+type nilURL struct{}
+
+func (n nilURL) Apply(it vocab.Item) bool {
+	return vocab.IsNil(it) || Any(SameURL(vocab.NilIRI), SameURL(vocab.EmptyIRI)).Apply(it)
+}
+
+// NilURL checks if the activitypub.Object's URL property matches any of the two magic values
+// that denote an empty value: activitypub.NilID = "-", or activitypub.EmptyID = ""
+var NilURL = nilURL{}

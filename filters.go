@@ -135,6 +135,8 @@ const (
 	keySummary = "summary"
 	keyContent = "content"
 
+	keyURL = "url"
+
 	keyActor  = "actor"
 	keyObject = "object"
 	keyTarget = "target"
@@ -319,6 +321,29 @@ func fromValues(q url.Values) Checks {
 		case keyTarget:
 			if len(remainder) > 0 {
 				targetQ[remainder] = vv
+			}
+		case keyURL:
+			fns := make(Checks, 0)
+			for _, n := range vv {
+				if n == "" {
+					f = append(f, NilURL)
+				} else if n == "!" || n == "!-" {
+					f = append(f, Not(NilURL))
+				} else if strings.HasPrefix(n, "!") {
+					f = append(f, Not(SameURL(vocab.IRI(n[1:]))))
+				} else if strings.HasPrefix(n, "~") {
+					f = append(f, URLLike(n[1:]))
+				} else {
+					f = append(f, SameURL(vocab.IRI(n)))
+				}
+				f = append(f)
+			}
+			if len(fns) > 0 {
+				if len(fns) == 1 {
+					f = append(f, fns...)
+				} else {
+					f = append(f, Any(fns...))
+				}
 			}
 		}
 	}
