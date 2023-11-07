@@ -388,7 +388,7 @@ func TestContentEmpty(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			it := vocab.Object{Content: tt.toCheckContents}
-			if got := ContentEmpty().Apply(it); got != tt.want {
+			if got := ContentEmpty.Apply(it); got != tt.want {
 				t.Errorf("ContentEmpty()(Object.Content=%v) = %v, want %v", tt.toCheckContents, got, tt.want)
 			}
 		})
@@ -573,7 +573,7 @@ func TestSummaryEmpty(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			it := vocab.Object{Summary: tt.toCheckSummarys}
-			if got := SummaryEmpty().Apply(it); got != tt.want {
+			if got := SummaryEmpty.Apply(it); got != tt.want {
 				t.Errorf("SummaryEmpty()(Object.Summary=%v) = %v, want %v", tt.toCheckSummarys, got, tt.want)
 			}
 		})

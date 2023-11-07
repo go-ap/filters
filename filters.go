@@ -270,9 +270,9 @@ func fromValues(q url.Values) Checks {
 			fns := make(Checks, 0)
 			for _, n := range vv {
 				if n == "" {
-					fns = append(fns, SummaryEmpty())
+					fns = append(fns, SummaryEmpty)
 				} else if n == "!" || n == "!-" {
-					fns = append(fns, Not(SummaryEmpty()))
+					fns = append(fns, Not(SummaryEmpty))
 				} else if strings.HasPrefix(n, "!") {
 					fns = append(fns, Not(SummaryLike(n[1:])))
 				} else if strings.HasPrefix(n, "~") {
@@ -292,9 +292,9 @@ func fromValues(q url.Values) Checks {
 			fns := make(Checks, 0)
 			for _, n := range vv {
 				if n == "" {
-					fns = append(fns, ContentEmpty())
+					fns = append(fns, ContentEmpty)
 				} else if n == "!" || n == "!-" {
-					fns = append(fns, Not(ContentEmpty()))
+					fns = append(fns, Not(ContentEmpty))
 				} else if strings.HasPrefix(n, "!") && n[1] != '-' {
 					fns = append(fns, Not(ContentLike(n[1:])))
 				} else if strings.HasPrefix(n, "~") {

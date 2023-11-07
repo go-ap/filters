@@ -58,9 +58,7 @@ func ContentLike(cont string) Check {
 // If *all* of the values are empty, the function returns true.
 //
 // Please note that the logic of this check is different from ContentIs and ContentLike.
-func ContentEmpty() Check {
-	return contentCheck("", naturalLanguageEmpty)
-}
+var ContentEmpty = contentCheck("", naturalLanguageEmpty)
 
 // SummaryIs checks an activitypub.Object's Summary against the "sum" value.
 // If any of the Language Ref map values match the value, the function returns true.
@@ -80,9 +78,7 @@ func SummaryLike(sum string) Check {
 // If *all* of the values are empty, the function returns true.
 //
 // Please note that the logic of this check is different from SummaryIs and SummaryLike.
-func SummaryEmpty() Check {
-	return summaryCheck("", naturalLanguageEmpty)
-}
+var SummaryEmpty = summaryCheck("", naturalLanguageEmpty)
 
 func naturalLanguageValuesEquals(check vocab.NaturalLanguageValues, val string) bool {
 	for _, c := range check {
