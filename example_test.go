@@ -33,11 +33,11 @@ func ExampleFilter() {
 			},
 			Object: vocab.IRI("https//example.com/test"),
 		},
-		// doesn't match due to activity Type
+		// doesn't match due to the activity Type
 		vocab.Follow{Type: "Follow"},
-		// doesn't match due to intransitive activity
+		// doesn't match due to Arrive being an intransitive activity
 		vocab.Arrive{Type: "Arrive"},
-		// doesn't match due to intransitive activity
+		// doesn't match due to Question being an intransitive activity
 		vocab.Question{Type: "Question"},
 	}
 	// This filters all activities that are not:
