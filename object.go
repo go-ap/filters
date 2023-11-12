@@ -8,7 +8,25 @@ import (
 	"golang.org/x/text/unicode/norm"
 )
 
-type idEquals vocab.IRI
+// NilID checks if the activitypub.Object's ID property matches any of the two magic values
+// that denote an empty value: activitypub.NilID = "-", or activitypub.EmptyID = ""
+var NilID = idNil{}
+
+// NotNilID checks if the activitypub.Object's ID property is not nil
+var NotNilID = Not(NilID)
+
+type idNil iriNil
+
+func (n idNil) Apply(it vocab.Item) bool {
+	return vocab.IsNil(it) || Any(SameIRI(vocab.NilIRI), SameIRI(vocab.EmptyIRI)).Apply(it.GetID())
+}
+
+// ID checks an activitypub.Object's ID property against the received iri.
+func ID(i vocab.IRI) Check {
+	return idEquals(i)
+}
+
+type idEquals iriEquals
 
 func (i idEquals) Apply(item vocab.Item) bool {
 	if vocab.IsNil(item) {
@@ -17,57 +35,29 @@ func (i idEquals) Apply(item vocab.Item) bool {
 	return item.GetID().Equals(vocab.IRI(i), true)
 }
 
-type nilId struct{}
-
-func (n nilId) Apply(it vocab.Item) bool {
-	return vocab.IsNil(it) || Any(SameIRI(vocab.NilIRI), SameIRI(vocab.EmptyIRI)).Apply(it.GetLink())
-}
-
-// NilID checks if the activitypub.Object's ID property matches any of the two magic values
-// that denote an empty value: activitypub.NilID = "-", or activitypub.EmptyID = ""
-var NilID = nilId{}
-
-// ID checks an activitypub.Object's ID property against the received iri.
-func ID(i vocab.IRI) Check {
-	return idEquals(i)
-}
-
-type iriLike string
-
-func (frag iriLike) Apply(item vocab.Item) bool {
-	nfc := norm.NFC.String
-	fragStr, _ := url.QueryUnescape(string(frag))
-	return strings.Contains(nfc(item.GetID().String()), nfc(fragStr))
-}
-
+// IDLike
 func IDLike(frag string) Check {
-	return iriLike(frag)
+	return idLike(frag)
 }
 
-type iriEquals vocab.IRI
+type idLike iriLike
 
-func (i iriEquals) Apply(item vocab.Item) bool {
-	if vocab.IsNil(item) {
-		return len(i) == 0
-	}
-	return item.GetLink().Equals(vocab.IRI(i), true)
-}
-
-// SameIRI checks an activitypub.Object's IRI
-func SameIRI(iri vocab.IRI) Check {
-	return iriEquals(iri)
-}
-
-type withTypes vocab.ActivityVocabularyTypes
-
-func (types withTypes) Apply(it vocab.Item) bool {
-	return vocab.ActivityVocabularyTypes(types).Contains(it.GetType())
+func (l idLike) Apply(item vocab.Item) bool {
+	nfc := norm.NFC.String
+	fragStr, _ := url.QueryUnescape(string(l))
+	return strings.Contains(nfc(item.GetID().String()), nfc(fragStr))
 }
 
 // HasType checks an activitypub.Object's Type property against a series of values.
 // If any of the ty values matches, the function returns true.
 func HasType(ty ...vocab.ActivityVocabularyType) Check {
 	return withTypes(ty)
+}
+
+type withTypes vocab.ActivityVocabularyTypes
+
+func (types withTypes) Apply(it vocab.Item) bool {
+	return vocab.ActivityVocabularyTypes(types).Contains(it.GetType())
 }
 
 func accumURLs(item vocab.Item) vocab.IRIs {
@@ -96,7 +86,12 @@ func accumURLs(item vocab.Item) vocab.IRIs {
 	return urls
 }
 
-type urlEquals vocab.IRI
+// SameURL checks an activitypub.Object's IRI
+func SameURL(iri vocab.IRI) Check {
+	return urlEquals(iri)
+}
+
+type urlEquals iriEquals
 
 func (i urlEquals) Apply(item vocab.Item) bool {
 	if vocab.IsNil(item) {
@@ -105,12 +100,7 @@ func (i urlEquals) Apply(item vocab.Item) bool {
 	return accumURLs(item).Contains(vocab.IRI(i))
 }
 
-// SameURL checks an activitypub.Object's IRI
-func SameURL(iri vocab.IRI) Check {
-	return urlEquals(iri)
-}
-
-type urlLike string
+type urlLike iriLike
 
 func (frag urlLike) Apply(item vocab.Item) bool {
 	nfc := norm.NFC.String
@@ -127,12 +117,30 @@ func URLLike(frag string) Check {
 	return urlLike(frag)
 }
 
-type nilURL struct{}
-
-func (n nilURL) Apply(it vocab.Item) bool {
-	return vocab.IsNil(it) || Any(SameURL(vocab.NilIRI), SameURL(vocab.EmptyIRI)).Apply(it)
+func SameContext(iri vocab.IRI) Check {
+	return iriEquals(iri)
 }
 
-// NilURL checks if the activitypub.Object's URL property matches any of the two magic values
-// that denote an empty value: activitypub.NilID = "-", or activitypub.EmptyID = ""
-var NilURL = nilURL{}
+type contextEquals iriEquals
+
+func (c contextEquals) Apply(item vocab.Item) bool {
+	return iriEquals(c).Apply(item)
+}
+
+func ContextLike(frag string) Check {
+	return iriLike(frag)
+}
+
+type contextLike iriLike
+
+func (c contextLike) Apply(item vocab.Item) bool {
+	return iriLike(c).Apply(item)
+}
+
+var NilContext = idNil{}
+
+type contextNil idNil
+
+func (c contextNil) Apply(item vocab.Item) bool {
+	return idNil(c).Apply(item)
+}

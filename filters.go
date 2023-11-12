@@ -20,15 +20,6 @@ type Check interface {
 
 type Checks []Check
 
-var orderedCollectionTypes = vocab.ActivityVocabularyTypes{
-	vocab.OrderedCollectionPageType,
-	vocab.OrderedCollectionType,
-}
-var collectionTypes = vocab.ActivityVocabularyTypes{
-	vocab.CollectionPageType,
-	vocab.CollectionType,
-}
-
 func (ff Checks) Run(item vocab.Item) vocab.Item {
 	if len(ff) == 0 || vocab.IsNil(item) {
 		return item
@@ -143,7 +134,7 @@ func ids(vv []string) []Check {
 		if v == "" {
 			f = append(f, NilID)
 		} else if v == "!" || v == "!-" {
-			f = append(f, Not(NilID))
+			f = append(f, NotNilIRI)
 		} else if strings.HasPrefix(v, "!") {
 			f = append(f, Not(ID(vocab.IRI(v[1:]))))
 		} else if strings.HasPrefix(v, "~") {
@@ -316,9 +307,9 @@ func fromValues(q url.Values) Checks {
 			fns := make(Checks, 0)
 			for _, n := range vv {
 				if n == "" {
-					f = append(f, NilURL)
+					f = append(f, NilIRI)
 				} else if n == "!" || n == "!-" {
-					f = append(f, Not(NilURL))
+					f = append(f, Not(NilIRI))
 				} else if strings.HasPrefix(n, "!") {
 					f = append(f, Not(SameURL(vocab.IRI(n[1:]))))
 				} else if strings.HasPrefix(n, "~") {

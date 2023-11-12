@@ -1,0 +1,112 @@
+package filters
+
+func FilterChecks(fns ...Check) Checks {
+	c := make([]Check, 0)
+	for _, fn := range fns {
+		if isFilterFn(fn) {
+			c = append(c, fn)
+		}
+	}
+	return c
+}
+
+func CursorChecks(fns ...Check) Checks {
+	c := make([]Check, 0)
+	for _, fn := range fns {
+		if isCursorFn(fn) {
+			c = append(c, fn)
+		}
+	}
+	return c
+}
+
+func MaxCountChecks(fns ...Check) Check {
+	for _, fn := range fns {
+		if f, ok := fn.(*counter); ok {
+			return f
+		}
+	}
+	return nil
+}
+
+func ObjectChecks(fns ...Check) Checks {
+	c := make([]Check, 0)
+	for _, fn := range fns {
+		switch fns := fn.(type) {
+		case authorized:
+			c = append(c, fn)
+		case objectChecks:
+			c = append(c, fns...)
+		}
+	}
+	return c
+}
+
+func ActorChecks(fns ...Check) Checks {
+	c := make([]Check, 0)
+	for _, fn := range fns {
+		switch fns := fn.(type) {
+		case authorized:
+			c = append(c, fn)
+		case actorChecks:
+			c = append(c, fns...)
+		}
+	}
+	return c
+}
+
+func TargetChecks(fns ...Check) Checks {
+	c := make([]Check, 0)
+	for _, fn := range fns {
+		switch fns := fn.(type) {
+		case authorized:
+			c = append(c, fn)
+		case targetChecks:
+			c = append(c, fns...)
+		}
+	}
+	return c
+}
+
+func ActivityChecks(fns ...Check) Checks {
+	c := make([]Check, 0)
+	for _, fn := range fns {
+		switch fns := fn.(type) {
+		case authorized:
+			c = append(c, fn)
+		case targetChecks:
+			c = append(c, fns...)
+		case objectChecks:
+			c = append(c, fns...)
+		case actorChecks:
+			c = append(c, fns...)
+		}
+	}
+	return c
+}
+
+func IntransitiveActivityChecks(fns ...Check) Checks {
+	c := make([]Check, 0)
+	for _, fn := range fns {
+		switch fns := fn.(type) {
+		case authorized:
+			c = append(c, fn)
+		case targetChecks:
+			c = append(c, fns...)
+		case actorChecks:
+			c = append(c, fns...)
+		}
+	}
+	return c
+}
+
+func TypeChecks(fns ...Check) Checks {
+	c := make([]Check, 0)
+	for _, fn := range fns {
+		switch t := fn.(type) {
+		case withTypes:
+			c = append(c, t)
+		}
+	}
+	return c
+}
