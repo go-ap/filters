@@ -42,4 +42,4 @@ func (n iriNil) Apply(it vocab.Item) bool {
 
 // NotNilIRI checks if the activitypub.Object's URL property matches any of the two magic values
 // that denote an empty value: activitypub.NilID = "-", or activitypub.EmptyID = ""
-var NotNilIRI = Not(iriEquals(vocab.NilIRI))
+var NotNilIRI = Not(Any(iriEquals(vocab.NilIRI), iriEquals("")))
