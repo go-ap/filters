@@ -207,7 +207,7 @@ type Filters struct {
 	FollowedBy    []Hash               `qstring:"followedBy,omitempty"` // todo(marius): not really used
 	OlderThan     time.Time            `qstring:"olderThan,omitempty"`
 	NewerThan     time.Time            `qstring:"newerThan,omitempty"`
-	Prev          Hash                 `qstring:"check,omitempty"`
+	Prev          Hash                 `qstring:"before,omitempty"`
 	Next          Hash                 `qstring:"after,omitempty"`
 	Object        *Filters             `qstring:"object,omitempty"`
 	Actor         *Filters             `qstring:"actor,omitempty"`
