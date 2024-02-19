@@ -17,9 +17,9 @@ func GetLimit(f ...Check) string {
 	}
 	return ""
 }
-func GetWhereClauses(f ...Check) ([]string, []interface{}) {
+func GetWhereClauses(f ...Check) ([]string, []any) {
 	var clauses = make([]string, 0)
-	var values = make([]interface{}, 0)
+	var values = make([]any, 0)
 
 	if typClause, typValues := getTypeWheres(f...); len(typClause) > 0 {
 		values = append(values, typValues...)
@@ -59,7 +59,7 @@ func GetWhereClauses(f ...Check) ([]string, []interface{}) {
 	return clauses, values
 }
 
-func getIRIWheres(f ...Check) (string, []interface{}) {
+func getIRIWheres(f ...Check) (string, []any) {
 	strs := make(CompStrs, 0)
 	for _, check := range f {
 		switch i := check.(type) {
@@ -74,11 +74,11 @@ func getIRIWheres(f ...Check) (string, []interface{}) {
 	return getStringFieldWheres(strs, "iri")
 }
 
-func getStringFieldInJSONWheres(strs CompStrs, props ...string) (string, []interface{}) {
+func getStringFieldInJSONWheres(strs CompStrs, props ...string) (string, []any) {
 	if len(strs) == 0 {
 		return "", nil
 	}
-	var values = make([]interface{}, 0)
+	var values = make([]any, 0)
 	keyWhere := make([]string, 0)
 	for _, n := range strs {
 		switch n.Operator {
@@ -88,13 +88,13 @@ func getStringFieldInJSONWheres(strs CompStrs, props ...string) (string, []inter
 					keyWhere = append(keyWhere, fmt.Sprintf(`json_extract("raw", '$.%s') IS NOT NULL`, prop))
 				} else {
 					keyWhere = append(keyWhere, fmt.Sprintf(`json_extract("raw", '$.%s') NOT LIKE ?`, prop))
-					values = append(values, interface{}("%"+n.Str+"%"))
+					values = append(values, any("%"+n.Str+"%"))
 				}
 			}
 		case "~":
 			for _, prop := range props {
 				keyWhere = append(keyWhere, fmt.Sprintf(`json_extract("raw", '$.%s') LIKE ?`, prop))
-				values = append(values, interface{}("%"+n.Str+"%"))
+				values = append(values, any("%"+n.Str+"%"))
 			}
 		case "", "=":
 			fallthrough
@@ -104,7 +104,7 @@ func getStringFieldInJSONWheres(strs CompStrs, props ...string) (string, []inter
 					keyWhere = append(keyWhere, fmt.Sprintf(`json_extract("raw", '$.%s') IS NULL`, prop))
 				} else {
 					keyWhere = append(keyWhere, fmt.Sprintf(`json_extract("raw", '$.%s') = ?`, prop))
-					values = append(values, interface{}(n.Str))
+					values = append(values, any(n.Str))
 				}
 			}
 		}
@@ -112,11 +112,11 @@ func getStringFieldInJSONWheres(strs CompStrs, props ...string) (string, []inter
 	return fmt.Sprintf("(%s)", strings.Join(keyWhere, " OR ")), values
 }
 
-func getStringFieldWheres(strs CompStrs, fields ...string) (string, []interface{}) {
+func getStringFieldWheres(strs CompStrs, fields ...string) (string, []any) {
 	if len(strs) == 0 {
 		return "", nil
 	}
-	var values = make([]interface{}, 0)
+	var values = make([]any, 0)
 	keyWhere := make([]string, 0)
 	for _, t := range strs {
 		switch t.Operator {
@@ -126,13 +126,13 @@ func getStringFieldWheres(strs CompStrs, fields ...string) (string, []interface{
 					keyWhere = append(keyWhere, fmt.Sprintf(`"%s" IS NOT NULL`, field))
 				} else {
 					keyWhere = append(keyWhere, fmt.Sprintf(`"%s" NOT LIKE ?`, field))
-					values = append(values, interface{}("%"+t.Str+"%"))
+					values = append(values, any("%"+t.Str+"%"))
 				}
 			}
 		case "~":
 			for _, field := range fields {
 				keyWhere = append(keyWhere, fmt.Sprintf(`"%s" LIKE ?`, field))
-				values = append(values, interface{}("%"+t.Str+"%"))
+				values = append(values, any("%"+t.Str+"%"))
 			}
 		case "", "=":
 			for _, field := range fields {
@@ -140,7 +140,7 @@ func getStringFieldWheres(strs CompStrs, fields ...string) (string, []interface{
 					keyWhere = append(keyWhere, fmt.Sprintf(`"%s" IS NULL`, field))
 				} else {
 					keyWhere = append(keyWhere, fmt.Sprintf(`"%s" = ?`, field))
-					values = append(values, interface{}(t.Str))
+					values = append(values, any(t.Str))
 				}
 			}
 		}
@@ -148,7 +148,7 @@ func getStringFieldWheres(strs CompStrs, fields ...string) (string, []interface{
 
 	return fmt.Sprintf("(%s)", strings.Join(keyWhere, " OR ")), values
 }
-func getTypeWheres(f ...Check) (string, []interface{}) {
+func getTypeWheres(f ...Check) (string, []any) {
 	types := make(CompStrs, 0)
 	for _, check := range f {
 		if c, ok := check.(withTypes); ok {
@@ -160,7 +160,7 @@ func getTypeWheres(f ...Check) (string, []interface{}) {
 	return getStringFieldWheres(types, "type")
 }
 
-func getContextWheres(f ...Check) (string, []interface{}) {
+func getContextWheres(f ...Check) (string, []any) {
 	strs := make(CompStrs, 0)
 	for _, check := range f {
 		switch c := check.(type) {
@@ -175,7 +175,7 @@ func getContextWheres(f ...Check) (string, []interface{}) {
 	return getStringFieldInJSONWheres(strs, "context")
 }
 
-func getURLWheres(f ...Check) (string, []interface{}) {
+func getURLWheres(f ...Check) (string, []any) {
 	strs := make(CompStrs, 0)
 	for _, check := range f {
 		switch c := check.(type) {
@@ -203,7 +203,7 @@ func isCollection(col string) bool {
 	return col == string(ActorsType) || col == string(ActivitiesType) || col == string(ObjectsType)
 }
 
-func getNamesWheres(f ...Check) (string, []interface{}) {
+func getNamesWheres(f ...Check) (string, []any) {
 	strs := make(CompStrs, 0)
 	for _, check := range f {
 		switch c := check.(type) {
@@ -217,7 +217,7 @@ func getNamesWheres(f ...Check) (string, []interface{}) {
 	return getStringFieldInJSONWheres(strs, "name", "preferredUsername")
 }
 
-func getInReplyToWheres(f ...Check) (string, []interface{}) {
+func getInReplyToWheres(f ...Check) (string, []any) {
 	strs := make(CompStrs, 0)
 	for _, check := range f {
 		switch c := check.(type) {
@@ -228,7 +228,7 @@ func getInReplyToWheres(f ...Check) (string, []interface{}) {
 	return getStringFieldInJSONWheres(strs, "inReplyTo")
 }
 
-func getAttributedToWheres(f ...Check) (string, []interface{}) {
+func getAttributedToWheres(f ...Check) (string, []any) {
 	strs := make(CompStrs, 0)
 	for _, check := range f {
 		switch c := check.(type) {
