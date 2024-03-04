@@ -3,8 +3,8 @@ module github.com/go-ap/filters
 go 1.20
 
 require (
-	github.com/go-ap/activitypub v0.0.0-20240211124657-820024a66b78
-	github.com/go-ap/errors v0.0.0-20231003111023-183eef4b31b7
+	github.com/go-ap/activitypub v0.0.0-20240304122919-ef7a45e2d04a
+	github.com/go-ap/errors v0.0.0-20240304112515-6077fa9c17b0
 	github.com/mariusor/qstring v0.0.0-20200204164351-5a99d46de39d
 	golang.org/x/text v0.13.0
 )
