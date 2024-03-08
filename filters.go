@@ -136,7 +136,7 @@ func ids(vv []string) []Check {
 		} else if v == "!" || v == "!-" {
 			f = append(f, NotNilIRI)
 		} else if strings.HasPrefix(v, "!") {
-			f = append(f, Not(ID(vocab.IRI(v[1:]))))
+			f = append(f, Not(IDLike(v[1:])))
 		} else if strings.HasPrefix(v, "~") {
 			f = append(f, IDLike(v[1:]))
 		} else {
