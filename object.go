@@ -43,6 +43,9 @@ func IDLike(frag string) Check {
 type idLike iriLike
 
 func (l idLike) Apply(item vocab.Item) bool {
+	if vocab.IsNil(item) {
+		return false
+	}
 	nfc := norm.NFC.String
 	fragStr, _ := url.QueryUnescape(string(l))
 	return strings.Contains(nfc(item.GetID().String()), nfc(fragStr))
@@ -57,6 +60,9 @@ func HasType(ty ...vocab.ActivityVocabularyType) Check {
 type withTypes vocab.ActivityVocabularyTypes
 
 func (types withTypes) Apply(it vocab.Item) bool {
+	if vocab.IsNil(it) {
+		return len(types) == 0
+	}
 	return vocab.ActivityVocabularyTypes(types).Contains(it.GetType())
 }
 
@@ -93,19 +99,22 @@ func SameURL(iri vocab.IRI) Check {
 
 type urlEquals iriEquals
 
-func (i urlEquals) Apply(item vocab.Item) bool {
-	if vocab.IsNil(item) {
+func (i urlEquals) Apply(it vocab.Item) bool {
+	if vocab.IsNil(it) {
 		return len(i) == 0
 	}
-	return accumURLs(item).Contains(vocab.IRI(i))
+	return accumURLs(it).Contains(vocab.IRI(i))
 }
 
 type urlLike iriLike
 
-func (frag urlLike) Apply(item vocab.Item) bool {
+func (frag urlLike) Apply(it vocab.Item) bool {
+	if vocab.IsNil(it) {
+		return len(frag) == 0
+	}
 	nfc := norm.NFC.String
 	fragStr, _ := url.QueryUnescape(string(frag))
-	for _, u := range accumURLs(item) {
+	for _, u := range accumURLs(it) {
 		if strings.Contains(nfc(u.String()), nfc(fragStr)) {
 			return true
 		}

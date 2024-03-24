@@ -5,6 +5,9 @@ import vocab "github.com/go-ap/activitypub"
 type actorChecks []Check
 
 func (a actorChecks) Apply(it vocab.Item) bool {
+	if vocab.IsNil(it) {
+		return false
+	}
 	act, err := vocab.ToIntransitiveActivity(it)
 	if err != nil {
 		return false
@@ -19,6 +22,9 @@ func Actor(fns ...Check) Check {
 type targetChecks []Check
 
 func (t targetChecks) Apply(it vocab.Item) bool {
+	if vocab.IsNil(it) {
+		return false
+	}
 	act, err := vocab.ToIntransitiveActivity(it)
 	if err != nil {
 		return false
@@ -32,6 +38,9 @@ func Target(fns ...Check) Check {
 type objectChecks []Check
 
 func (o objectChecks) Apply(it vocab.Item) bool {
+	if vocab.IsNil(it) {
+		return false
+	}
 	act, err := vocab.ToActivity(it)
 	if err != nil {
 		return false

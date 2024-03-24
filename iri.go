@@ -10,11 +10,11 @@ import (
 
 type iriEquals vocab.IRI
 
-func (i iriEquals) Apply(item vocab.Item) bool {
-	if vocab.IsNil(item) {
+func (i iriEquals) Apply(it vocab.Item) bool {
+	if vocab.IsNil(it) {
 		return len(i) == 0
 	}
-	return item.GetLink().Equals(vocab.IRI(i), true)
+	return it.GetLink().Equals(vocab.IRI(i), true)
 }
 
 // SameIRI checks an activitypub.Object's IRI
@@ -24,10 +24,13 @@ func SameIRI(iri vocab.IRI) Check {
 
 type iriLike string
 
-func (frag iriLike) Apply(item vocab.Item) bool {
+func (frag iriLike) Apply(it vocab.Item) bool {
+	if vocab.IsNil(it) {
+		return false
+	}
 	nfc := norm.NFC.String
 	fragStr, _ := url.QueryUnescape(string(frag))
-	return strings.Contains(nfc(item.GetLink().String()), nfc(fragStr))
+	return strings.Contains(nfc(it.GetLink().String()), nfc(fragStr))
 }
 
 // NilIRI checks if the activitypub.Item's IRI that matches any of the two magic values

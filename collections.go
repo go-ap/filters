@@ -16,7 +16,10 @@ func WithMaxCount(max int) Check {
 	return &counter{max: max}
 }
 
-func (cnt *counter) Apply(_ vocab.Item) bool {
+func (cnt *counter) Apply(it vocab.Item) bool {
+	if vocab.IsNil(it) {
+		return false
+	}
 	if cnt.max <= cnt.cnt {
 		return false
 	}

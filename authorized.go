@@ -5,6 +5,9 @@ import vocab "github.com/go-ap/activitypub"
 type authorized vocab.IRI
 
 func (a authorized) Apply(it vocab.Item) bool {
+	if vocab.IsNil(it) {
+		return false
+	}
 	aud := fullAudience(it)
 	return aud.Contains(vocab.PublicNS) || aud.Contains(vocab.IRI(a))
 }

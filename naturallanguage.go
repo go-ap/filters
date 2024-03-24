@@ -144,6 +144,9 @@ func contentCheck(content string, checkFn naturalLanguageValuesCheckFn) Check {
 }
 
 func loadContent(it vocab.Item) vocab.NaturalLanguageValues {
+	if vocab.IsNil(it) {
+		return nil
+	}
 	toCheck := make(vocab.NaturalLanguageValues, 0)
 	_ = vocab.OnObject(it, func(ob *vocab.Object) error {
 		toCheck = ob.Content
@@ -161,6 +164,9 @@ func summaryCheck(summary string, checkFn naturalLanguageValuesCheckFn) Check {
 }
 
 func loadSummary(it vocab.Item) vocab.NaturalLanguageValues {
+	if vocab.IsNil(it) {
+		return nil
+	}
 	toCheck := make(vocab.NaturalLanguageValues, 0)
 	_ = vocab.OnObject(it, func(ob *vocab.Object) error {
 		toCheck = ob.Summary
