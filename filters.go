@@ -122,6 +122,8 @@ const (
 	keyObject = "object"
 	keyTarget = "target"
 
+	keyTag = "tag"
+
 	keyAfter  = "after"
 	keyBefore = "before"
 
@@ -210,6 +212,7 @@ func fromValues(q url.Values) Checks {
 	actorQ := make(url.Values)
 	objectQ := make(url.Values)
 	targetQ := make(url.Values)
+	tagQ := make(url.Values)
 
 	f := make(Checks, 0)
 	for k, vv := range q {
@@ -303,6 +306,10 @@ func fromValues(q url.Values) Checks {
 			if len(remainder) > 0 {
 				targetQ[remainder] = vv
 			}
+		case keyTag:
+			if len(remainder) > 0 {
+				tagQ[remainder] = vv
+			}
 		case keyURL:
 			fns := make(Checks, 0)
 			for _, n := range vv {
@@ -341,6 +348,11 @@ func fromValues(q url.Values) Checks {
 	if len(targetQ) > 0 {
 		if tf := fromValues(targetQ); len(tf) > 0 {
 			f = append(f, Target(tf...))
+		}
+	}
+	if len(tagQ) > 0 {
+		if tf := fromValues(tagQ); len(tf) > 0 {
+			f = append(f, Tag(tf...))
 		}
 	}
 	if len(f) == 0 {
