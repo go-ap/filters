@@ -1275,6 +1275,11 @@ func CacheKey(f *Filters) vocab.IRI {
 func FiltersFromIRI(i vocab.IRI) (*Filters, error) {
 	f := FiltersNew()
 	u, _ := i.URL()
+
+	if u == nil {
+		return f, nil
+	}
+
 	if f.BaseURL == "" {
 		f.BaseURL = baseURL(u)
 	}
