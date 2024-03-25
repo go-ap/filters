@@ -34,6 +34,9 @@ func (a anyCrit) Apply(it vocab.Item) bool {
 }
 
 func Any(fns ...Check) Check {
+	if len(fns) == 1 {
+		return fns[0]
+	}
 	return anyCrit(fns)
 }
 
@@ -54,5 +57,8 @@ func (a checkAll) Apply(it vocab.Item) bool {
 	return true
 }
 func All(fns ...Check) Check {
+	if len(fns) == 1 {
+		return fns[0]
+	}
 	return checkAll(fns)
 }
