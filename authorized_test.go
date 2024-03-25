@@ -28,6 +28,12 @@ func Test_authorized_Apply(t *testing.T) {
 			it:   &vocab.Object{To: vocab.ItemCollection{vocab.PublicNS}},
 			want: true,
 		},
+		{
+			name: "PublicNS should be authorized for object with empty recipients list",
+			a:    vocab.PublicNS,
+			it:   &vocab.Object{Type: vocab.TombstoneType},
+			want: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
