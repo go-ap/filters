@@ -81,8 +81,11 @@ func SummaryLike(sum string) Check {
 var SummaryEmpty = summaryCheck("", naturalLanguageEmpty)
 
 func naturalLanguageValuesEquals(check vocab.NaturalLanguageValues, val string) bool {
+	nfc := norm.NFC.String
+
+	val, _ = url.QueryUnescape(val)
 	for _, c := range check {
-		if strings.EqualFold(c.String(), val) {
+		if strings.EqualFold(nfc(c.String()), nfc(val)) {
 			return true
 		}
 	}

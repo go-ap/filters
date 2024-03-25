@@ -31,6 +31,7 @@ func (t targetChecks) Apply(it vocab.Item) bool {
 	}
 	return All(t...).Apply(act.Target)
 }
+
 func Target(fns ...Check) Check {
 	return targetChecks(fns)
 }
