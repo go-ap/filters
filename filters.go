@@ -329,13 +329,19 @@ func fromValues(q url.Values) Checks {
 		}
 	}
 	if len(actorQ) > 0 {
-		f = append(f, Actor(fromValues(actorQ)...))
+		if af := fromValues(actorQ); len(af) > 0 {
+			f = append(f, Actor(af...))
+		}
 	}
 	if len(objectQ) > 0 {
-		f = append(f, Object(fromValues(objectQ)...))
+		if of := fromValues(objectQ); len(of) > 0 {
+			f = append(f, Object(of...))
+		}
 	}
 	if len(targetQ) > 0 {
-		f = append(f, Target(fromValues(targetQ)...))
+		if tf := fromValues(targetQ); len(tf) > 0 {
+			f = append(f, Target(tf...))
+		}
 	}
 	if len(f) == 0 {
 		return nil
