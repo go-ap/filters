@@ -146,7 +146,7 @@ func accumContexts(item vocab.Item) vocab.IRIs {
 }
 
 func SameContext(iri vocab.IRI) Check {
-	return iriEquals(iri)
+	return contextEquals(iri)
 }
 
 type contextEquals iriEquals
@@ -173,7 +173,7 @@ func (c contextLike) Apply(it vocab.Item) bool {
 	return accumContexts(it).Contains(vocab.IRI(c))
 }
 
-var NilContext = idNil{}
+var NilContext = contextNil{}
 
 type contextNil idNil
 
@@ -204,7 +204,7 @@ func accumAttributedTos(item vocab.Item) vocab.IRIs {
 }
 
 func SameAttributedTo(iri vocab.IRI) Check {
-	return iriEquals(iri)
+	return attributedToEquals(iri)
 }
 
 type attributedToEquals iriEquals
@@ -218,7 +218,7 @@ func (a attributedToEquals) Apply(it vocab.Item) bool {
 }
 
 func AttributedToLike(frag string) Check {
-	return iriLike(frag)
+	return attributedToLike(frag)
 }
 
 type attributedToLike iriLike
@@ -237,7 +237,7 @@ func (a attributedToLike) Apply(it vocab.Item) bool {
 	return false
 }
 
-var NilAttributedTo = idNil{}
+var NilAttributedTo = attributedToNil{}
 
 type attributedToNil idNil
 
