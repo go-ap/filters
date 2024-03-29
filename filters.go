@@ -116,7 +116,9 @@ const (
 	keySummary = "summary"
 	keyContent = "content"
 
-	keyURL = "url"
+	keyURL          = "url"
+	keyAttributedTo = "attributedTo"
+	keyContext      = "context"
 
 	keyActor  = "actor"
 	keyObject = "object"
@@ -129,27 +131,6 @@ const (
 
 	keyMaxItems = "maxItems"
 )
-
-func ids(vv []string) []Check {
-	f := make([]Check, 0)
-	for _, v := range vv {
-		if v == "" {
-			f = append(f, NilID)
-		} else if v == "!" || v == "!-" {
-			f = append(f, NotNilIRI)
-		} else if strings.HasPrefix(v, "!") {
-			f = append(f, Not(IDLike(v[1:])))
-		} else if strings.HasPrefix(v, "~") {
-			f = append(f, IDLike(v[1:]))
-		} else {
-			f = append(f, ID(vocab.IRI(v)))
-		}
-	}
-	if len(f) == 1 {
-		return f
-	}
-	return Checks{Any(f...)}
-}
 
 func FromURL(u url.URL) Checks {
 	q := u.Query()
@@ -208,6 +189,97 @@ func paginationFromValues(q url.Values) Checks {
 	return f
 }
 
+type buildFilterFn func(string) Check
+
+type checkGroup struct {
+	nilFn  Check
+	likeFn buildFilterFn
+	sameFn buildFilterFn
+}
+
+func (cg checkGroup) build(vv ...string) Check {
+	f := make(Checks, 0)
+	for _, n := range vv {
+		if n == "" {
+			f = append(f, cg.nilFn)
+		} else if n == "!" || n == "!-" {
+			f = append(f, Not(cg.nilFn))
+		} else if strings.HasPrefix(n, "!") {
+			f = append(f, Not(cg.sameFn(n[1:])))
+		} else if strings.HasPrefix(n, "~") {
+			f = append(f, cg.likeFn(n[1:]))
+		} else {
+			f = append(f, cg.sameFn(n))
+		}
+		f = append(f)
+	}
+	if len(f) == 0 {
+		return nil
+	}
+	if len(f) == 1 {
+		return f[0]
+	}
+	return Any(f...)
+}
+
+var idFilters = checkGroup{
+	nilFn:  NilID,
+	likeFn: IDLike,
+	sameFn: func(s string) Check {
+		return SameID(vocab.IRI(s))
+	},
+}
+
+var iriFilters = checkGroup{
+	nilFn:  NilIRI,
+	likeFn: IRILike,
+	sameFn: func(s string) Check {
+		return SameIRI(vocab.IRI(s))
+	},
+}
+
+var nameFilters = checkGroup{
+	nilFn:  NameEmpty,
+	likeFn: NameLike,
+	sameFn: NameIs,
+}
+
+var summaryFilters = checkGroup{
+	nilFn:  SummaryEmpty,
+	likeFn: SummaryLike,
+	sameFn: SummaryIs,
+}
+
+var contentFilters = checkGroup{
+	nilFn:  ContentEmpty,
+	likeFn: ContentLike,
+	sameFn: ContentIs,
+}
+
+var urlFilters = checkGroup{
+	nilFn:  NilIRI,
+	likeFn: URLLike,
+	sameFn: func(s string) Check {
+		return SameURL(vocab.IRI(s))
+	},
+}
+
+var attributedToFilters = checkGroup{
+	nilFn:  NilAttributedTo,
+	likeFn: AttributedToLike,
+	sameFn: func(s string) Check {
+		return SameAttributedTo(vocab.IRI(s))
+	},
+}
+
+var contextFilters = checkGroup{
+	nilFn:  NilContext,
+	likeFn: ContextLike,
+	sameFn: func(s string) Check {
+		return SameContext(vocab.IRI(s))
+	},
+}
+
 func fromValues(q url.Values) Checks {
 	actorQ := make(url.Values)
 	objectQ := make(url.Values)
@@ -225,75 +297,15 @@ func fromValues(q url.Values) Checks {
 		}
 		switch piece {
 		case keyID, keyIRI:
-			f = append(f, ids(vv)...)
+			f = append(f, idFilters.build(vv...))
 		case keyType:
 			f = append(f, HasType(VocabularyTypesFilter(vv...)...))
 		case keyName:
-			fns := make(Checks, 0)
-			for _, n := range vv {
-				if n == "" {
-					fns = append(fns, NameEmpty)
-				} else if n == "!" || n == "!-" {
-					fns = append(fns, Not(NameEmpty))
-				} else if strings.HasPrefix(n, "!") {
-					fns = append(fns, Not(NameLike(n[1:])))
-				} else if strings.HasPrefix(n, "~") {
-					fns = append(fns, NameLike(n[1:]))
-				} else {
-					fns = append(fns, NameIs(n))
-				}
-			}
-			if len(fns) > 0 {
-				if len(fns) == 1 {
-					f = append(f, fns...)
-				} else {
-					f = append(f, Any(fns...))
-				}
-			}
+			f = append(f, nameFilters.build(vv...))
 		case keySummary:
-			fns := make(Checks, 0)
-			for _, n := range vv {
-				if n == "" {
-					fns = append(fns, SummaryEmpty)
-				} else if n == "!" || n == "!-" {
-					fns = append(fns, Not(SummaryEmpty))
-				} else if strings.HasPrefix(n, "!") {
-					fns = append(fns, Not(SummaryLike(n[1:])))
-				} else if strings.HasPrefix(n, "~") {
-					fns = append(fns, SummaryLike(n[1:]))
-				} else {
-					fns = append(fns, SummaryIs(n))
-				}
-			}
-			if len(fns) > 0 {
-				if len(fns) == 1 {
-					f = append(f, fns...)
-				} else {
-					f = append(f, Any(fns...))
-				}
-			}
+			f = append(f, summaryFilters.build(vv...))
 		case keyContent:
-			fns := make(Checks, 0)
-			for _, n := range vv {
-				if n == "" {
-					fns = append(fns, ContentEmpty)
-				} else if n == "!" || n == "!-" {
-					fns = append(fns, Not(ContentEmpty))
-				} else if strings.HasPrefix(n, "!") && n[1] != '-' {
-					fns = append(fns, Not(ContentLike(n[1:])))
-				} else if strings.HasPrefix(n, "~") {
-					fns = append(fns, ContentLike(n[1:]))
-				} else {
-					fns = append(fns, ContentIs(n))
-				}
-			}
-			if len(fns) > 0 {
-				if len(fns) == 1 {
-					f = append(f, fns...)
-				} else {
-					f = append(f, Any(fns...))
-				}
-			}
+			f = append(f, contentFilters.build(vv...))
 		case keyActor:
 			if len(remainder) > 0 {
 				actorQ[remainder] = vv
@@ -311,28 +323,11 @@ func fromValues(q url.Values) Checks {
 				tagQ[remainder] = vv
 			}
 		case keyURL:
-			fns := make(Checks, 0)
-			for _, n := range vv {
-				if n == "" {
-					f = append(f, NilIRI)
-				} else if n == "!" || n == "!-" {
-					f = append(f, Not(NilIRI))
-				} else if strings.HasPrefix(n, "!") {
-					f = append(f, Not(SameURL(vocab.IRI(n[1:]))))
-				} else if strings.HasPrefix(n, "~") {
-					f = append(f, URLLike(n[1:]))
-				} else {
-					f = append(f, SameURL(vocab.IRI(n)))
-				}
-				f = append(f)
-			}
-			if len(fns) > 0 {
-				if len(fns) == 1 {
-					f = append(f, fns...)
-				} else {
-					f = append(f, Any(fns...))
-				}
-			}
+			f = append(f, urlFilters.build(vv...))
+		case keyAttributedTo:
+			f = append(f, attributedToFilters.build(vv...))
+		case keyContext:
+			f = append(f, contextFilters.build(vv...))
 		}
 	}
 	if len(actorQ) > 0 {

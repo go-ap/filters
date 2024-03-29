@@ -126,14 +126,37 @@ func URLLike(frag string) Check {
 	return urlLike(frag)
 }
 
+func accumContexts(item vocab.Item) vocab.IRIs {
+	iris := make(vocab.IRIs, 0)
+	_ = vocab.OnObject(item, func(ob *vocab.Object) error {
+		if vocab.IsNil(ob.URL) {
+			return nil
+		}
+		if ob.AttributedTo.IsObject() {
+			_ = vocab.OnObject(ob.Context, func(c *vocab.Object) error {
+				iris = append(iris, c.GetLink())
+				return nil
+			})
+		} else {
+			iris = append(iris, ob.Context.GetLink())
+		}
+		return nil
+	})
+	return iris
+}
+
 func SameContext(iri vocab.IRI) Check {
 	return iriEquals(iri)
 }
 
 type contextEquals iriEquals
 
-func (c contextEquals) Apply(item vocab.Item) bool {
-	return iriEquals(c).Apply(item)
+func (c contextEquals) Apply(it vocab.Item) bool {
+	if vocab.IsNil(it) {
+		return len(c) == 0
+	}
+
+	return accumContexts(it).Contains(vocab.IRI(c))
 }
 
 func ContextLike(frag string) Check {
@@ -142,14 +165,85 @@ func ContextLike(frag string) Check {
 
 type contextLike iriLike
 
-func (c contextLike) Apply(item vocab.Item) bool {
-	return iriLike(c).Apply(item)
+func (c contextLike) Apply(it vocab.Item) bool {
+	if vocab.IsNil(it) {
+		return len(c) == 0
+	}
+
+	return accumContexts(it).Contains(vocab.IRI(c))
 }
 
 var NilContext = idNil{}
 
 type contextNil idNil
 
-func (c contextNil) Apply(item vocab.Item) bool {
-	return idNil(c).Apply(item)
+func (c contextNil) Apply(it vocab.Item) bool {
+	if vocab.IsNil(it) {
+		return true
+	}
+	return accumContexts(it) == nil
+}
+
+func accumAttributedTos(item vocab.Item) vocab.IRIs {
+	iris := make(vocab.IRIs, 0)
+	_ = vocab.OnObject(item, func(ob *vocab.Object) error {
+		if vocab.IsNil(ob.URL) {
+			return nil
+		}
+		if ob.AttributedTo.IsObject() {
+			_ = vocab.OnObject(ob.AttributedTo, func(attrTo *vocab.Object) error {
+				iris = append(iris, attrTo.GetLink())
+				return nil
+			})
+		} else {
+			iris = append(iris, ob.AttributedTo.GetLink())
+		}
+		return nil
+	})
+	return iris
+}
+
+func SameAttributedTo(iri vocab.IRI) Check {
+	return iriEquals(iri)
+}
+
+type attributedToEquals iriEquals
+
+func (a attributedToEquals) Apply(it vocab.Item) bool {
+	if vocab.IsNil(it) {
+		return len(a) == 0
+	}
+
+	return accumAttributedTos(it).Contains(vocab.IRI(a))
+}
+
+func AttributedToLike(frag string) Check {
+	return iriLike(frag)
+}
+
+type attributedToLike iriLike
+
+func (a attributedToLike) Apply(it vocab.Item) bool {
+	if vocab.IsNil(it) {
+		return len(a) == 0
+	}
+	nfc := norm.NFC.String
+	fragStr, _ := url.QueryUnescape(string(a))
+	for _, u := range accumAttributedTos(it) {
+		if strings.Contains(nfc(u.String()), nfc(fragStr)) {
+			return true
+		}
+	}
+	return false
+}
+
+var NilAttributedTo = idNil{}
+
+type attributedToNil idNil
+
+func (a attributedToNil) Apply(it vocab.Item) bool {
+	if vocab.IsNil(it) {
+		return true
+	}
+	return accumAttributedTos(it) == nil
 }

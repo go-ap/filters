@@ -33,6 +33,11 @@ func (frag iriLike) Apply(it vocab.Item) bool {
 	return strings.Contains(nfc(it.GetLink().String()), nfc(fragStr))
 }
 
+// IRILike
+func IRILike(frag string) Check {
+	return iriLike(frag)
+}
+
 // NilIRI checks if the activitypub.Item's IRI that matches any of the two magic values
 // that denote an empty value: activitypub.NilID = "-", or activitypub.EmptyID = ""
 var NilIRI = iriNil{}
