@@ -435,3 +435,207 @@ func Test_paginationFromValues(t *testing.T) {
 		})
 	}
 }
+
+func Test_fromValues(t *testing.T) {
+	tests := []struct {
+		name string
+		arg  url.Values
+		want Checks
+	}{
+		{
+			name: "empty",
+		},
+		// ID
+		{
+			name: "Empty ID",
+			arg: url.Values{
+				"id": []string{""},
+			},
+			want: Checks{
+				NilID,
+			},
+		},
+		{
+			name: "Not empty ID",
+			arg: url.Values{
+				"id": []string{"!"},
+			},
+			want: Checks{
+				NotNilID,
+			},
+		},
+		{
+			name: "ID like",
+			arg: url.Values{
+				"id": []string{"~test"},
+			},
+			want: Checks{
+				IDLike("test"),
+			},
+		},
+		{
+			name: "ID equals",
+			arg: url.Values{
+				"id": []string{"https://example.com"},
+			},
+			want: Checks{
+				SameID("https://example.com"),
+			},
+		},
+		// AttributedTo
+		{
+			name: "Empty attributedTo",
+			arg: url.Values{
+				"attributedTo": []string{""},
+			},
+			want: Checks{
+				NilAttributedTo,
+			},
+		},
+		{
+			name: "Not empty attributedTo",
+			arg: url.Values{
+				"attributedTo": []string{"!"},
+			},
+			want: Checks{
+				Not(NilAttributedTo),
+			},
+		},
+		{
+			name: "attributedTo like",
+			arg: url.Values{
+				"attributedTo": []string{"~test"},
+			},
+			want: Checks{
+				AttributedToLike("test"),
+			},
+		},
+		{
+			name: "attributedTo equals",
+			arg: url.Values{
+				"attributedTo": []string{"https://example.com"},
+			},
+			want: Checks{
+				SameAttributedTo("https://example.com"),
+			},
+		},
+		// context
+		{
+			name: "Empty context",
+			arg: url.Values{
+				"context": []string{""},
+			},
+			want: Checks{
+				NilContext,
+			},
+		},
+		{
+			name: "Not empty context",
+			arg: url.Values{
+				"context": []string{"!"},
+			},
+			want: Checks{
+				Not(NilContext),
+			},
+		},
+		{
+			name: "context like",
+			arg: url.Values{
+				"context": []string{"~test"},
+			},
+			want: Checks{
+				ContextLike("test"),
+			},
+		},
+		{
+			name: "context equals",
+			arg: url.Values{
+				"context": []string{"https://example.com"},
+			},
+			want: Checks{
+				SameContext("https://example.com"),
+			},
+		},
+		// URL
+		{
+			name: "Empty URL",
+			arg: url.Values{
+				"url": []string{""},
+			},
+			want: Checks{
+				NilIRI,
+			},
+		},
+		{
+			name: "Not empty URL",
+			arg: url.Values{
+				"url": []string{"!"},
+			},
+			want: Checks{
+				Not(NilIRI),
+			},
+		},
+		{
+			name: "URL like",
+			arg: url.Values{
+				"url": []string{"~test"},
+			},
+			want: Checks{
+				URLLike("test"),
+			},
+		},
+		{
+			name: "URL equals",
+			arg: url.Values{
+				"url": []string{"https://example.com"},
+			},
+			want: Checks{
+				SameURL("https://example.com"),
+			},
+		},
+		// Name
+		//{
+		//	name: "Empty Name",
+		//	arg: url.Values{
+		//		"name": []string{""},
+		//	},
+		//	want: Checks{
+		//		NameEmpty,
+		//	},
+		//},
+		//{
+		//	name: "Not empty Name",
+		//	arg: url.Values{
+		//		"name": []string{"!"},
+		//	},
+		//	want: Checks{
+		//		Not(NameEmpty),
+		//	},
+		//},
+		//{
+		//	name: "Name like",
+		//	arg: url.Values{
+		//		"name": []string{"~test"},
+		//	},
+		//	want: Checks{
+		//		NameLike("test"),
+		//	},
+		//},
+		//{
+		//	name: "Name equals",
+		//	arg: url.Values{
+		//		"name": []string{"john doe"},
+		//	},
+		//	want: Checks{
+		//		NameIs("john doe"),
+		//	},
+		//},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := fromValues(tt.arg); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("fromValues() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

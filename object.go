@@ -160,7 +160,7 @@ func (c contextEquals) Apply(it vocab.Item) bool {
 }
 
 func ContextLike(frag string) Check {
-	return iriLike(frag)
+	return contextLike(frag)
 }
 
 type contextLike iriLike

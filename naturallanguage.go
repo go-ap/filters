@@ -34,7 +34,7 @@ func NameLike(name string) Check {
 }
 
 // NameEmpty checks an activitypub.Object's Name, *and*, in the case of an activitypub.Actor
-// also the PreferredUsername to be empty.
+// also its PreferredUsername to be empty.
 // If *all* of the values are empty, the function returns true.
 //
 // Please note that the logic of this check is different from NameIs and NameLike.
