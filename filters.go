@@ -181,7 +181,7 @@ func paginationFromValues(q url.Values) Checks {
 		vv := q[keyBefore]
 		if len(vv) > 0 {
 			if _, err := url.ParseRequestURI(vv[0]); err == nil {
-				f = append(f, Before(ID(vocab.IRI(vv[0]))))
+				f = append(f, Before(SameID(vocab.IRI(vv[0]))))
 			} else {
 				f = append(f, Before(IDLike(vv[0])))
 			}
@@ -191,7 +191,7 @@ func paginationFromValues(q url.Values) Checks {
 		vv := q[keyAfter]
 		if len(vv) > 0 {
 			if _, err := url.ParseRequestURI(vv[0]); err == nil {
-				f = append(f, After(ID(vocab.IRI(vv[0]))))
+				f = append(f, After(SameID(vocab.IRI(vv[0]))))
 			} else {
 				f = append(f, After(IDLike(vv[0])))
 			}

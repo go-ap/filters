@@ -143,8 +143,8 @@ func TestID(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ob := vocab.Object{ID: tt.args.toCheckIRI}
-			if got := ID(tt.args.checkIRI).Apply(ob); got != tt.want {
-				t.Errorf("ID(%s).Apply(Object.ID=%s) = %v, want %v", tt.args.checkIRI, tt.args.toCheckIRI, got, tt.want)
+			if got := SameID(tt.args.checkIRI).Apply(ob); got != tt.want {
+				t.Errorf("SameID(%s).Apply(Object.ID=%s) = %v, want %v", tt.args.checkIRI, tt.args.toCheckIRI, got, tt.want)
 			}
 		})
 	}

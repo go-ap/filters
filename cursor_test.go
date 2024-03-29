@@ -17,7 +17,7 @@ func TestCursorFns(t *testing.T) {
 		{name: "empty"},
 		{
 			name: "just after",
-			fns:  Checks{After(ID("https://example.com"))},
+			fns:  Checks{After(SameID("https://example.com"))},
 			item: vocab.ItemCollection{
 				vocab.Activity{ID: "https://example.com/1"},
 				vocab.Activity{ID: "https://example.com"},
@@ -29,7 +29,7 @@ func TestCursorFns(t *testing.T) {
 		},
 		{
 			name: "after with filters",
-			fns:  Checks{After(ID("example.com"), HasType("Activity"), After(ID("example.com")))},
+			fns:  Checks{After(SameID("example.com"), HasType("Activity"), After(SameID("example.com")))},
 			want: nil,
 		},
 		{
@@ -59,7 +59,7 @@ func TestCursorFns(t *testing.T) {
 		},
 		{
 			name: "before=https://example.com/1 single item",
-			fns:  Checks{Before(ID("https://example.com/1"))},
+			fns:  Checks{Before(SameID("https://example.com/1"))},
 			item: vocab.ItemCollection{
 				vocab.Activity{ID: "https://example.com/1"},
 			},
@@ -67,7 +67,7 @@ func TestCursorFns(t *testing.T) {
 		},
 		{
 			name: "before=https://example.com/1 second item",
-			fns:  Checks{Before(ID("https://example.com/1"))},
+			fns:  Checks{Before(SameID("https://example.com/1"))},
 			item: vocab.ItemCollection{
 				vocab.Activity{ID: "https://example.com/0"},
 				vocab.Activity{ID: "https://example.com/1"},
@@ -79,7 +79,7 @@ func TestCursorFns(t *testing.T) {
 		},
 		{
 			name: "after=https://example.com/1 first item",
-			fns:  Checks{After(ID("https://example.com/1"))},
+			fns:  Checks{After(SameID("https://example.com/1"))},
 			item: vocab.ItemCollection{
 				vocab.Activity{ID: "https://example.com/1"},
 			},
@@ -87,7 +87,7 @@ func TestCursorFns(t *testing.T) {
 		},
 		{
 			name: "after=https://example.com/1 second item",
-			fns:  Checks{After(ID("https://example.com/1"))},
+			fns:  Checks{After(SameID("https://example.com/1"))},
 			item: vocab.ItemCollection{
 				vocab.Activity{ID: "https://example.com/0"},
 				vocab.Activity{ID: "https://example.com/1"},

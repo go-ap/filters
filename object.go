@@ -21,8 +21,8 @@ func (n idNil) Apply(it vocab.Item) bool {
 	return vocab.IsNil(it) || Any(SameIRI(vocab.NilIRI), SameIRI(vocab.EmptyIRI)).Apply(it.GetID())
 }
 
-// ID checks an activitypub.Object's ID property against the received iri.
-func ID(i vocab.IRI) Check {
+// SameID checks an activitypub.Object's ID property against the received iri.
+func SameID(i vocab.IRI) Check {
 	return idEquals(i)
 }
 

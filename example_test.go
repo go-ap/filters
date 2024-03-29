@@ -48,7 +48,7 @@ func ExampleFilter() {
 		HasType("Create"),
 		Actor(
 			Any(
-				ID("https://example.com/jdoe"),
+				SameID("https://example.com/jdoe"),
 				NameIs("JohnDoe"),
 			),
 		),
