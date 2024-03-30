@@ -129,7 +129,7 @@ func URLLike(frag string) Check {
 func accumContexts(item vocab.Item) vocab.IRIs {
 	iris := make(vocab.IRIs, 0)
 	_ = vocab.OnObject(item, func(ob *vocab.Object) error {
-		if vocab.IsNil(ob.URL) {
+		if vocab.IsNil(ob.Context) {
 			return nil
 		}
 		if ob.AttributedTo.IsObject() {
@@ -187,7 +187,7 @@ func (c contextNil) Apply(it vocab.Item) bool {
 func accumAttributedTos(item vocab.Item) vocab.IRIs {
 	iris := make(vocab.IRIs, 0)
 	_ = vocab.OnObject(item, func(ob *vocab.Object) error {
-		if vocab.IsNil(ob.URL) {
+		if vocab.IsNil(ob.AttributedTo) {
 			return nil
 		}
 		if ob.AttributedTo.IsObject() {
