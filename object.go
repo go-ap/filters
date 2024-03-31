@@ -78,13 +78,27 @@ func accumURLs(item vocab.Item) vocab.IRIs {
 			if vocab.IsNil(ob.URL) {
 				return nil
 			}
-			if ob.URL.IsObject() {
+			if vocab.IsIRI(ob.URL) {
+				urls = append(urls, ob.URL.GetLink())
+			} else if vocab.IsIRIs(ob.URL) {
+				_ = vocab.OnIRIs(ob.URL, func(replTos *vocab.IRIs) error {
+					for _, r := range *replTos {
+						urls = append(urls, r.GetLink())
+					}
+					return nil
+				})
+			} else if vocab.IsItemCollection(ob.URL) {
+				_ = vocab.OnItemCollection(ob.URL, func(uc *vocab.ItemCollection) error {
+					for _, u := range *uc {
+						urls = append(urls, u.GetLink())
+					}
+					return nil
+				})
+			} else {
 				_ = vocab.OnObject(ob.URL, func(url *vocab.Object) error {
 					urls = append(urls, url.GetLink())
 					return nil
 				})
-			} else {
-				urls = append(urls, ob.URL.GetLink())
 			}
 			return nil
 		})
@@ -132,13 +146,27 @@ func accumContexts(item vocab.Item) vocab.IRIs {
 		if vocab.IsNil(ob.Context) {
 			return nil
 		}
-		if ob.AttributedTo.IsObject() {
+		if vocab.IsIRI(ob.Context) {
+			iris = append(iris, ob.Context.GetLink())
+		} else if vocab.IsIRIs(ob.Context) {
+			_ = vocab.OnIRIs(ob.Context, func(col *vocab.IRIs) error {
+				for _, r := range *col {
+					iris = append(iris, r.GetLink())
+				}
+				return nil
+			})
+		} else if vocab.IsItemCollection(ob.Context) {
+			_ = vocab.OnItemCollection(ob.Context, func(col *vocab.ItemCollection) error {
+				for _, c := range *col {
+					iris = append(iris, c.GetLink())
+				}
+				return nil
+			})
+		} else {
 			_ = vocab.OnObject(ob.Context, func(c *vocab.Object) error {
 				iris = append(iris, c.GetLink())
 				return nil
 			})
-		} else {
-			iris = append(iris, ob.Context.GetLink())
 		}
 		return nil
 	})
@@ -175,13 +203,13 @@ func (c contextLike) Apply(it vocab.Item) bool {
 
 var NilContext = contextNil{}
 
-type contextNil idNil
+type contextNil iriNil
 
 func (c contextNil) Apply(it vocab.Item) bool {
 	if vocab.IsNil(it) {
 		return true
 	}
-	return accumContexts(it) == nil
+	return len(accumContexts(it)) == 0
 }
 
 func accumAttributedTos(item vocab.Item) vocab.IRIs {
@@ -190,13 +218,27 @@ func accumAttributedTos(item vocab.Item) vocab.IRIs {
 		if vocab.IsNil(ob.AttributedTo) {
 			return nil
 		}
-		if ob.AttributedTo.IsObject() {
+		if vocab.IsIRI(ob.AttributedTo) {
+			iris = append(iris, ob.AttributedTo.GetLink())
+		} else if vocab.IsIRIs(ob.AttributedTo) {
+			_ = vocab.OnIRIs(ob.AttributedTo, func(col *vocab.IRIs) error {
+				for _, r := range *col {
+					iris = append(iris, r.GetLink())
+				}
+				return nil
+			})
+		} else if vocab.IsItemCollection(ob.AttributedTo) {
+			_ = vocab.OnItemCollection(ob.AttributedTo, func(attrTos *vocab.ItemCollection) error {
+				for _, a := range *attrTos {
+					iris = append(iris, a.GetLink())
+				}
+				return nil
+			})
+		} else {
 			_ = vocab.OnObject(ob.AttributedTo, func(attrTo *vocab.Object) error {
 				iris = append(iris, attrTo.GetLink())
 				return nil
 			})
-		} else {
-			iris = append(iris, ob.AttributedTo.GetLink())
 		}
 		return nil
 	})
@@ -239,13 +281,13 @@ func (a attributedToLike) Apply(it vocab.Item) bool {
 
 var NilAttributedTo = attributedToNil{}
 
-type attributedToNil idNil
+type attributedToNil iriNil
 
 func (a attributedToNil) Apply(it vocab.Item) bool {
 	if vocab.IsNil(it) {
 		return true
 	}
-	return accumAttributedTos(it) == nil
+	return len(accumAttributedTos(it)) == 0
 }
 
 func accumInReplyTos(item vocab.Item) vocab.IRIs {
@@ -254,13 +296,27 @@ func accumInReplyTos(item vocab.Item) vocab.IRIs {
 		if vocab.IsNil(ob.InReplyTo) {
 			return nil
 		}
-		if ob.AttributedTo.IsObject() {
+		if vocab.IsIRI(ob.InReplyTo) {
+			iris = append(iris, ob.InReplyTo.GetLink())
+		} else if vocab.IsIRIs(ob.InReplyTo) {
+			_ = vocab.OnIRIs(ob.InReplyTo, func(replTos *vocab.IRIs) error {
+				for _, r := range *replTos {
+					iris = append(iris, r.GetLink())
+				}
+				return nil
+			})
+		} else if vocab.IsItemCollection(ob.InReplyTo) {
+			_ = vocab.OnItemCollection(ob.InReplyTo, func(replTos *vocab.ItemCollection) error {
+				for _, r := range *replTos {
+					iris = append(iris, r.GetLink())
+				}
+				return nil
+			})
+		} else {
 			_ = vocab.OnObject(ob.InReplyTo, func(inReplyTo *vocab.Object) error {
 				iris = append(iris, inReplyTo.GetLink())
 				return nil
 			})
-		} else {
-			iris = append(iris, ob.InReplyTo.GetLink())
 		}
 		return nil
 	})
@@ -269,13 +325,13 @@ func accumInReplyTos(item vocab.Item) vocab.IRIs {
 
 var NilInReplyTo = inReplyToNil{}
 
-type inReplyToNil idNil
+type inReplyToNil iriNil
 
 func (c inReplyToNil) Apply(it vocab.Item) bool {
 	if vocab.IsNil(it) {
 		return true
 	}
-	return accumInReplyTos(it) == nil
+	return len(accumInReplyTos(it)) == 0
 }
 
 func InReplyToLike(frag string) Check {

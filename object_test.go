@@ -1,6 +1,9 @@
 package filters
 
 import (
+	"reflect"
+	"runtime"
+	"strings"
 	"testing"
 
 	vocab "github.com/go-ap/activitypub"
@@ -362,4 +365,77 @@ func TestIDLike(t *testing.T) {
 			}
 		})
 	}
+}
+
+func testAccumFn(accumFn func(vocab.Item) vocab.IRIs) func(*testing.T) {
+	accumFnName := runtime.FuncForPC(reflect.ValueOf(accumFn).Pointer()).Name()
+	if idx := strings.LastIndex(accumFnName, ".") + 1; idx < len(accumFnName) {
+		accumFnName = accumFnName[idx:]
+	}
+	return func(t *testing.T) {
+		tests := []struct {
+			name string
+			item vocab.Item
+			want vocab.IRIs
+		}{
+			{
+				name: "empty Item",
+			},
+			{
+				name: "empty InReplyTo",
+				item: &vocab.Object{},
+			},
+			{
+				name: "one InReplyTo IRI",
+				item: &vocab.Object{InReplyTo: vocab.IRI("https://example.com")},
+				want: vocab.IRIs{"https://example.com"},
+			},
+			{
+				name: "two InReplyTo IRIs",
+				item: &vocab.Object{InReplyTo: vocab.IRIs{vocab.IRI("https://example.com"), vocab.IRI("https://example.com/one")}},
+				want: vocab.IRIs{"https://example.com", "https://example.com/one"},
+			},
+			{
+				name: "two InReplyTo IRIs as Items",
+				item: &vocab.Object{InReplyTo: vocab.ItemCollection{vocab.IRI("https://example.com"), vocab.IRI("https://example.com/one")}},
+				want: vocab.IRIs{"https://example.com", "https://example.com/one"},
+			},
+			{
+				name: "two InReplyTo Items",
+				item: &vocab.Object{InReplyTo: vocab.ItemCollection{&vocab.Object{ID: "https://example.com"}, &vocab.Profile{ID: "https://example.com/one"}}},
+				want: vocab.IRIs{"https://example.com", "https://example.com/one"},
+			},
+		}
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				got := accumFn(tt.item)
+				if len(got) != len(tt.want) {
+					t.Errorf("%s() has %d items, wanted %d items", accumFnName, len(got), len(tt.want))
+					return
+				}
+				for i, it := range tt.want {
+					git := got[i]
+					if !git.Equals(it, true) {
+						t.Errorf("%s() at pos %d = %v, want %v", accumFnName, i, git.GetLink(), it)
+					}
+				}
+			})
+		}
+	}
+}
+
+func Test_accumInReplyTos(t *testing.T) {
+	testAccumFn(accumInReplyTos)
+}
+
+func Test_accumContexts(t *testing.T) {
+	testAccumFn(accumContexts)
+}
+
+func Test_accumAttributedTos(t *testing.T) {
+	testAccumFn(accumAttributedTos)
+}
+
+func Test_accumURLs(t *testing.T) {
+	testAccumFn(accumURLs)
 }

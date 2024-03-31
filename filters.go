@@ -337,7 +337,7 @@ func fromValues(q url.Values) Checks {
 		case keyAttributedTo:
 			f = append(f, attributedToFilters.build(vv...))
 		case keyInReplyTo:
-			f = append(f, attributedToFilters.build(vv...))
+			f = append(f, inReplyToFilters.build(vv...))
 		case keyContext:
 			f = append(f, contextFilters.build(vv...))
 		}
