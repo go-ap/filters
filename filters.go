@@ -202,9 +202,9 @@ type checkGroup struct {
 func (cg checkGroup) build(vv ...string) Check {
 	f := make(Checks, 0)
 	for _, n := range vv {
-		if n == "" {
+		if n == "" || n == vocab.NilIRI.String() {
 			f = append(f, cg.nilFn)
-		} else if n == "!" || n == "!-" {
+		} else if n == "!" || n[1:] == vocab.NilIRI.String() {
 			f = append(f, Not(cg.nilFn))
 		} else if strings.HasPrefix(n, "!") {
 			f = append(f, Not(cg.sameFn(n[1:])))
