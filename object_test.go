@@ -439,3 +439,523 @@ func Test_accumAttributedTos(t *testing.T) {
 func Test_accumURLs(t *testing.T) {
 	testAccumFn(accumURLs)
 }
+
+func Test_inReplyToEquals_Apply(t *testing.T) {
+	tests := []struct {
+		name string
+		i    inReplyToEquals
+		it   vocab.Item
+		want bool
+	}{
+		{
+			name: "empty equals empty",
+			i:    "",
+			want: true,
+		},
+		{
+			name: "https://example.com does not equal empty",
+			i:    "https://example.com",
+			want: false,
+		},
+		{
+			name: "https://example.com with empty inReplyTo",
+			i:    "https://example.com",
+			it:   &vocab.Object{},
+			want: false,
+		},
+		{
+			name: "https://example.com not equal with IRI inReplyTo",
+			i:    "https://example.com",
+			it:   &vocab.Object{InReplyTo: vocab.IRI("https://example.com/not-equal")},
+			want: false,
+		},
+		{
+			name: "https://example.com equals with IRI inReplyTo",
+			i:    "https://example.com",
+			it:   &vocab.Object{InReplyTo: vocab.IRI("https://example.com")},
+			want: true,
+		},
+		{
+			name: "https://example.com not equal with Object inReplyTo",
+			i:    "https://example.com",
+			it:   &vocab.Object{InReplyTo: vocab.Object{ID: "https://example.com/not-equal"}},
+			want: false,
+		},
+		{
+			name: "https://example.com equals with Object inReplyTo",
+			i:    "https://example.com",
+			it:   &vocab.Object{InReplyTo: vocab.Object{ID: "https://example.com"}},
+			want: true,
+		},
+		{
+			name: "https://example.com not equal with IRI inReplyTo",
+			i:    "https://example.com",
+			it:   &vocab.Object{InReplyTo: vocab.IRIs{vocab.IRI("https://example.com/not-equal")}},
+			want: false,
+		},
+		{
+			name: "https://example.com equals with IRI inReplyTo",
+			i:    "https://example.com",
+			it:   &vocab.Object{InReplyTo: vocab.IRIs{vocab.IRI("https://example.com")}},
+			want: true,
+		},
+		{
+			name: "https://example.com not equal with IRI inReplyTo",
+			i:    "https://example.com",
+			it:   &vocab.Object{InReplyTo: vocab.ItemCollection{vocab.IRI("https://example.com/not-equal")}},
+			want: false,
+		},
+		{
+			name: "https://example.com equals with IRI inReplyTo",
+			i:    "https://example.com",
+			it:   &vocab.Object{InReplyTo: vocab.ItemCollection{vocab.IRI("https://example.com")}},
+			want: true,
+		},
+		{
+			name: "https://example.com not equal with Object inReplyTo",
+			i:    "https://example.com",
+			it:   &vocab.Object{InReplyTo: vocab.ItemCollection{vocab.Object{ID: "https://example.com/not-equal"}}},
+			want: false,
+		},
+		{
+			name: "https://example.com equals with Object inReplyTo",
+			i:    "https://example.com",
+			it:   &vocab.Object{InReplyTo: vocab.ItemCollection{vocab.Object{ID: "https://example.com"}}},
+			want: true,
+		},
+		//
+		{
+			name: "https://example.com not equal with IRI inReplyTo",
+			i:    "https://example.com",
+			it:   &vocab.Object{InReplyTo: vocab.IRIs{vocab.IRI("https://example.com/not-equal"), vocab.IRI("https://example.com/still-not-equal")}},
+			want: false,
+		},
+		{
+			name: "https://example.com equals with IRI inReplyTo",
+			i:    "https://example.com",
+			it:   &vocab.Object{InReplyTo: vocab.IRIs{vocab.IRI("https://example.com"), vocab.IRI("https://example.com/not-equal")}},
+			want: true,
+		},
+		{
+			name: "https://example.com not equal with IRI inReplyTo",
+			i:    "https://example.com",
+			it:   &vocab.Object{InReplyTo: vocab.ItemCollection{vocab.IRI("https://example.com/not-equal"), vocab.IRI("https://example.com/still-not-equal")}},
+			want: false,
+		},
+		{
+			name: "https://example.com equals with IRI inReplyTo",
+			i:    "https://example.com",
+			it:   &vocab.Object{InReplyTo: vocab.ItemCollection{vocab.IRI("https://example.com"), vocab.IRI("https://example.com/not-equal")}},
+			want: true,
+		},
+		{
+			name: "https://example.com not equal with Object inReplyTo",
+			i:    "https://example.com",
+			it:   &vocab.Object{InReplyTo: vocab.ItemCollection{vocab.Object{ID: "https://example.com/not-equal"}, vocab.Object{ID: "https://example.com/still-not-equal"}}},
+			want: false,
+		},
+		{
+			name: "https://example.com equals with Object inReplyTo",
+			i:    "https://example.com",
+			it:   &vocab.Object{InReplyTo: vocab.ItemCollection{vocab.Object{ID: "https://example.com"}, vocab.Object{ID: "https://example.com/not-equal"}}},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.i.Apply(tt.it); got != tt.want {
+				t.Errorf("inReplyTo.Apply() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_attributedToEquals_Apply(t *testing.T) {
+	tests := []struct {
+		name string
+		i    attributedToEquals
+		it   vocab.Item
+		want bool
+	}{
+		{
+			name: "empty equals empty",
+			i:    "",
+			want: true,
+		},
+		{
+			name: "https://example.com does not equal empty",
+			i:    "https://example.com",
+			want: false,
+		},
+		{
+			name: "https://example.com with empty attributedTo",
+			i:    "https://example.com",
+			it:   &vocab.Object{},
+			want: false,
+		},
+		{
+			name: "https://example.com not equal with IRI attributedTo",
+			i:    "https://example.com",
+			it:   &vocab.Object{AttributedTo: vocab.IRI("https://example.com/not-equal")},
+			want: false,
+		},
+		{
+			name: "https://example.com equals with IRI attributedTo",
+			i:    "https://example.com",
+			it:   &vocab.Object{AttributedTo: vocab.IRI("https://example.com")},
+			want: true,
+		},
+		{
+			name: "https://example.com not equal with Object attributedTo",
+			i:    "https://example.com",
+			it:   &vocab.Object{AttributedTo: vocab.Object{ID: "https://example.com/not-equal"}},
+			want: false,
+		},
+		{
+			name: "https://example.com equals with Object attributedTo",
+			i:    "https://example.com",
+			it:   &vocab.Object{AttributedTo: vocab.Object{ID: "https://example.com"}},
+			want: true,
+		},
+		{
+			name: "https://example.com not equal with IRI attributedTo",
+			i:    "https://example.com",
+			it:   &vocab.Object{AttributedTo: vocab.IRIs{vocab.IRI("https://example.com/not-equal")}},
+			want: false,
+		},
+		{
+			name: "https://example.com equals with IRI attributedTo",
+			i:    "https://example.com",
+			it:   &vocab.Object{AttributedTo: vocab.IRIs{vocab.IRI("https://example.com")}},
+			want: true,
+		},
+		{
+			name: "https://example.com not equal with IRI attributedTo",
+			i:    "https://example.com",
+			it:   &vocab.Object{AttributedTo: vocab.ItemCollection{vocab.IRI("https://example.com/not-equal")}},
+			want: false,
+		},
+		{
+			name: "https://example.com equals with IRI attributedTo",
+			i:    "https://example.com",
+			it:   &vocab.Object{AttributedTo: vocab.ItemCollection{vocab.IRI("https://example.com")}},
+			want: true,
+		},
+		{
+			name: "https://example.com not equal with Object attributedTo",
+			i:    "https://example.com",
+			it:   &vocab.Object{AttributedTo: vocab.ItemCollection{vocab.Object{ID: "https://example.com/not-equal"}}},
+			want: false,
+		},
+		{
+			name: "https://example.com equals with Object attributedTo",
+			i:    "https://example.com",
+			it:   &vocab.Object{AttributedTo: vocab.ItemCollection{vocab.Object{ID: "https://example.com"}}},
+			want: true,
+		},
+		//
+		{
+			name: "https://example.com not equal with IRI attributedTo",
+			i:    "https://example.com",
+			it:   &vocab.Object{AttributedTo: vocab.IRIs{vocab.IRI("https://example.com/not-equal"), vocab.IRI("https://example.com/still-not-equal")}},
+			want: false,
+		},
+		{
+			name: "https://example.com equals with IRI attributedTo",
+			i:    "https://example.com",
+			it:   &vocab.Object{AttributedTo: vocab.IRIs{vocab.IRI("https://example.com"), vocab.IRI("https://example.com/not-equal")}},
+			want: true,
+		},
+		{
+			name: "https://example.com not equal with IRI attributedTo",
+			i:    "https://example.com",
+			it:   &vocab.Object{AttributedTo: vocab.ItemCollection{vocab.IRI("https://example.com/not-equal"), vocab.IRI("https://example.com/still-not-equal")}},
+			want: false,
+		},
+		{
+			name: "https://example.com equals with IRI attributedTo",
+			i:    "https://example.com",
+			it:   &vocab.Object{AttributedTo: vocab.ItemCollection{vocab.IRI("https://example.com"), vocab.IRI("https://example.com/not-equal")}},
+			want: true,
+		},
+		{
+			name: "https://example.com not equal with Object attributedTo",
+			i:    "https://example.com",
+			it:   &vocab.Object{AttributedTo: vocab.ItemCollection{vocab.Object{ID: "https://example.com/not-equal"}, vocab.Object{ID: "https://example.com/still-not-equal"}}},
+			want: false,
+		},
+		{
+			name: "https://example.com equals with Object attributedTo",
+			i:    "https://example.com",
+			it:   &vocab.Object{AttributedTo: vocab.ItemCollection{vocab.Object{ID: "https://example.com"}, vocab.Object{ID: "https://example.com/not-equal"}}},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.i.Apply(tt.it); got != tt.want {
+				t.Errorf("attributedTo.Apply() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_contextEquals_Apply(t *testing.T) {
+	tests := []struct {
+		name string
+		i    contextEquals
+		it   vocab.Item
+		want bool
+	}{
+		{
+			name: "empty equals empty",
+			i:    "",
+			want: true,
+		},
+		{
+			name: "https://example.com does not equal empty",
+			i:    "https://example.com",
+			want: false,
+		},
+		{
+			name: "https://example.com with empty context",
+			i:    "https://example.com",
+			it:   &vocab.Object{},
+			want: false,
+		},
+		{
+			name: "https://example.com not equal with IRI context",
+			i:    "https://example.com",
+			it:   &vocab.Object{Context: vocab.IRI("https://example.com/not-equal")},
+			want: false,
+		},
+		{
+			name: "https://example.com equals with IRI context",
+			i:    "https://example.com",
+			it:   &vocab.Object{Context: vocab.IRI("https://example.com")},
+			want: true,
+		},
+		{
+			name: "https://example.com not equal with Object context",
+			i:    "https://example.com",
+			it:   &vocab.Object{Context: vocab.Object{ID: "https://example.com/not-equal"}},
+			want: false,
+		},
+		{
+			name: "https://example.com equals with Object context",
+			i:    "https://example.com",
+			it:   &vocab.Object{Context: vocab.Object{ID: "https://example.com"}},
+			want: true,
+		},
+		{
+			name: "https://example.com not equal with IRI context",
+			i:    "https://example.com",
+			it:   &vocab.Object{Context: vocab.IRIs{vocab.IRI("https://example.com/not-equal")}},
+			want: false,
+		},
+		{
+			name: "https://example.com equals with IRI context",
+			i:    "https://example.com",
+			it:   &vocab.Object{Context: vocab.IRIs{vocab.IRI("https://example.com")}},
+			want: true,
+		},
+		{
+			name: "https://example.com not equal with IRI context",
+			i:    "https://example.com",
+			it:   &vocab.Object{Context: vocab.ItemCollection{vocab.IRI("https://example.com/not-equal")}},
+			want: false,
+		},
+		{
+			name: "https://example.com equals with IRI context",
+			i:    "https://example.com",
+			it:   &vocab.Object{Context: vocab.ItemCollection{vocab.IRI("https://example.com")}},
+			want: true,
+		},
+		{
+			name: "https://example.com not equal with Object context",
+			i:    "https://example.com",
+			it:   &vocab.Object{Context: vocab.ItemCollection{vocab.Object{ID: "https://example.com/not-equal"}}},
+			want: false,
+		},
+		{
+			name: "https://example.com equals with Object context",
+			i:    "https://example.com",
+			it:   &vocab.Object{Context: vocab.ItemCollection{vocab.Object{ID: "https://example.com"}}},
+			want: true,
+		},
+		//
+		{
+			name: "https://example.com not equal with IRI context",
+			i:    "https://example.com",
+			it:   &vocab.Object{Context: vocab.IRIs{vocab.IRI("https://example.com/not-equal"), vocab.IRI("https://example.com/still-not-equal")}},
+			want: false,
+		},
+		{
+			name: "https://example.com equals with IRI context",
+			i:    "https://example.com",
+			it:   &vocab.Object{Context: vocab.IRIs{vocab.IRI("https://example.com"), vocab.IRI("https://example.com/not-equal")}},
+			want: true,
+		},
+		{
+			name: "https://example.com not equal with IRI context",
+			i:    "https://example.com",
+			it:   &vocab.Object{Context: vocab.ItemCollection{vocab.IRI("https://example.com/not-equal"), vocab.IRI("https://example.com/still-not-equal")}},
+			want: false,
+		},
+		{
+			name: "https://example.com equals with IRI context",
+			i:    "https://example.com",
+			it:   &vocab.Object{Context: vocab.ItemCollection{vocab.IRI("https://example.com"), vocab.IRI("https://example.com/not-equal")}},
+			want: true,
+		},
+		{
+			name: "https://example.com not equal with Object context",
+			i:    "https://example.com",
+			it:   &vocab.Object{Context: vocab.ItemCollection{vocab.Object{ID: "https://example.com/not-equal"}, vocab.Object{ID: "https://example.com/still-not-equal"}}},
+			want: false,
+		},
+		{
+			name: "https://example.com equals with Object context",
+			i:    "https://example.com",
+			it:   &vocab.Object{Context: vocab.ItemCollection{vocab.Object{ID: "https://example.com"}, vocab.Object{ID: "https://example.com/not-equal"}}},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.i.Apply(tt.it); got != tt.want {
+				t.Errorf("context.Apply() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_URLEquals_Apply(t *testing.T) {
+	tests := []struct {
+		name string
+		i    urlEquals
+		it   vocab.Item
+		want bool
+	}{
+		{
+			name: "empty equals empty",
+			i:    "",
+			want: true,
+		},
+		{
+			name: "https://example.com does not equal empty",
+			i:    "https://example.com",
+			want: false,
+		},
+		{
+			name: "https://example.com with empty URL",
+			i:    "https://example.com",
+			it:   &vocab.Object{},
+			want: false,
+		},
+		{
+			name: "https://example.com not equal with IRI URL",
+			i:    "https://example.com",
+			it:   &vocab.Object{URL: vocab.IRI("https://example.com/not-equal")},
+			want: false,
+		},
+		{
+			name: "https://example.com equals with IRI URL",
+			i:    "https://example.com",
+			it:   &vocab.Object{URL: vocab.IRI("https://example.com")},
+			want: true,
+		},
+		{
+			name: "https://example.com not equal with Object URL",
+			i:    "https://example.com",
+			it:   &vocab.Object{URL: vocab.Object{ID: "https://example.com/not-equal"}},
+			want: false,
+		},
+		{
+			name: "https://example.com equals with Object URL",
+			i:    "https://example.com",
+			it:   &vocab.Object{URL: vocab.Object{ID: "https://example.com"}},
+			want: true,
+		},
+		{
+			name: "https://example.com not equal with IRI URL",
+			i:    "https://example.com",
+			it:   &vocab.Object{URL: vocab.IRIs{vocab.IRI("https://example.com/not-equal")}},
+			want: false,
+		},
+		{
+			name: "https://example.com equals with IRI URL",
+			i:    "https://example.com",
+			it:   &vocab.Object{URL: vocab.IRIs{vocab.IRI("https://example.com")}},
+			want: true,
+		},
+		{
+			name: "https://example.com not equal with IRI URL",
+			i:    "https://example.com",
+			it:   &vocab.Object{URL: vocab.ItemCollection{vocab.IRI("https://example.com/not-equal")}},
+			want: false,
+		},
+		{
+			name: "https://example.com equals with IRI URL",
+			i:    "https://example.com",
+			it:   &vocab.Object{URL: vocab.ItemCollection{vocab.IRI("https://example.com")}},
+			want: true,
+		},
+		{
+			name: "https://example.com not equal with Object URL",
+			i:    "https://example.com",
+			it:   &vocab.Object{URL: vocab.ItemCollection{vocab.Object{ID: "https://example.com/not-equal"}}},
+			want: false,
+		},
+		{
+			name: "https://example.com equals with Object URL",
+			i:    "https://example.com",
+			it:   &vocab.Object{URL: vocab.ItemCollection{vocab.Object{ID: "https://example.com"}}},
+			want: true,
+		},
+		//
+		{
+			name: "https://example.com not equal with IRI URL",
+			i:    "https://example.com",
+			it:   &vocab.Object{URL: vocab.IRIs{vocab.IRI("https://example.com/not-equal"), vocab.IRI("https://example.com/still-not-equal")}},
+			want: false,
+		},
+		{
+			name: "https://example.com equals with IRI URL",
+			i:    "https://example.com",
+			it:   &vocab.Object{URL: vocab.IRIs{vocab.IRI("https://example.com"), vocab.IRI("https://example.com/not-equal")}},
+			want: true,
+		},
+		{
+			name: "https://example.com not equal with IRI URL",
+			i:    "https://example.com",
+			it:   &vocab.Object{URL: vocab.ItemCollection{vocab.IRI("https://example.com/not-equal"), vocab.IRI("https://example.com/still-not-equal")}},
+			want: false,
+		},
+		{
+			name: "https://example.com equals with IRI URL",
+			i:    "https://example.com",
+			it:   &vocab.Object{URL: vocab.ItemCollection{vocab.IRI("https://example.com"), vocab.IRI("https://example.com/not-equal")}},
+			want: true,
+		},
+		{
+			name: "https://example.com not equal with Object URL",
+			i:    "https://example.com",
+			it:   &vocab.Object{URL: vocab.ItemCollection{vocab.Object{ID: "https://example.com/not-equal"}, vocab.Object{ID: "https://example.com/still-not-equal"}}},
+			want: false,
+		},
+		{
+			name: "https://example.com equals with Object URL",
+			i:    "https://example.com",
+			it:   &vocab.Object{URL: vocab.ItemCollection{vocab.Object{ID: "https://example.com"}, vocab.Object{ID: "https://example.com/not-equal"}}},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.i.Apply(tt.it); got != tt.want {
+				t.Errorf("URL.Apply() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
