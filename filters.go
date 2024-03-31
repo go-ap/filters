@@ -118,6 +118,7 @@ const (
 
 	keyURL          = "url"
 	keyAttributedTo = "attributedTo"
+	keyInReplyTo    = "inReplyTo"
 	keyContext      = "context"
 
 	keyActor  = "actor"
@@ -280,6 +281,14 @@ var contextFilters = checkGroup{
 	},
 }
 
+var inReplyToFilters = checkGroup{
+	nilFn:  NilInReplyTo,
+	likeFn: InReplyToLike,
+	sameFn: func(s string) Check {
+		return SameInReplyTo(vocab.IRI(s))
+	},
+}
+
 func fromValues(q url.Values) Checks {
 	actorQ := make(url.Values)
 	objectQ := make(url.Values)
@@ -325,6 +334,8 @@ func fromValues(q url.Values) Checks {
 		case keyURL:
 			f = append(f, urlFilters.build(vv...))
 		case keyAttributedTo:
+			f = append(f, attributedToFilters.build(vv...))
+		case keyInReplyTo:
 			f = append(f, attributedToFilters.build(vv...))
 		case keyContext:
 			f = append(f, contextFilters.build(vv...))

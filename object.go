@@ -247,3 +247,67 @@ func (a attributedToNil) Apply(it vocab.Item) bool {
 	}
 	return accumAttributedTos(it) == nil
 }
+
+func accumInReplyTos(item vocab.Item) vocab.IRIs {
+	iris := make(vocab.IRIs, 0)
+	_ = vocab.OnObject(item, func(ob *vocab.Object) error {
+		if vocab.IsNil(ob.InReplyTo) {
+			return nil
+		}
+		if ob.AttributedTo.IsObject() {
+			_ = vocab.OnObject(ob.InReplyTo, func(inReplyTo *vocab.Object) error {
+				iris = append(iris, inReplyTo.GetLink())
+				return nil
+			})
+		} else {
+			iris = append(iris, ob.InReplyTo.GetLink())
+		}
+		return nil
+	})
+	return iris
+}
+
+var NilInReplyTo = inReplyToNil{}
+
+type inReplyToNil idNil
+
+func (c inReplyToNil) Apply(it vocab.Item) bool {
+	if vocab.IsNil(it) {
+		return true
+	}
+	return accumInReplyTos(it) == nil
+}
+
+func InReplyToLike(frag string) Check {
+	return inReplyToLike(frag)
+}
+
+type inReplyToLike iriLike
+
+func (a inReplyToLike) Apply(it vocab.Item) bool {
+	if vocab.IsNil(it) {
+		return len(a) == 0
+	}
+	nfc := norm.NFC.String
+	fragStr, _ := url.QueryUnescape(string(a))
+	for _, u := range accumInReplyTos(it) {
+		if strings.Contains(nfc(u.String()), nfc(fragStr)) {
+			return true
+		}
+	}
+	return false
+}
+
+// SameInReplyTo checks an activitypub.Object's InReplyTo
+func SameInReplyTo(iri vocab.IRI) Check {
+	return inReplyToEquals(iri)
+}
+
+type inReplyToEquals iriEquals
+
+func (i inReplyToEquals) Apply(it vocab.Item) bool {
+	if vocab.IsNil(it) {
+		return len(i) == 0
+	}
+	return accumInReplyTos(it).Contains(vocab.IRI(i))
+}
