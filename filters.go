@@ -25,41 +25,42 @@ func (ff Checks) Run(item vocab.Item) vocab.Item {
 		return item
 	}
 
-	if item.IsCollection() {
-		_ = vocab.OnItemCollection(item, func(col *vocab.ItemCollection) error {
-			if vocab.IsItemCollection(item) {
-				item = FilterChecks(ff...).runOnItems(*col)
-			} else {
-				*col = FilterChecks(ff...).runOnItems(*col)
-			}
+	if !item.IsCollection() {
+		return FilterChecks(ff...).runOnItem(item)
+	}
+
+	_ = vocab.OnItemCollection(item, func(col *vocab.ItemCollection) error {
+		if vocab.IsItemCollection(item) {
+			item = FilterChecks(ff...).runOnItems(*col)
+		} else {
+			*col = FilterChecks(ff...).runOnItems(*col)
+		}
+		return nil
+	})
+
+	switch item.GetType() {
+	case vocab.OrderedCollectionType:
+		_ = vocab.OnOrderedCollection(item, func(c *vocab.OrderedCollection) error {
+			c.TotalItems = c.Count()
 			return nil
 		})
-
-		switch item.GetType() {
-		case vocab.OrderedCollectionType:
-			_ = vocab.OnOrderedCollection(item, func(c *vocab.OrderedCollection) error {
-				c.TotalItems = c.Count()
-				return nil
-			})
-		case vocab.OrderedCollectionPageType:
-			_ = vocab.OnOrderedCollectionPage(item, func(c *vocab.OrderedCollectionPage) error {
-				c.TotalItems = c.Count()
-				return nil
-			})
-		case vocab.CollectionType:
-			_ = vocab.OnCollection(item, func(c *vocab.Collection) error {
-				c.TotalItems = c.Count()
-				return nil
-			})
-		case vocab.CollectionPageType:
-			_ = vocab.OnCollectionPage(item, func(c *vocab.CollectionPage) error {
-				c.TotalItems = c.Count()
-				return nil
-			})
-		}
-		return PaginateCollection(item, ff...)
+	case vocab.OrderedCollectionPageType:
+		_ = vocab.OnOrderedCollectionPage(item, func(c *vocab.OrderedCollectionPage) error {
+			c.TotalItems = c.Count()
+			return nil
+		})
+	case vocab.CollectionType:
+		_ = vocab.OnCollection(item, func(c *vocab.Collection) error {
+			c.TotalItems = c.Count()
+			return nil
+		})
+	case vocab.CollectionPageType:
+		_ = vocab.OnCollectionPage(item, func(c *vocab.CollectionPage) error {
+			c.TotalItems = c.Count()
+			return nil
+		})
 	}
-	return FilterChecks(ff...).runOnItem(item)
+	return PaginateCollection(item, ff...)
 }
 
 func (ff Checks) runOnItem(it vocab.Item) vocab.Item {
@@ -87,7 +88,7 @@ func (ff Checks) runOnItems(col vocab.ItemCollection) vocab.ItemCollection {
 	}
 	result := make(vocab.ItemCollection, 0)
 	for _, it := range col {
-		if !checkFn(ff)(it) {
+		if vocab.IsNil(it) || !checkFn(ff)(it) {
 			continue
 		}
 		result = append(result, it)
