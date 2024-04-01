@@ -326,21 +326,25 @@ func fromValues(q url.Values) Checks {
 		case keyContent:
 			f = append(f, contentFilters.build(vv...))
 		case keyActor:
-			if len(remainder) > 0 {
-				actorQ[remainder] = vv
+			if len(remainder) == 0 {
+				remainder = keyID
 			}
+			actorQ[remainder] = vv
 		case keyObject:
-			if len(remainder) > 0 {
-				objectQ[remainder] = vv
+			if len(remainder) == 0 {
+				remainder = keyID
 			}
+			objectQ[remainder] = vv
 		case keyTarget:
-			if len(remainder) > 0 {
-				targetQ[remainder] = vv
+			if len(remainder) == 0 {
+				remainder = keyID
 			}
+			targetQ[remainder] = vv
 		case keyTag:
-			if len(remainder) > 0 {
-				tagQ[remainder] = vv
+			if len(remainder) == 0 {
+				remainder = keyID
 			}
+			tagQ[remainder] = vv
 		case keyURL:
 			f = append(f, urlFilters.build(vv...))
 		case keyAttributedTo:
