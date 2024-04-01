@@ -182,8 +182,12 @@ func parseURLValue(v string) (string, string) {
 		return opNone, v
 	}
 	op := opNone
-	if v[0:1] == opNot || v[0:1] == opLike {
-		op = string(v[0])
+	if len(v) > 2 && v[0:2] == opNotLike {
+		op = v[0:2]
+		v = v[2:]
+	}
+	if op == opNone && (v[0:1] == opNot || v[0:1] == opLike) {
+		op = v[0:1]
 		v = v[1:]
 	}
 	return op, v
@@ -192,6 +196,7 @@ func parseURLValue(v string) (string, string) {
 const (
 	opNot     = "!"
 	opLike    = "~"
+	opNotLike = "!~"
 	opNone    = ""
 	sNilIRI   = string(vocab.NilIRI)
 	sEmptyIRI = string(vocab.EmptyIRI)
@@ -215,6 +220,8 @@ func (cg checkGroup) build(vv ...string) Check {
 			}
 		case opLike:
 			f = append(f, cg.likeFn(v))
+		case opNotLike:
+			f = append(f, Not(cg.likeFn(v)))
 		}
 	}
 	if len(f) == 0 {
