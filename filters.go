@@ -38,28 +38,6 @@ func (ff Checks) Run(item vocab.Item) vocab.Item {
 		return nil
 	})
 
-	switch item.GetType() {
-	case vocab.OrderedCollectionType:
-		_ = vocab.OnOrderedCollection(item, func(c *vocab.OrderedCollection) error {
-			c.TotalItems = c.Count()
-			return nil
-		})
-	case vocab.OrderedCollectionPageType:
-		_ = vocab.OnOrderedCollectionPage(item, func(c *vocab.OrderedCollectionPage) error {
-			c.TotalItems = c.Count()
-			return nil
-		})
-	case vocab.CollectionType:
-		_ = vocab.OnCollection(item, func(c *vocab.Collection) error {
-			c.TotalItems = c.Count()
-			return nil
-		})
-	case vocab.CollectionPageType:
-		_ = vocab.OnCollectionPage(item, func(c *vocab.CollectionPage) error {
-			c.TotalItems = c.Count()
-			return nil
-		})
-	}
 	return PaginateCollection(item, ff...)
 }
 
@@ -199,21 +177,45 @@ type checkGroup struct {
 	sameFn buildFilterFn
 }
 
+func parseURLValue(v string) (string, string) {
+	if len(v) < 1 {
+		return opNone, v
+	}
+	op := opNone
+	if v[0:1] == opNot || v[0:1] == opLike {
+		op = string(v[0])
+		v = v[1:]
+	}
+	return op, v
+}
+
+const (
+	opNot     = "!"
+	opLike    = "~"
+	opNone    = ""
+	sNilIRI   = string(vocab.NilIRI)
+	sEmptyIRI = string(vocab.EmptyIRI)
+)
+
 func (cg checkGroup) build(vv ...string) Check {
 	f := make(Checks, 0)
 	for _, n := range vv {
-		if n == "" || n == vocab.NilIRI.String() {
-			f = append(f, cg.nilFn)
-		} else if n == "!" || n[1:] == vocab.NilIRI.String() {
-			f = append(f, Not(cg.nilFn))
-		} else if strings.HasPrefix(n, "!") {
-			f = append(f, Not(cg.sameFn(n[1:])))
-		} else if strings.HasPrefix(n, "~") {
-			f = append(f, cg.likeFn(n[1:]))
-		} else {
-			f = append(f, cg.sameFn(n))
+		switch op, v := parseURLValue(n); op {
+		case opNone:
+			if v == sNilIRI || v == sEmptyIRI {
+				f = append(f, cg.nilFn)
+			} else {
+				f = append(f, cg.sameFn(n))
+			}
+		case opNot:
+			if v == sNilIRI || v == sEmptyIRI {
+				f = append(f, Not(cg.nilFn))
+			} else {
+				f = append(f, Not(cg.sameFn(v)))
+			}
+		case opLike:
+			f = append(f, cg.likeFn(v))
 		}
-		f = append(f)
 	}
 	if len(f) == 0 {
 		return nil

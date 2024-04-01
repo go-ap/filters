@@ -15,6 +15,12 @@ func PaginateCollection(it vocab.Item, filters ...Check) vocab.Item {
 		return it
 	}
 
+	total := uint(0)
+	_ = vocab.OnCollectionIntf(it, func(col vocab.CollectionInterface) error {
+		total = col.Count()
+		return nil
+	})
+
 	col, prevIRI, nextIRI := collectionPageFromItem(it, CursorChecks(filters...)...)
 	if vocab.IsNil(col) {
 		return it
@@ -43,11 +49,13 @@ func PaginateCollection(it vocab.Item, filters ...Check) vocab.Item {
 	switch col.GetType() {
 	case vocab.OrderedCollectionType:
 		_ = vocab.OnOrderedCollection(col, func(c *vocab.OrderedCollection) error {
+			c.TotalItems = total
 			c.First = firstIRI
 			return nil
 		})
 	case vocab.OrderedCollectionPageType:
 		_ = vocab.OnOrderedCollectionPage(col, func(c *vocab.OrderedCollectionPage) error {
+			c.TotalItems = total
 			c.PartOf = partOfIRI
 			c.First = firstIRI
 			if !nextIRI.GetLink().Equals(firstIRI, true) {
@@ -60,11 +68,13 @@ func PaginateCollection(it vocab.Item, filters ...Check) vocab.Item {
 		})
 	case vocab.CollectionType:
 		_ = vocab.OnCollection(col, func(c *vocab.Collection) error {
+			c.TotalItems = total
 			c.First = firstIRI
 			return nil
 		})
 	case vocab.CollectionPageType:
 		_ = vocab.OnCollectionPage(col, func(c *vocab.CollectionPage) error {
+			c.TotalItems = total
 			c.PartOf = partOfIRI
 			c.First = firstIRI
 			if !nextIRI.GetLink().Equals(firstIRI, true) {

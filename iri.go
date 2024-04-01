@@ -45,7 +45,26 @@ var NilIRI = iriNil{}
 type iriNil struct{}
 
 func (n iriNil) Apply(it vocab.Item) bool {
-	return vocab.IsNil(it) || Any(SameIRI(vocab.NilIRI), SameIRI(vocab.EmptyIRI)).Apply(it.GetLink())
+	if vocab.IsNil(it) {
+		return true
+	}
+	if vocab.IsIRIs(it) {
+		result := false
+		_ = vocab.OnIRIs(it, func(col *vocab.IRIs) error {
+			result = len(*col) == 0
+			return nil
+		})
+		return result
+	}
+	if vocab.IsItemCollection(it) {
+		result := false
+		_ = vocab.OnItemCollection(it, func(col *vocab.ItemCollection) error {
+			result = len(*col) == 0
+			return nil
+		})
+		return result
+	}
+	return Any(SameIRI(vocab.NilIRI), SameIRI(vocab.EmptyIRI)).Apply(it.GetLink())
 }
 
 // NotNilIRI checks if the activitypub.Object's URL property matches any of the two magic values
