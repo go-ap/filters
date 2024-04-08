@@ -1,9 +1,9 @@
 module github.com/go-ap/filters
 
-go 1.20
+go 1.18
 
 require (
-	github.com/go-ap/activitypub v0.0.0-20240327073638-93645bda3b18
+	github.com/go-ap/activitypub v0.0.0-20240408091739-ba76b44c2594
 	github.com/go-ap/errors v0.0.0-20240304112515-6077fa9c17b0
 	github.com/mariusor/qstring v0.0.0-20200204164351-5a99d46de39d
 	golang.org/x/text v0.13.0
