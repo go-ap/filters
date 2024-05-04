@@ -29,6 +29,15 @@ func MaxCountChecks(fns ...Check) Check {
 	return nil
 }
 
+func MaxCount(fns ...Check) int {
+	for _, fn := range fns {
+		if f, ok := fn.(*counter); ok {
+			return f.max
+		}
+	}
+	return -1
+}
+
 func ObjectChecks(fns ...Check) Checks {
 	c := make([]Check, 0)
 	for _, fn := range fns {
