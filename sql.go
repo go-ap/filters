@@ -7,16 +7,16 @@ import (
 	vocab "github.com/go-ap/activitypub"
 )
 
-func GetLimit(f ...Check) string {
+func GetLimit(f ...Check) int {
 	for _, check := range f {
-		switch check.(type) {
+		switch c := check.(type) {
 		case *counter:
-		case *afterCrit:
-		case *beforeCrit:
+			return c.max
 		}
 	}
-	return ""
+	return -1
 }
+
 func GetWhereClauses(f ...Check) ([]string, []any) {
 	var clauses = make([]string, 0)
 	var values = make([]any, 0)
