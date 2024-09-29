@@ -8,11 +8,11 @@ import (
 	"golang.org/x/text/unicode/norm"
 )
 
-// NilID checks if the activitypub.Object's ID property matches any of the two magic values
-// that denote an empty value: activitypub.NilID = "-", or activitypub.EmptyID = ""
+// NilID checks if the [vocab.Object]'s ID property matches any of the two magic values
+// that denote an empty value: [vocab.NilID] = "-", or [vocab.EmptyID] = ""
 var NilID = idNil{}
 
-// NotNilID checks if the activitypub.Object's ID property is not nil
+// NotNilID checks if the [vocab.Object]'s ID property is not nil
 var NotNilID = Not(NilID)
 
 type idNil iriNil
@@ -21,7 +21,7 @@ func (n idNil) Apply(it vocab.Item) bool {
 	return vocab.IsNil(it) || Any(SameIRI(vocab.NilIRI), SameIRI(vocab.EmptyIRI)).Apply(it.GetID())
 }
 
-// SameID checks an activitypub.Object's ID property against the received iri.
+// SameID checks a [vocab.Object]'s ID property against the received iri.
 func SameID(i vocab.IRI) Check {
 	return idEquals(i)
 }

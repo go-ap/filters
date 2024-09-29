@@ -48,14 +48,6 @@ func (n iriNil) Apply(it vocab.Item) bool {
 	if vocab.IsNil(it) {
 		return true
 	}
-	if vocab.IsIRIs(it) {
-		result := false
-		_ = vocab.OnIRIs(it, func(col *vocab.IRIs) error {
-			result = len(*col) == 0
-			return nil
-		})
-		return result
-	}
 	if vocab.IsItemCollection(it) {
 		result := false
 		_ = vocab.OnItemCollection(it, func(col *vocab.ItemCollection) error {
