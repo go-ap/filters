@@ -170,7 +170,7 @@ func collectionPageFromItem(it vocab.Item, filters ...Check) (vocab.Item, vocab.
 			}
 		} else {
 			_ = vocab.OnOrderedCollection(it, func(new *vocab.OrderedCollection) error {
-				new.OrderedItems, prev, next = filterCollection(new.Collection(), filters...)
+				new.OrderedItems, prev, next = filterCollection(sortItemsByPublishedUpdated(new.Collection()), filters...)
 				if len(next) > 0 {
 					new.First = getURL(it.GetLink(), next)
 				}
@@ -275,33 +275,26 @@ func filterCollection(col vocab.ItemCollection, fns ...Check) (vocab.ItemCollect
 }
 
 func sortItemsByPublishedUpdated(col vocab.ItemCollection) vocab.ItemCollection {
-	sort.SliceStable(col, func(i int, j int) bool {
+	sort.SliceStable(col, func(i, j int) bool {
 		it1 := col.Collection()[i]
 		it2 := col.Collection()[j]
 		var (
-			p1 time.Time
-			p2 time.Time
 			u1 time.Time
 			u2 time.Time
 		)
 		_ = vocab.OnObject(it1, func(ob *vocab.Object) error {
-			p1 = ob.Published
-			u1 = ob.Updated
+			if u1 = ob.Published; ob.Updated.After(u1) {
+				u1 = ob.Updated
+			}
 			return nil
 		})
 		_ = vocab.OnObject(it2, func(ob *vocab.Object) error {
-			p2 = ob.Published
-			u2 = ob.Updated
+			if u2 = ob.Published; ob.Updated.After(u2) {
+				u2 = ob.Updated
+			}
 			return nil
 		})
-
-		if d1 := u1.Sub(p1); d1 < 0 {
-			u1 = p1
-		}
-		if d2 := u2.Sub(p2); d2 < 0 {
-			u2 = p2
-		}
-		return u2.Sub(u1) < 0
+		return u2.Before(u1)
 	})
 	return col
 }
