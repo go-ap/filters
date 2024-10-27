@@ -11,7 +11,7 @@ import (
 
 // PaginateCollection is a function that populates the received collection
 func PaginateCollection(it vocab.Item, filters ...Check) vocab.Item {
-	if vocab.IsNil(it) {
+	if vocab.IsNil(it) || !it.IsCollection() {
 		return it
 	}
 

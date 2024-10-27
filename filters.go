@@ -20,6 +20,14 @@ type Check interface {
 
 type Checks []Check
 
+func (ff Checks) Filter(item vocab.Item) vocab.Item {
+	return FilterChecks(ff...).runOnItem(item)
+}
+
+func (ff Checks) Paginate(item vocab.Item) vocab.Item {
+	return PaginateCollection(item, ff...)
+}
+
 func (ff Checks) Run(item vocab.Item) vocab.Item {
 	if len(ff) == 0 || vocab.IsNil(item) {
 		return item
