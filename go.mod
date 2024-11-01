@@ -3,7 +3,7 @@ module github.com/go-ap/filters
 go 1.18
 
 require (
-	github.com/go-ap/activitypub v0.0.0-20240910141749-b4b8c8aa484c
+	github.com/go-ap/activitypub v0.0.0-20241101101514-bc5248bb8442
 	github.com/go-ap/errors v0.0.0-20240910140019-1e9d33cc1568
 	github.com/mariusor/qstring v0.0.0-20200204164351-5a99d46de39d
 	golang.org/x/text v0.17.0
