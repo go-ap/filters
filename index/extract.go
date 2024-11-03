@@ -9,9 +9,11 @@ import (
 // This works on both [vocab.Link] and [vocab.Item] objects.
 func extractType(li vocab.LinkOrIRI) []string {
 	switch it := li.(type) {
-	case vocab.Item:
-		return []string{string(it.GetType())}
 	case vocab.Link:
+		return []string{string(it.GetType())}
+	case *vocab.Link:
+		return []string{string(it.GetType())}
+	case vocab.Item:
 		return []string{string(it.GetType())}
 	}
 	return nil
@@ -21,6 +23,10 @@ func extractType(li vocab.LinkOrIRI) []string {
 // This works on both [vocab.Link] and [vocab.Item] objects.
 func extractName(li vocab.LinkOrIRI) []string {
 	switch it := li.(type) {
+	case vocab.Link:
+		return extractNatLangVal(it.Name)
+	case *vocab.Link:
+		return extractNatLangVal(it.Name)
 	case vocab.Item:
 		result := make([]string, 0)
 		_ = vocab.OnObject(it, func(ob *vocab.Object) error {
@@ -28,8 +34,6 @@ func extractName(li vocab.LinkOrIRI) []string {
 			return nil
 		})
 		return result
-	case vocab.Link:
-		return extractNatLangVal(it.Name)
 	}
 
 	return nil
@@ -83,6 +87,10 @@ func extractContent(li vocab.LinkOrIRI) []string {
 // extractNatLangVal extracts a single token from the value of the [vocab.NaturalLanguageValues] value.
 // This is meant for the properties that contain single words like "preferredUsername" or "name".
 func extractNatLangVal(nlv vocab.NaturalLanguageValues) []string {
+	if nlv == nil {
+		return nil
+	}
+
 	result := make([]string, 0)
 	for _, cc := range nlv {
 		result = append(result, cc.Value.String())
@@ -96,13 +104,13 @@ func extractNatLangVal(nlv vocab.NaturalLanguageValues) []string {
 //
 //	See something like https://pkg.go.dev/github.com/huantt/plaintext-extractor
 func tokenizeNatLangVal(nlv vocab.NaturalLanguageValues) []string {
+	if nlv == nil {
+		return nil
+	}
+
 	result := make([]string, 0)
 	for _, cc := range nlv {
-		lng := "en"
-		if cc.Ref == "en" || cc.Ref == "fr" || cc.Ref == "es" {
-			lng = string(cc.Ref)
-		}
-		tokenizer, _ := tokenize.NewPragmaticSegmenter(lng)
+		tokenizer := tokenize.NewWordBoundaryTokenizer()
 		result = append(result, tokenizer.Tokenize(cc.Value.String())...)
 	}
 	return result
@@ -116,16 +124,23 @@ func extractRecipients(li vocab.LinkOrIRI) []vocab.IRI {
 	if !ok {
 		return nil
 	}
-	iris := make([]vocab.IRI, 0)
-	if r, ok := it.(vocab.HasRecipients); ok {
-		for _, rec := range r.Recipients() {
-			iris = append(iris, rec.GetLink())
-		}
+	r, ok := it.(vocab.HasRecipients)
+	if !ok {
+		return nil
+	}
+	recipients := r.Recipients()
+	if len(recipients) == 0 {
+		return nil
+	}
+
+	iris := make([]vocab.IRI, 0, len(recipients))
+	for _, rec := range recipients {
+		iris = append(iris, rec.GetLink())
 	}
 	return iris
 }
 
-// extractObject returns the [vocab.IRI] tokens corresponding to the "attributedTo" property of
+// extractAttributedTo returns the [vocab.IRI] tokens corresponding to the "attributedTo" property of
 // the received [vocab.Item]
 func extractAttributedTo(li vocab.LinkOrIRI) []vocab.IRI {
 	it, ok := li.(vocab.Item)

@@ -33,7 +33,7 @@ type Index struct {
 
 // Full returns a full index data type.
 // The indexable fields can be found in the "ByXX" constants.
-func Full(types ...Type) *Index {
+func Full() *Index {
 	return &Index{
 		w:   sync.RWMutex{},
 		Ref: make(map[uint32]vocab.IRI),
