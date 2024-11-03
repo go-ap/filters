@@ -8,24 +8,34 @@ import (
 	"golang.org/x/text/unicode/norm"
 )
 
+type nlvType uint8
+
+const (
+	byName nlvType = iota
+	byPreferredUsername
+	bySummary
+	byContent
+)
+
 type naturalLanguageValCheck struct {
 	checkValue string
 	checkFn    naturalLanguageValuesCheckFn
 	accumFn    func(vocab.Item) vocab.NaturalLanguageValues
+	typ        nlvType
 }
 
 func (n naturalLanguageValCheck) Apply(it vocab.Item) bool {
 	return n.checkFn(n.accumFn(it), n.checkValue)
 }
 
-// NameIs checks an activitypub.Object's Name, or, in the case of an activitypub.Actor
+// NameIs checks an [vocab.Object]'s Name, or, in the case of an [vocab.Actor]
 // also the PreferredUsername against the "name" value.
 // If any of the Language Ref map values match the value, the function returns true.
 func NameIs(name string) Check {
 	return nameCheck(name, naturalLanguageValuesEquals)
 }
 
-// NameLike checks an activitypub.Object's Name, or, in the case of an activitypub.Actor
+// NameLike checks an [vocab.Object]'s Name, or, in the case of an [vocab.Actor]
 // // also the PreferredUsername against the "name" value.
 // If any of the Language Ref map values contains the value as a substring,
 // the function returns true.
@@ -33,47 +43,47 @@ func NameLike(name string) Check {
 	return nameCheck(name, naturalLanguageValuesLike)
 }
 
-// NameEmpty checks an activitypub.Object's Name, *and*, in the case of an activitypub.Actor
+// NameEmpty checks an [vocab.Object]'s Name, *and*, in the case of an [vocab.Actor]
 // also its PreferredUsername to be empty.
 // If *all* of the values are empty, the function returns true.
 //
 // Please note that the logic of this check is different from NameIs and NameLike.
 var NameEmpty = nameCheck("", naturalLanguageEmpty)
 
-// ContentIs checks an activitypub.Object's Content against the "cont" value.
+// ContentIs checks an [vocab.Object]'s Content against the "cont" value.
 // If any of the Language Ref map values match the value, the function returns true.
 func ContentIs(cont string) Check {
 	return contentCheck(cont, naturalLanguageValuesEquals)
 }
 
-// ContentLike checks an activitypub.Object's Content property against the "cont" value.
+// ContentLike checks an [vocab.Object]'s Content property against the "cont" value.
 // If any of the Language Ref map values contains the value as a substring,
 // the function returns true.
 func ContentLike(cont string) Check {
 	return contentCheck(cont, naturalLanguageValuesLike)
 }
 
-// ContentEmpty checks an activitypub.Object's Content, *and*, in the case of an activitypub.Actor
+// ContentEmpty checks an [vocab.Object]'s Content, *and*, in the case of an [vocab.Actor]
 // also the PreferredUsername to be empty.
 // If *all* of the values are empty, the function returns true.
 //
 // Please note that the logic of this check is different from ContentIs and ContentLike.
 var ContentEmpty = contentCheck("", naturalLanguageEmpty)
 
-// SummaryIs checks an activitypub.Object's Summary against the "sum" value.
+// SummaryIs checks an [vocab.Object]'s Summary against the "sum" value.
 // If any of the Language Ref map values match the value, the function returns true.
 func SummaryIs(sum string) Check {
 	return summaryCheck(sum, naturalLanguageValuesEquals)
 }
 
-// SummaryLike checks an activitypub.Object's Summary property against the "sum" value.
+// SummaryLike checks an [vocab.Object]'s Summary property against the "sum" value.
 // If any of the Language Ref map values contains the value as a substring,
 // the function returns true.
 func SummaryLike(sum string) Check {
 	return summaryCheck(sum, naturalLanguageValuesLike)
 }
 
-// SummaryEmpty checks an activitypub.Object's Summary, *and*, in the case of an activitypub.Actor
+// SummaryEmpty checks an [vocab.Object]'s Summary, *and*, in the case of an [vocab.Actor]
 // also the PreferredUsername to be empty.
 // If *all* of the values are empty, the function returns true.
 //
@@ -115,6 +125,7 @@ func nameCheck(name string, checkFn naturalLanguageValuesCheckFn) Check {
 		checkValue: name,
 		checkFn:    checkFn,
 		accumFn:    loadName,
+		typ:        byName,
 	}
 }
 
@@ -143,6 +154,7 @@ func contentCheck(content string, checkFn naturalLanguageValuesCheckFn) Check {
 		checkValue: content,
 		checkFn:    checkFn,
 		accumFn:    loadContent,
+		typ:        byContent,
 	}
 }
 
@@ -163,6 +175,7 @@ func summaryCheck(summary string, checkFn naturalLanguageValuesCheckFn) Check {
 		checkValue: summary,
 		checkFn:    checkFn,
 		accumFn:    loadSummary,
+		typ:        bySummary,
 	}
 }
 
