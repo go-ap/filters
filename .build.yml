@@ -1,0 +1,14 @@
+image: archlinux
+packages:
+  - go
+sources:
+  - https://github.com/go-ap/filters
+environment:
+  GO111MODULE: 'on'
+tasks:
+  - tests: |
+      cd filters
+      make test
+  - coverage: |
+      set -a +x
+      cd client && make coverage
