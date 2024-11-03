@@ -121,7 +121,7 @@ func TestAggregateFilters(t *testing.T) {
 	}
 }
 
-func ExampleIndex_Find() {
+func ExampleAggregateFilters() {
 	checks := Checks{
 		HasType(vocab.CreateType),
 		Authorized("https://federated.local/actors/jDoe"),
