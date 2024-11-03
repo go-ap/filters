@@ -8,6 +8,10 @@ import (
 // AggregateFilters converts the received [Checks] into a list of [index.BasicFilter] objects
 // that can be used to query an [index.Index].
 func AggregateFilters(fil ...Check) []index.BasicFilter {
+	if len(fil) == 0 {
+		return nil
+	}
+
 	types := make([]index.BasicFilter, 0, len(fil))
 	for _, f := range fil {
 		switch ff := f.(type) {
@@ -15,6 +19,8 @@ func AggregateFilters(fil ...Check) []index.BasicFilter {
 			switch ff.typ {
 			case byName:
 				types = append(types, index.BasicFilter{Type: index.ByName, Values: []string{ff.checkValue}})
+				// NOTE(marius): the naturalLanguageValChecks have this idiosyncrasy of doing name searches for
+				// both Name and PreferredUsername fields.
 				types = append(types, index.BasicFilter{Type: index.ByPreferredUsername, Values: []string{ff.checkValue}})
 			case bySummary:
 				types = append(types, index.BasicFilter{Type: index.BySummary, Values: []string{ff.checkValue}})
@@ -23,23 +29,11 @@ func AggregateFilters(fil ...Check) []index.BasicFilter {
 			default:
 			}
 		case actorChecks:
-			values := make([]string, 0)
-			for _, af := range ff {
-				if ie, ok := af.(iriEquals); ok {
-					values = append(values, vocab.IRI(ie).String())
-				}
-			}
-			if len(values) > 0 {
+			if values := objectCheckValues(ff); len(values) > 0 {
 				types = append(types, index.BasicFilter{Type: index.ByActor, Values: values})
 			}
 		case objectChecks:
-			values := make([]string, 0)
-			for _, af := range ff {
-				if ie, ok := af.(iriEquals); ok {
-					values = append(values, vocab.IRI(ie).String())
-				}
-			}
-			if len(values) > 0 {
+			if values := objectCheckValues(ff); len(values) > 0 {
 				types = append(types, index.BasicFilter{Type: index.ByObject, Values: values})
 			}
 		case attributedToEquals:
@@ -59,4 +53,17 @@ func AggregateFilters(fil ...Check) []index.BasicFilter {
 		}
 	}
 	return types
+}
+
+func objectCheckValues(ff []Check) []string {
+	values := make([]string, 0, len(ff))
+	for _, af := range ff {
+		if ie, ok := af.(iriEquals); ok {
+			values = append(values, vocab.IRI(ie).String())
+		}
+		if ie, ok := af.(idEquals); ok {
+			values = append(values, vocab.IRI(ie).String())
+		}
+	}
+	return values
 }

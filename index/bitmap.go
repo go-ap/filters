@@ -7,32 +7,34 @@ import (
 )
 
 type (
-	tokenTypes interface{ ~string }
+	tokener interface{ ~string }
 
 	Indexer interface {
 		Add(vocab.LinkOrIRI) error
 	}
 
-	bitmaps[T tokenTypes] interface {
+	bitmaps[T tokener] interface {
 		get(key T) (*roaring.Bitmap, bool)
 	}
 
-	hashFnType                  func(iri vocab.LinkOrIRI) uint32
-	extractFnType[T tokenTypes] func(vocab.LinkOrIRI) []T
+	hashFnType               func(iri vocab.LinkOrIRI) uint32
+	extractFnType[T tokener] func(vocab.LinkOrIRI) []T
 )
+
+var HashSeed uint32 = 666
 
 func murmurHash(it vocab.LinkOrIRI) uint32 {
 	if it == nil {
 		return 0
 	}
-	h := murmur3.New32()
+	h := murmur3.New32WithSeed(HashSeed)
 	_, _ = h.Write([]byte(it.GetLink()))
 	return h.Sum32()
 }
 
 var hashFn hashFnType = murmurHash
 
-type index[T tokenTypes] struct {
+type index[T tokener] struct {
 	tokenMap  map[T]*roaring.Bitmap
 	extractFn extractFnType[T]
 }
@@ -44,11 +46,10 @@ func (i *index[T]) Add(li vocab.LinkOrIRI) error {
 	}
 	tokens := i.extractFn(li)
 	for _, tok := range tokens {
-		bmp, ok := i.tokenMap[tok]
-		if !ok {
+		if _, ok := i.tokenMap[tok]; !ok {
 			i.tokenMap[tok] = roaring.New()
 		}
-		bmp.Add(ref)
+		i.tokenMap[tok].Add(ref)
 	}
 	return nil
 }
@@ -58,7 +59,7 @@ func (i *index[T]) get(key T) (*roaring.Bitmap, bool) {
 	return b, ok
 }
 
-func TokenBitmap[T tokenTypes](extractFn extractFnType[T]) Indexer {
+func TokenBitmap[T tokener](extractFn extractFnType[T]) Indexer {
 	return &index[T]{
 		tokenMap:  make(map[T]*roaring.Bitmap),
 		extractFn: extractFn,
