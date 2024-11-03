@@ -1,9 +1,11 @@
 package filters
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
+	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/filters/index"
 )
 
@@ -117,4 +119,33 @@ func TestAggregateFilters(t *testing.T) {
 			}
 		})
 	}
+}
+
+func ExampleIndex_Find() {
+	checks := Checks{
+		HasType(vocab.CreateType),
+		Authorized("https://federated.local/actors/jDoe"),
+		Object(SameID("https://federated.local/objects/1")),
+	}
+
+	findableCreate := &vocab.Activity{
+		ID:   "https://federated.local/1",
+		Type: vocab.CreateType,
+		To:   vocab.ItemCollection{vocab.IRI("https://federated.local/actors/jDoe")},
+		Object: &vocab.Object{
+			ID:   "https://federated.local/objects/1",
+			Type: vocab.NoteType,
+		},
+	}
+
+	in := index.Full()
+	_ = in.Add(findableCreate)
+
+	iris, err := in.Find(AggregateFilters(checks...)...)
+	fmt.Printf("Error: %v\n", err)
+	fmt.Printf("IRIs: %#v\n", iris)
+
+	// Output:
+	// Error: <nil>
+	// IRIs: []activitypub.IRI{https://federated.local/1}
 }

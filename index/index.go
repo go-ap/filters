@@ -56,10 +56,17 @@ func (i *Index) Add(li vocab.LinkOrIRI) error {
 	i.w.Lock()
 	defer i.w.Unlock()
 
+	ref := hashFn(li)
+	if ref == 0 {
+		return errors.Newf("invalid hash")
+	}
+	i.Ref[ref] = li.GetLink()
+
 	errs := make([]error, 0)
 	for _, bmp := range i.Indexes {
 		if err := bmp.Add(li); err != nil {
 			errs = append(errs, err)
+			continue
 		}
 	}
 
