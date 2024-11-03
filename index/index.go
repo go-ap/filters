@@ -1,11 +1,11 @@
 package index
 
 import (
-	"errors"
 	"sync"
 
 	"github.com/RoaringBitmap/roaring"
 	vocab "github.com/go-ap/activitypub"
+	"github.com/go-ap/errors"
 )
 
 type Type int8
@@ -68,6 +68,9 @@ func (i *Index) Add(li vocab.LinkOrIRI) error {
 
 // Find does a fast index search for the received filters.
 func (i *Index) Find(filters ...BasicFilter) ([]vocab.IRI, error) {
+	if len(filters) == 0 {
+		return nil, errors.Errorf("nil filters for index search")
+	}
 	i.w.RLock()
 	defer i.w.RUnlock()
 
