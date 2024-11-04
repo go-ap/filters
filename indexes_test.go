@@ -19,6 +19,18 @@ func TestAggregateFilters(t *testing.T) {
 			name: "empty",
 		},
 		{
+			name: "type:Note",
+			args: []Check{
+				HasType(vocab.NoteType),
+			},
+			want: []index.BasicFilter{
+				{
+					Values: []string{"Note"},
+					Type:   index.ByType,
+				},
+			},
+		},
+		{
 			name: "Object:example.com",
 			args: []Check{
 				Object(SameID("https://example.com")),

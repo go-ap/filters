@@ -66,7 +66,7 @@ func TestIndex_Add(t *testing.T) {
 			name:    "empty",
 			fields:  fields{},
 			arg:     nil,
-			wantErr: false,
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {

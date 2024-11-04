@@ -30,26 +30,29 @@ func AggregateFilters(fil ...Check) []index.BasicFilter {
 			}
 		case actorChecks:
 			if values := objectCheckValues(ff); len(values) > 0 {
-				types = append(types, index.BasicFilter{Type: index.ByActor, Values: values})
+				types = append(types, index.BasicFilter{Type: index.ByActor, Op: index.OPEq, Values: values})
 			}
 		case objectChecks:
 			if values := objectCheckValues(ff); len(values) > 0 {
-				types = append(types, index.BasicFilter{Type: index.ByObject, Values: values})
+				types = append(types, index.BasicFilter{Type: index.ByObject, Op: index.OPEq, Values: values})
 			}
 		case attributedToEquals:
 			ie := vocab.IRI(ff)
-			types = append(types, index.BasicFilter{Type: index.ByAttributedTo, Values: []string{ie.String()}})
+			types = append(types, index.BasicFilter{Type: index.ByAttributedTo, Op: index.OPEq, Values: []string{ie.String()}})
 		case withTypes:
 			values := make([]string, 0)
 			for _, tf := range ff {
 				values = append(values, string(tf))
 			}
 			if len(values) > 0 {
-				types = append(types, index.BasicFilter{Type: index.ByType, Values: values})
+				types = append(types, index.BasicFilter{Type: index.ByType, Op: index.OPEq, Values: values})
 			}
 		case authorized:
 			ie := vocab.IRI(ff)
-			types = append(types, index.BasicFilter{Type: index.ByRecipients, Values: []string{ie.String()}})
+			types = append(types, index.BasicFilter{Type: index.ByRecipients, Op: index.OPEq, Values: []string{ie.String()}})
+		case recipients:
+			ie := vocab.IRI(ff)
+			types = append(types, index.BasicFilter{Type: index.ByRecipients, Op: index.OPEq, Values: []string{ie.String()}})
 		}
 	}
 	return types
