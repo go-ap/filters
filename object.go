@@ -67,20 +67,20 @@ func (types withTypes) Apply(it vocab.Item) bool {
 }
 
 func accumURLs(item vocab.Item) vocab.IRIs {
-	urls := make(vocab.ItemCollection, 0)
+	var urls vocab.ItemCollection
 	switch it := item.(type) {
 	case vocab.Item:
 		_ = vocab.OnObject(it, func(ob *vocab.Object) error {
-			urls = append(urls, derefObject(ob.URL)...)
+			urls = vocab.DerefItem(ob.URL)
 			return nil
 		})
 	case vocab.Link:
 		_ = vocab.OnLink(item, func(lnk *vocab.Link) error {
-			urls = append(urls, lnk.Href)
+			urls = vocab.ItemCollection{lnk.Href}
 			return nil
 		})
 	}
-	return ToIRIs(&urls)
+	return urls.IRIs()
 }
 
 // SameURL checks an activitypub.Object's IRI
@@ -120,10 +120,10 @@ func URLLike(frag string) Check {
 func accumContexts(item vocab.Item) vocab.IRIs {
 	var items vocab.ItemCollection
 	_ = vocab.OnObject(item, func(ob *vocab.Object) error {
-		items = derefObject(ob.Context)
+		items = vocab.DerefItem(ob.Context)
 		return nil
 	})
-	return ToIRIs(&items)
+	return items.IRIs()
 }
 
 func SameContext(iri vocab.IRI) Check {
@@ -165,21 +165,13 @@ func (c contextNil) Apply(it vocab.Item) bool {
 	return len(accumContexts(it)) == 0
 }
 
-func ToIRIs(col vocab.CollectionInterface) vocab.IRIs {
-	iris := make(vocab.IRIs, 0, col.Count())
-	for _, it := range col.Collection() {
-		iris = append(iris, it.GetLink())
-	}
-	return iris
-}
-
 func accumAttributedTos(item vocab.Item) vocab.IRIs {
 	var items vocab.ItemCollection
 	_ = vocab.OnObject(item, func(ob *vocab.Object) error {
-		items = derefObject(ob.AttributedTo)
+		items = vocab.DerefItem(ob.AttributedTo)
 		return nil
 	})
-	return ToIRIs(&items)
+	return items.IRIs()
 }
 
 // SameAttributedTo creates a filter that checks the [vocab.IRI] against the attributedTo property of the item
@@ -234,10 +226,10 @@ func (a attributedToNil) Apply(it vocab.Item) bool {
 func accumInReplyTos(item vocab.Item) vocab.IRIs {
 	var iris vocab.ItemCollection
 	_ = vocab.OnObject(item, func(ob *vocab.Object) error {
-		iris = derefObject(ob.InReplyTo)
+		iris = vocab.DerefItem(ob.InReplyTo)
 		return nil
 	})
-	return ToIRIs(&iris)
+	return iris.IRIs()
 }
 
 var NilInReplyTo = inReplyToNil{}

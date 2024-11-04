@@ -23,35 +23,3 @@ func accumRecipients(it vocab.Item) vocab.ItemCollection {
 	}
 	return nil
 }
-
-func derefObject(it vocab.Item) vocab.ItemCollection {
-	if vocab.IsNil(it) {
-		return nil
-	}
-	if vocab.IsIRI(it) {
-		return vocab.ItemCollection{it.GetLink()}
-	}
-
-	iris := make(vocab.ItemCollection, 0)
-	if vocab.IsIRIs(it) {
-		_ = vocab.OnIRIs(it, func(col *vocab.IRIs) error {
-			for _, r := range *col {
-				iris = append(iris, r)
-			}
-			return nil
-		})
-	} else if vocab.IsItemCollection(it) {
-		_ = vocab.OnItemCollection(it, func(col *vocab.ItemCollection) error {
-			for _, a := range *col {
-				iris = append(iris, a)
-			}
-			return nil
-		})
-	} else {
-		_ = vocab.OnObject(it, func(ob *vocab.Object) error {
-			iris = append(iris, ob)
-			return nil
-		})
-	}
-	return iris
-}
