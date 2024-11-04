@@ -67,43 +67,20 @@ func (types withTypes) Apply(it vocab.Item) bool {
 }
 
 func accumURLs(item vocab.Item) vocab.IRIs {
-	urls := make(vocab.IRIs, 0)
-	if vocab.LinkTypes.Contains(item.GetType()) {
+	urls := make(vocab.ItemCollection, 0)
+	switch it := item.(type) {
+	case vocab.Item:
+		_ = vocab.OnObject(it, func(ob *vocab.Object) error {
+			urls = append(urls, derefObject(ob.URL)...)
+			return nil
+		})
+	case vocab.Link:
 		_ = vocab.OnLink(item, func(lnk *vocab.Link) error {
 			urls = append(urls, lnk.Href)
 			return nil
 		})
-	} else {
-		_ = vocab.OnObject(item, func(ob *vocab.Object) error {
-			if vocab.IsNil(ob.URL) {
-				return nil
-			}
-			if vocab.IsIRI(ob.URL) {
-				urls = append(urls, ob.URL.GetLink())
-			} else if vocab.IsIRIs(ob.URL) {
-				_ = vocab.OnIRIs(ob.URL, func(replTos *vocab.IRIs) error {
-					for _, r := range *replTos {
-						urls = append(urls, r.GetLink())
-					}
-					return nil
-				})
-			} else if vocab.IsItemCollection(ob.URL) {
-				_ = vocab.OnItemCollection(ob.URL, func(uc *vocab.ItemCollection) error {
-					for _, u := range *uc {
-						urls = append(urls, u.GetLink())
-					}
-					return nil
-				})
-			} else {
-				_ = vocab.OnObject(ob.URL, func(url *vocab.Object) error {
-					urls = append(urls, url.GetLink())
-					return nil
-				})
-			}
-			return nil
-		})
 	}
-	return urls
+	return ToIRIs(&urls)
 }
 
 // SameURL checks an activitypub.Object's IRI
@@ -141,36 +118,12 @@ func URLLike(frag string) Check {
 }
 
 func accumContexts(item vocab.Item) vocab.IRIs {
-	iris := make(vocab.IRIs, 0)
+	var items vocab.ItemCollection
 	_ = vocab.OnObject(item, func(ob *vocab.Object) error {
-		if vocab.IsNil(ob.Context) {
-			return nil
-		}
-		if vocab.IsIRI(ob.Context) {
-			iris = append(iris, ob.Context.GetLink())
-		} else if vocab.IsIRIs(ob.Context) {
-			_ = vocab.OnIRIs(ob.Context, func(col *vocab.IRIs) error {
-				for _, r := range *col {
-					iris = append(iris, r.GetLink())
-				}
-				return nil
-			})
-		} else if vocab.IsItemCollection(ob.Context) {
-			_ = vocab.OnItemCollection(ob.Context, func(col *vocab.ItemCollection) error {
-				for _, c := range *col {
-					iris = append(iris, c.GetLink())
-				}
-				return nil
-			})
-		} else {
-			_ = vocab.OnObject(ob.Context, func(c *vocab.Object) error {
-				iris = append(iris, c.GetLink())
-				return nil
-			})
-		}
+		items = derefObject(ob.Context)
 		return nil
 	})
-	return iris
+	return ToIRIs(&items)
 }
 
 func SameContext(iri vocab.IRI) Check {
@@ -212,39 +165,25 @@ func (c contextNil) Apply(it vocab.Item) bool {
 	return len(accumContexts(it)) == 0
 }
 
-func accumAttributedTos(item vocab.Item) vocab.IRIs {
-	iris := make(vocab.IRIs, 0)
-	_ = vocab.OnObject(item, func(ob *vocab.Object) error {
-		if vocab.IsNil(ob.AttributedTo) {
-			return nil
-		}
-		if vocab.IsIRI(ob.AttributedTo) {
-			iris = append(iris, ob.AttributedTo.GetLink())
-		} else if vocab.IsIRIs(ob.AttributedTo) {
-			_ = vocab.OnIRIs(ob.AttributedTo, func(col *vocab.IRIs) error {
-				for _, r := range *col {
-					iris = append(iris, r.GetLink())
-				}
-				return nil
-			})
-		} else if vocab.IsItemCollection(ob.AttributedTo) {
-			_ = vocab.OnItemCollection(ob.AttributedTo, func(attrTos *vocab.ItemCollection) error {
-				for _, a := range *attrTos {
-					iris = append(iris, a.GetLink())
-				}
-				return nil
-			})
-		} else {
-			_ = vocab.OnObject(ob.AttributedTo, func(attrTo *vocab.Object) error {
-				iris = append(iris, attrTo.GetLink())
-				return nil
-			})
-		}
-		return nil
-	})
+func ToIRIs(col vocab.CollectionInterface) vocab.IRIs {
+	iris := make(vocab.IRIs, 0, col.Count())
+	for _, it := range col.Collection() {
+		iris = append(iris, it.GetLink())
+	}
 	return iris
 }
 
+func accumAttributedTos(item vocab.Item) vocab.IRIs {
+	var items vocab.ItemCollection
+	_ = vocab.OnObject(item, func(ob *vocab.Object) error {
+		items = derefObject(ob.AttributedTo)
+		return nil
+	})
+	return ToIRIs(&items)
+}
+
+// SameAttributedTo creates a filter that checks the [vocab.IRI] against the attributedTo property of the item
+// it gets applied on.
 func SameAttributedTo(iri vocab.IRI) Check {
 	return attributedToEquals(iri)
 }
@@ -259,6 +198,8 @@ func (a attributedToEquals) Apply(it vocab.Item) bool {
 	return accumAttributedTos(it).Contains(vocab.IRI(a))
 }
 
+// AttributedToLike creates a filter that checks the [vocab.IRI] against the attributedTo property of the item
+// it gets applied on using a similarity match.
 func AttributedToLike(frag string) Check {
 	return attributedToLike(frag)
 }
@@ -291,36 +232,12 @@ func (a attributedToNil) Apply(it vocab.Item) bool {
 }
 
 func accumInReplyTos(item vocab.Item) vocab.IRIs {
-	iris := make(vocab.IRIs, 0)
+	var iris vocab.ItemCollection
 	_ = vocab.OnObject(item, func(ob *vocab.Object) error {
-		if vocab.IsNil(ob.InReplyTo) {
-			return nil
-		}
-		if vocab.IsIRI(ob.InReplyTo) {
-			iris = append(iris, ob.InReplyTo.GetLink())
-		} else if vocab.IsIRIs(ob.InReplyTo) {
-			_ = vocab.OnIRIs(ob.InReplyTo, func(replTos *vocab.IRIs) error {
-				for _, r := range *replTos {
-					iris = append(iris, r.GetLink())
-				}
-				return nil
-			})
-		} else if vocab.IsItemCollection(ob.InReplyTo) {
-			_ = vocab.OnItemCollection(ob.InReplyTo, func(replTos *vocab.ItemCollection) error {
-				for _, r := range *replTos {
-					iris = append(iris, r.GetLink())
-				}
-				return nil
-			})
-		} else {
-			_ = vocab.OnObject(ob.InReplyTo, func(inReplyTo *vocab.Object) error {
-				iris = append(iris, inReplyTo.GetLink())
-				return nil
-			})
-		}
+		iris = derefObject(ob.InReplyTo)
 		return nil
 	})
-	return iris
+	return ToIRIs(&iris)
 }
 
 var NilInReplyTo = inReplyToNil{}
