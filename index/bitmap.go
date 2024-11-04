@@ -1,6 +1,9 @@
 package index
 
 import (
+	"bytes"
+	"encoding/gob"
+
 	"github.com/RoaringBitmap/roaring"
 	vocab "github.com/go-ap/activitypub"
 	"github.com/spaolacci/murmur3"
@@ -9,7 +12,7 @@ import (
 type (
 	tokener interface{ ~string }
 
-	Indexer interface {
+	Indexable interface {
 		Add(vocab.LinkOrIRI) error
 	}
 
@@ -39,6 +42,19 @@ type index[T tokener] struct {
 	extractFn extractFnType[T]
 }
 
+func (i *index[T]) MarshalBinary() ([]byte, error) {
+	buff := bytes.Buffer{}
+	err := gob.NewEncoder(&buff).Encode(i.tokenMap)
+	return buff.Bytes(), err
+}
+
+func (i *index[T]) UnmarshalBinary(data []byte) error {
+	if i.tokenMap == nil {
+		i.tokenMap = make(map[T]*roaring.Bitmap)
+	}
+	return gob.NewDecoder(bytes.NewReader(data)).Decode(&i.tokenMap)
+}
+
 func (i *index[T]) Add(li vocab.LinkOrIRI) error {
 	ref := hashFn(li)
 	if ref == 0 {
@@ -59,7 +75,7 @@ func (i *index[T]) get(key T) (*roaring.Bitmap, bool) {
 	return b, ok
 }
 
-func TokenBitmap[T tokener](extractFn extractFnType[T]) Indexer {
+func TokenBitmap[T tokener](extractFn extractFnType[T]) Indexable {
 	return &index[T]{
 		tokenMap:  make(map[T]*roaring.Bitmap),
 		extractFn: extractFn,

@@ -1,6 +1,8 @@
 package index
 
 import (
+	"bytes"
+	"encoding/gob"
 	"sync"
 
 	"github.com/RoaringBitmap/roaring"
@@ -28,7 +30,7 @@ const (
 type Index struct {
 	w       sync.RWMutex
 	Ref     map[uint32]vocab.IRI
-	Indexes map[Type]Indexer
+	Indexes map[Type]Indexable
 }
 
 // Full returns a full index data type.
@@ -37,7 +39,7 @@ func Full() *Index {
 	return &Index{
 		w:   sync.RWMutex{},
 		Ref: make(map[uint32]vocab.IRI),
-		Indexes: map[Type]Indexer{
+		Indexes: map[Type]Indexable{
 			ByType:              TokenBitmap(extractType),
 			ByName:              TokenBitmap(extractName),
 			ByPreferredUsername: TokenBitmap(extractPreferredUsername),
@@ -102,8 +104,34 @@ func (i *Index) Find(filters ...BasicFilter) ([]vocab.IRI, error) {
 	return result, nil
 }
 
+type bareIndex struct {
+	Ref     map[uint32]vocab.IRI
+	Indexes map[Type]Indexable
+}
+
+func (i *Index) MarshalBinary() ([]byte, error) {
+	buff := bytes.Buffer{}
+	b := bareIndex{Ref: i.Ref, Indexes: i.Indexes}
+	err := gob.NewEncoder(&buff).Encode(b)
+	return buff.Bytes(), err
+}
+
+func (i *Index) UnmarshalBinary(data []byte) error {
+	b := bareIndex{
+		Ref:     make(map[uint32]vocab.IRI),
+		Indexes: make(map[Type]Indexable),
+	}
+	err := gob.NewDecoder(bytes.NewReader(data)).Decode(&b)
+	if err != nil {
+		return err
+	}
+	i.Ref = b.Ref
+	i.Indexes = b.Indexes
+	return nil
+}
+
 // getIRIBitmaps returns the union of the underlying search bitmaps corresponding to the received values.
-func getIRIBitmaps(in Indexer, iris ...string) *roaring.Bitmap {
+func getIRIBitmaps(in Indexable, iris ...string) *roaring.Bitmap {
 	bmp, ok := in.(bitmaps[vocab.IRI])
 	if !ok {
 		return nil
@@ -120,7 +148,7 @@ func getIRIBitmaps(in Indexer, iris ...string) *roaring.Bitmap {
 }
 
 // getIRIBitmaps returns the union of the underlying search bitmaps to the received values.
-func getStringBitmaps(in Indexer, types ...string) *roaring.Bitmap {
+func getStringBitmaps(in Indexable, types ...string) *roaring.Bitmap {
 	bmp, ok := in.(bitmaps[string])
 	if !ok {
 		return nil
