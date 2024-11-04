@@ -8,13 +8,16 @@ func (a authorized) Apply(it vocab.Item) bool {
 	if vocab.IsNil(it) {
 		return false
 	}
-	aud := fullAudience(it)
-	if aud.Count() == 0 && vocab.IRI(a).Equals(vocab.PublicNS, true) {
-		return true
-	}
-	return aud.Contains(vocab.PublicNS) || aud.Contains(vocab.IRI(a))
+	i := vocab.IRI(a)
+	return Any(
+		Actor(SameID(i)),
+		Any(Recipients(vocab.PublicNS), Recipients(i)),
+	).Apply(it)
 }
 
+// Authorized creates a filter that checks the [vocab.IRI] against the recipients list of the item it gets applied on.
+// The ActivityStreams Public Namespace IRI gets special treatment, because servers use it to signify that the audience of
+// an object is public.
 func Authorized(iri vocab.IRI) Check {
 	return authorized(iri)
 }
