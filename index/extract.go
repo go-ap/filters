@@ -24,13 +24,13 @@ func extractType(li vocab.LinkOrIRI) []string {
 func extractName(li vocab.LinkOrIRI) []string {
 	switch it := li.(type) {
 	case vocab.Link:
-		return extractNatLangVal(it.Name)
+		return tokenizeNatLangVal(it.Name)
 	case *vocab.Link:
-		return extractNatLangVal(it.Name)
+		return tokenizeNatLangVal(it.Name)
 	case vocab.Item:
 		result := make([]string, 0)
 		_ = vocab.OnObject(it, func(ob *vocab.Object) error {
-			result = extractNatLangVal(ob.Name)
+			result = tokenizeNatLangVal(ob.Name)
 			return nil
 		})
 		return result

@@ -194,22 +194,22 @@ func Test_extractName(t *testing.T) {
 		{
 			name: "*Object name",
 			arg:  &vocab.Object{Name: nlv(kv(vocab.NilLangRef, vocab.Content("John Doe")))},
-			want: []string{"John Doe"},
+			want: []string{"John", "Doe"},
 		},
 		{
 			name: "Object name",
 			arg:  vocab.Object{Name: nlv(kv(vocab.NilLangRef, vocab.Content("John Doe")))},
-			want: []string{"John Doe"},
+			want: []string{"John", "Doe"},
 		},
 		{
 			name: "*Link name",
 			arg:  &vocab.Link{Name: nlv(kv(vocab.NilLangRef, vocab.Content("The empty page")))},
-			want: []string{"The empty page"},
+			want: []string{"The", "empty", "page"},
 		},
 		{
 			name: "Link name",
 			arg:  vocab.Link{Name: nlv(kv(vocab.NilLangRef, vocab.Content("The empty page")))},
-			want: []string{"The empty page"},
+			want: []string{"The", "empty", "page"},
 		},
 	}
 	for _, tt := range tests {
