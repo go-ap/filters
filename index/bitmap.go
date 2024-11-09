@@ -13,15 +13,15 @@ type (
 	tokener interface{ ~string }
 
 	Indexable interface {
-		Add(vocab.LinkOrIRI) error
+		Add(vocab.LinkOrIRI) (uint32, error)
 	}
 
 	bitmaps[T tokener] interface {
 		get(key T) (*roaring.Bitmap, bool)
 	}
 
-	hashFnType               func(iri vocab.LinkOrIRI) uint32
-	extractFnType[T tokener] func(vocab.LinkOrIRI) []T
+	HashFnType               func(vocab.LinkOrIRI) uint32
+	ExtractFnType[T tokener] func(vocab.LinkOrIRI) []T
 )
 
 var HashSeed uint32 = 666
@@ -35,11 +35,11 @@ func murmurHash(it vocab.LinkOrIRI) uint32 {
 	return h.Sum32()
 }
 
-var hashFn hashFnType = murmurHash
+var HashFn HashFnType = murmurHash
 
 type index[T tokener] struct {
 	tokenMap  map[T]*roaring.Bitmap
-	extractFn extractFnType[T]
+	extractFn ExtractFnType[T]
 }
 
 func (i *index[T]) MarshalBinary() ([]byte, error) {
@@ -55,19 +55,24 @@ func (i *index[T]) UnmarshalBinary(data []byte) error {
 	return gob.NewDecoder(bytes.NewReader(data)).Decode(&i.tokenMap)
 }
 
-func (i *index[T]) Add(li vocab.LinkOrIRI) error {
-	ref := hashFn(li)
+func (i *index[T]) Add(li vocab.LinkOrIRI) (uint32, error) {
+	ref := HashFn(li)
 	if ref == 0 {
-		return nil
+		return 0, nil
 	}
+
 	tokens := i.extractFn(li)
+	if len(tokens) == 0 {
+		return ref, nil
+	}
+
 	for _, tok := range tokens {
 		if _, ok := i.tokenMap[tok]; !ok {
 			i.tokenMap[tok] = roaring.New()
 		}
 		i.tokenMap[tok].Add(ref)
 	}
-	return nil
+	return ref, nil
 }
 
 func (i *index[T]) get(key T) (*roaring.Bitmap, bool) {
@@ -75,7 +80,7 @@ func (i *index[T]) get(key T) (*roaring.Bitmap, bool) {
 	return b, ok
 }
 
-func TokenBitmap[T tokener](extractFn extractFnType[T]) Indexable {
+func TokenBitmap[T tokener](extractFn ExtractFnType[T]) Indexable {
 	return &index[T]{
 		tokenMap:  make(map[T]*roaring.Bitmap),
 		extractFn: extractFn,

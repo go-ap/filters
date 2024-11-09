@@ -57,7 +57,7 @@ func nlv(fns ...func(values *vocab.NaturalLanguageValues)) vocab.NaturalLanguage
 	return n
 }
 
-func Test_extractNatLangVal(t *testing.T) {
+func Test_ExtractNatLangVal(t *testing.T) {
 	tests := []struct {
 		name string
 		args vocab.NaturalLanguageValues
@@ -89,8 +89,8 @@ func Test_extractNatLangVal(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := extractNatLangVal(tt.args); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("extractNatLangVal() = %v, want %v", got, tt.want)
+			if got := ExtractNatLangVal(tt.args); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ExtractNatLangVal() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -143,7 +143,7 @@ func Test_tokenizeNatLangVal(t *testing.T) {
 	}
 }
 
-func Test_extractType(t *testing.T) {
+func Test_ExtractType(t *testing.T) {
 	tests := []struct {
 		name string
 		arg  vocab.LinkOrIRI
@@ -175,14 +175,14 @@ func Test_extractType(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := extractType(tt.arg); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("extractType() = %#v, want %#v", got, tt.want)
+			if got := ExtractType(tt.arg); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ExtractType() = %#v, want %#v", got, tt.want)
 			}
 		})
 	}
 }
 
-func Test_extractName(t *testing.T) {
+func Test_ExtractName(t *testing.T) {
 	tests := []struct {
 		name string
 		arg  vocab.LinkOrIRI
@@ -214,14 +214,14 @@ func Test_extractName(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := extractName(tt.arg); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("extractName() = %#v, want %#v", got, tt.want)
+			if got := ExtractName(tt.arg); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ExtractName() = %#v, want %#v", got, tt.want)
 			}
 		})
 	}
 }
 
-func Test_extractPreferredUsername(t *testing.T) {
+func Test_ExtractPreferredUsername(t *testing.T) {
 	tests := []struct {
 		name string
 		arg  vocab.LinkOrIRI
@@ -243,15 +243,15 @@ func Test_extractPreferredUsername(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := extractPreferredUsername(tt.arg)
+			got := ExtractPreferredUsername(tt.arg)
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("extractPreferredUsername() = %#v, want %#v", got, tt.want)
+				t.Errorf("ExtractPreferredUsername() = %#v, want %#v", got, tt.want)
 			}
 		})
 	}
 }
 
-func Test_extractSummary(t *testing.T) {
+func Test_ExtractSummary(t *testing.T) {
 	tests := []struct {
 		name string
 		arg  vocab.LinkOrIRI
@@ -273,13 +273,13 @@ func Test_extractSummary(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := extractSummary(tt.arg); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("extractSummary() = %#v, want %#v", got, tt.want)
+			if got := ExtractSummary(tt.arg); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ExtractSummary() = %#v, want %#v", got, tt.want)
 			}
 		})
 	}
 }
-func Test_extractContent(t *testing.T) {
+func Test_ExtractContent(t *testing.T) {
 	tests := []struct {
 		name string
 		arg  vocab.LinkOrIRI
@@ -301,14 +301,14 @@ func Test_extractContent(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := extractContent(tt.arg); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("extractContent() = %#v, want %#v", got, tt.want)
+			if got := ExtractContent(tt.arg); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ExtractContent() = %#v, want %#v", got, tt.want)
 			}
 		})
 	}
 }
 
-func Test_extractActor(t *testing.T) {
+func Test_ExtractActor(t *testing.T) {
 	tests := []struct {
 		name string
 		arg  vocab.LinkOrIRI
@@ -390,14 +390,14 @@ func Test_extractActor(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := extractActor(tt.arg); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("extractActor() = %#v, want %#v", got, tt.want)
+			if got := ExtractActor(tt.arg); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ExtractActor() = %#v, want %#v", got, tt.want)
 			}
 		})
 	}
 }
 
-func Test_extractObject(t *testing.T) {
+func Test_ExtractObject(t *testing.T) {
 	tests := []struct {
 		name string
 		arg  vocab.LinkOrIRI
@@ -444,14 +444,14 @@ func Test_extractObject(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := extractObject(tt.arg); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("extractObject() = %#v, want %#v", got, tt.want)
+			if got := ExtractObject(tt.arg); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ExtractObject() = %#v, want %#v", got, tt.want)
 			}
 		})
 	}
 }
 
-func Test_extractRecipients(t *testing.T) {
+func Test_ExtractRecipients(t *testing.T) {
 	tests := []struct {
 		name string
 		arg  vocab.LinkOrIRI
@@ -508,9 +508,9 @@ func Test_extractRecipients(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := extractRecipients(tt.arg)
+			got := ExtractRecipients(tt.arg)
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("extractRecipients() = %#v, want %#v", got, tt.want)
+				t.Errorf("ExtractRecipients() = %#v, want %#v", got, tt.want)
 			}
 		})
 	}

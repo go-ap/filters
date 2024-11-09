@@ -5,9 +5,9 @@ import (
 	"github.com/jdkato/prose/tokenize"
 )
 
-// extractType returns the "type" of the [vocab.LinkOrIRI].
+// ExtractType returns the "type" of the [vocab.LinkOrIRI].
 // This works on both [vocab.Link] and [vocab.Item] objects.
-func extractType(li vocab.LinkOrIRI) []string {
+func ExtractType(li vocab.LinkOrIRI) []string {
 	switch it := li.(type) {
 	case vocab.Link:
 		return []string{string(it.GetType())}
@@ -19,9 +19,9 @@ func extractType(li vocab.LinkOrIRI) []string {
 	return nil
 }
 
-// extractName returns a single token composed of the "name" property of the [vocab.LinkOrIRI].
+// ExtractName returns a single token composed of the "name" property of the [vocab.LinkOrIRI].
 // This works on both [vocab.Link] and [vocab.Item] objects.
-func extractName(li vocab.LinkOrIRI) []string {
+func ExtractName(li vocab.LinkOrIRI) []string {
 	switch it := li.(type) {
 	case vocab.Link:
 		return tokenizeNatLangVal(it.Name)
@@ -39,8 +39,8 @@ func extractName(li vocab.LinkOrIRI) []string {
 	return nil
 }
 
-// extractPreferredUsername returns a single token composed of the "preferredUsername" property of the [vocab.Actor]
-func extractPreferredUsername(li vocab.LinkOrIRI) []string {
+// ExtractPreferredUsername returns a single token composed of the "preferredUsername" property of the [vocab.Actor]
+func ExtractPreferredUsername(li vocab.LinkOrIRI) []string {
 	it, ok := li.(vocab.Item)
 	if !ok {
 		return nil
@@ -48,14 +48,14 @@ func extractPreferredUsername(li vocab.LinkOrIRI) []string {
 
 	result := make([]string, 0)
 	_ = vocab.OnActor(it, func(act *vocab.Actor) error {
-		result = extractNatLangVal(act.PreferredUsername)
+		result = ExtractNatLangVal(act.PreferredUsername)
 		return nil
 	})
 	return result
 }
 
-// extractSummary returns the tokens in the "summary" property of the [vocab.Item]
-func extractSummary(li vocab.LinkOrIRI) []string {
+// ExtractSummary returns the tokens in the "summary" property of the [vocab.Item]
+func ExtractSummary(li vocab.LinkOrIRI) []string {
 	it, ok := li.(vocab.Item)
 	if !ok {
 		return nil
@@ -69,8 +69,8 @@ func extractSummary(li vocab.LinkOrIRI) []string {
 	return result
 }
 
-// extractContent returns the tokens in the "content" property of the [vocab.Item]
-func extractContent(li vocab.LinkOrIRI) []string {
+// ExtractContent returns the tokens in the "content" property of the [vocab.Item]
+func ExtractContent(li vocab.LinkOrIRI) []string {
 	it, ok := li.(vocab.Item)
 	if !ok {
 		return nil
@@ -84,9 +84,9 @@ func extractContent(li vocab.LinkOrIRI) []string {
 	return result
 }
 
-// extractNatLangVal extracts a single token from the value of the [vocab.NaturalLanguageValues] value.
+// ExtractNatLangVal extracts a single token from the value of the [vocab.NaturalLanguageValues] value.
 // This is meant for the properties that contain single words like "preferredUsername" or "name".
-func extractNatLangVal(nlv vocab.NaturalLanguageValues) []string {
+func ExtractNatLangVal(nlv vocab.NaturalLanguageValues) []string {
 	if nlv == nil {
 		return nil
 	}
@@ -116,10 +116,10 @@ func tokenizeNatLangVal(nlv vocab.NaturalLanguageValues) []string {
 	return result
 }
 
-// extractRecipients returns the [vocab.IRI] tokens corresponding to the various addressing properties of
+// ExtractRecipients returns the [vocab.IRI] tokens corresponding to the various addressing properties of
 // the received [vocab.Item].
 // NOTE(marius): Currently it includes *all* the addressing fields, not removing the "blind" ones (Bto and BCC)
-func extractRecipients(li vocab.LinkOrIRI) []vocab.IRI {
+func ExtractRecipients(li vocab.LinkOrIRI) []vocab.IRI {
 	it, ok := li.(vocab.Item)
 	if !ok {
 		return nil
@@ -140,9 +140,9 @@ func extractRecipients(li vocab.LinkOrIRI) []vocab.IRI {
 	return iris
 }
 
-// extractAttributedTo returns the [vocab.IRI] tokens corresponding to the "attributedTo" property of
+// ExtractAttributedTo returns the [vocab.IRI] tokens corresponding to the "attributedTo" property of
 // the received [vocab.Item]
-func extractAttributedTo(li vocab.LinkOrIRI) []vocab.IRI {
+func ExtractAttributedTo(li vocab.LinkOrIRI) []vocab.IRI {
 	it, ok := li.(vocab.Item)
 	if !ok {
 		return nil
@@ -155,9 +155,9 @@ func extractAttributedTo(li vocab.LinkOrIRI) []vocab.IRI {
 	return iris
 }
 
-// extractObject returns the [vocab.IRI] tokens corresponding to the "object" property of
+// ExtractObject returns the [vocab.IRI] tokens corresponding to the "object" property of
 // the received [vocab.Activity]
-func extractObject(li vocab.LinkOrIRI) []vocab.IRI {
+func ExtractObject(li vocab.LinkOrIRI) []vocab.IRI {
 	it, ok := li.(vocab.Item)
 	if !ok {
 		return nil
@@ -171,9 +171,9 @@ func extractObject(li vocab.LinkOrIRI) []vocab.IRI {
 	return iris
 }
 
-// extractActor returns the [vocab.IRI] tokens corresponding to the "actor" property of
+// ExtractActor returns the [vocab.IRI] tokens corresponding to the "actor" property of
 // the received [vocab.IntransitiveActivity]
-func extractActor(li vocab.LinkOrIRI) []vocab.IRI {
+func ExtractActor(li vocab.LinkOrIRI) []vocab.IRI {
 	it, ok := li.(vocab.Item)
 	if !ok {
 		return nil

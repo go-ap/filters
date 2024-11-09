@@ -22,6 +22,7 @@ const (
 	ByObject
 	ByRecipients
 	ByAttributedTo
+	ByCollection
 )
 
 // Index represents a full index
@@ -33,75 +34,85 @@ type Index struct {
 	Indexes map[Type]Indexable
 }
 
+var objectIndexTypes = []Type{
+	ByType,
+	ByRecipients, ByAttributedTo,
+	ByName, BySummary, ByContent,
+}
+
+var actorIndexTypes = append(objectIndexTypes, ByPreferredUsername)
+
+var activityIndexTypes = append(objectIndexTypes, ByActor, ByObject)
+
+var collectionIndexTypes = append(objectIndexTypes /*, ByCollection*/)
+
+var allIndexTypes = append(append(objectIndexTypes, actorIndexTypes...), activityIndexTypes...)
+
 // Full returns a full index data type.
-// The indexable fields can be found in the "ByXX" constants.
+// The complete list of types can be found in the "ByXX" constants.
 func Full() *Index {
-	return &Index{
-		w:   sync.RWMutex{},
-		Ref: make(map[uint32]vocab.IRI),
-		Indexes: map[Type]Indexable{
-			ByType:              TokenBitmap(extractType),
-			ByName:              TokenBitmap(extractName),
-			ByPreferredUsername: TokenBitmap(extractPreferredUsername),
-			BySummary:           TokenBitmap(extractSummary),
-			ByContent:           TokenBitmap(extractContent),
-			ByActor:             TokenBitmap(extractActor),
-			ByObject:            TokenBitmap(extractObject),
-			ByRecipients:        TokenBitmap(extractRecipients),
-			ByAttributedTo:      TokenBitmap(extractAttributedTo),
-		},
+	return Partial(allIndexTypes...)
+}
+
+// Partial returns a partial index. It will create tokenized bitmaps only for the types it receives as parameters.
+// The types can be found in the "ByXX" constants.
+func Partial(types ...Type) *Index {
+	i := Index{
+		w:       sync.RWMutex{},
+		Ref:     make(map[uint32]vocab.IRI),
+		Indexes: make(map[Type]Indexable),
 	}
+	for _, typ := range types {
+		switch typ {
+		case ByType:
+			i.Indexes[typ] = TokenBitmap(ExtractType)
+		case ByName:
+			i.Indexes[typ] = TokenBitmap(ExtractName)
+		case ByPreferredUsername:
+			i.Indexes[typ] = TokenBitmap(ExtractPreferredUsername)
+		case BySummary:
+			i.Indexes[typ] = TokenBitmap(ExtractSummary)
+		case ByContent:
+			i.Indexes[typ] = TokenBitmap(ExtractContent)
+		case ByActor:
+			i.Indexes[typ] = TokenBitmap(ExtractActor)
+		case ByObject:
+			i.Indexes[typ] = TokenBitmap(ExtractObject)
+		case ByRecipients:
+			i.Indexes[typ] = TokenBitmap(ExtractRecipients)
+		case ByAttributedTo:
+			i.Indexes[typ] = TokenBitmap(ExtractAttributedTo)
+		case ByCollection:
+			i.Indexes[typ] = CollectionBitmap()
+		}
+	}
+	return &i
 }
 
 // Add adds a [vocab.LinkOrIRI] object to the index.
-func (i *Index) Add(li vocab.LinkOrIRI) error {
+func (i *Index) Add(items ...vocab.LinkOrIRI) error {
 	i.w.Lock()
 	defer i.w.Unlock()
 
-	ref := hashFn(li)
-	if ref == 0 {
-		return errors.Newf("invalid hash")
-	}
-	i.Ref[ref] = li.GetLink()
-
 	errs := make([]error, 0)
-	for _, bmp := range i.Indexes {
-		if err := bmp.Add(li); err != nil {
-			errs = append(errs, err)
+	for _, li := range items {
+		ref := HashFn(li)
+		if ref == 0 {
+			errs = append(errs, errors.Newf("invalid hash"))
 			continue
+		}
+
+		i.Ref[ref] = li.GetLink()
+
+		for _, bmp := range i.Indexes {
+			if _, err := bmp.Add(li); err != nil {
+				errs = append(errs, err)
+				continue
+			}
 		}
 	}
 
 	return errors.Join(errs...)
-}
-
-// Find does a fast index search for the received filters.
-func (i *Index) Find(filters ...BasicFilter) ([]vocab.IRI, error) {
-	if len(filters) == 0 {
-		return nil, errors.Errorf("nil filters for index search")
-	}
-	i.w.RLock()
-	defer i.w.RUnlock()
-
-	ands := make([]*roaring.Bitmap, 0, len(filters))
-	for _, f := range filters {
-		switch f.Type {
-		case ByType, ByName, ByPreferredUsername, BySummary, ByContent:
-			ands = append(ands, getStringBitmaps(i.Indexes[f.Type], f.Values...))
-		case ByActor, ByObject, ByRecipients, ByAttributedTo:
-			ands = append(ands, getIRIBitmaps(i.Indexes[f.Type], f.Values...))
-		}
-	}
-
-	bmp := roaring.FastAnd(ands...)
-	result := make([]vocab.IRI, 0, bmp.GetCardinality())
-	bmp.Iterate(func(x uint32) bool {
-		if iri, ok := i.Ref[x]; ok {
-			result = append(result, iri)
-		}
-		return true
-	})
-	return result, nil
 }
 
 type bareIndex struct {
@@ -130,32 +141,15 @@ func (i *Index) UnmarshalBinary(data []byte) error {
 	return nil
 }
 
-// getIRIBitmaps returns the union of the underlying search bitmaps corresponding to the received values.
-func getIRIBitmaps(in Indexable, iris ...string) *roaring.Bitmap {
-	bmp, ok := in.(bitmaps[vocab.IRI])
+// GetBitmaps returns the ORing of the underlying search bitmaps corresponding to the received values.
+func GetBitmaps[T tokener](in Indexable, iris ...string) *roaring.Bitmap {
+	bmp, ok := in.(bitmaps[T])
 	if !ok {
-		return nil
+		return roaring.New()
 	}
 	ors := make([]*roaring.Bitmap, 0, len(iris))
 	for _, typ := range iris {
-		ti, ok := bmp.get(vocab.IRI(typ))
-		if !ok {
-			continue
-		}
-		ors = append(ors, ti)
-	}
-	return roaring.FastOr(ors...)
-}
-
-// getIRIBitmaps returns the union of the underlying search bitmaps to the received values.
-func getStringBitmaps(in Indexable, types ...string) *roaring.Bitmap {
-	bmp, ok := in.(bitmaps[string])
-	if !ok {
-		return nil
-	}
-	ors := make([]*roaring.Bitmap, 0, len(types))
-	for _, typ := range types {
-		ti, ok := bmp.get(typ)
+		ti, ok := bmp.get(T(typ))
 		if !ok {
 			continue
 		}

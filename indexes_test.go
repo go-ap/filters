@@ -2,162 +2,75 @@ package filters
 
 import (
 	"fmt"
-	"reflect"
-	"testing"
 
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/filters/index"
 )
 
-func TestAggregateFilters(t *testing.T) {
-	tests := []struct {
-		name string
-		args []Check
-		want []index.BasicFilter
-	}{
-		{
-			name: "empty",
-		},
-		{
-			name: "type:Note",
-			args: []Check{
-				HasType(vocab.NoteType),
-			},
-			want: []index.BasicFilter{
-				{
-					Values: []string{"Note"},
-					Type:   index.ByType,
-				},
+func ExampleSearchIndex() {
+	activities := []vocab.LinkOrIRI{
+		&vocab.Activity{
+			ID:    "https://federated.local/1",
+			Type:  vocab.CreateType,
+			To:    vocab.ItemCollection{vocab.IRI("https://federated.local/~jdoe")},
+			Actor: vocab.IRI("https://federated.local/~jdoe"),
+			Object: &vocab.Object{
+				ID:   "https://federated.local/objects/1",
+				Type: vocab.PageType,
+				Name: vocab.NaturalLanguageValues{{Ref: "-", Value: vocab.Content("Link to example.com")}},
+				URL:  vocab.IRI("https://example.com"),
 			},
 		},
-		{
-			name: "Object:example.com",
-			args: []Check{
-				Object(SameID("https://example.com")),
-			},
-			want: []index.BasicFilter{
-				{
-					Values: []string{"https://example.com"},
-					Type:   index.ByObject,
-				},
-			},
+		&vocab.Activity{
+			ID:     "https://federated.local/2",
+			Type:   vocab.LikeType,
+			To:     vocab.ItemCollection{vocab.IRI("https://federated.local/~jdoe")},
+			Actor:  vocab.IRI("https://federated.local/~jdoe"),
+			Object: vocab.IRI("https://federated.local/objects/1"),
 		},
-		{
-			name: "Actor:example.com",
-			args: []Check{
-				Actor(SameID("https://example.com")),
-			},
-			want: []index.BasicFilter{
-				{
-					Values: []string{"https://example.com"},
-					Type:   index.ByActor,
-				},
-			},
+		&vocab.Activity{
+			ID:     "https://federated.local/3",
+			Type:   vocab.DislikeType,
+			To:     vocab.ItemCollection{vocab.IRI("https://federated.local/~jdoe")},
+			Actor:  vocab.IRI("https://federated.local/~jdoe"),
+			Object: vocab.IRI("https://federated.local/objects/1"),
 		},
-		{
-			name: "multiple actors",
-			args: []Check{
-				Actor(SameID("https://example.com/~alice"), SameID("https://example.com/~bob")),
-			},
-			want: []index.BasicFilter{
-				{
-					Values: []string{"https://example.com/~alice", "https://example.com/~bob"},
-					Type:   index.ByActor,
-				},
-			},
-		},
-		{
-			name: "Recipients:example.com",
-			args: []Check{
-				Authorized("https://example.com/~alice"),
-				Authorized("https://example.com/~bob"),
-			},
-			want: []index.BasicFilter{
-				{
-					Values: []string{"https://example.com/~alice"},
-					Type:   index.ByRecipients,
-				},
-				{
-					Values: []string{"https://example.com/~bob"},
-					Type:   index.ByRecipients,
-				},
-			},
-		},
-		{
-			name: "name:JaneDoe",
-			args: []Check{
-				NameIs("JaneDoe"),
-			},
-			want: []index.BasicFilter{
-				{
-					Values: []string{"JaneDoe"},
-					Type:   index.ByName,
-				},
-				{
-					Values: []string{"JaneDoe"},
-					Type:   index.ByPreferredUsername,
-				},
-			},
-		},
-		{
-			name: "summary",
-			args: []Check{
-				SummaryIs("Lorem ipsum dolor sic amet."),
-			},
-			want: []index.BasicFilter{
-				{
-					Values: []string{"Lorem ipsum dolor sic amet."},
-					Type:   index.BySummary,
-				},
-			},
-		},
-		{
-			name: "content",
-			args: []Check{
-				ContentIs("Lorem ipsum dolor sic amet, consectetur adipiscing elit."),
-			},
-			want: []index.BasicFilter{
-				{
-					Values: []string{"Lorem ipsum dolor sic amet, consectetur adipiscing elit."},
-					Type:   index.ByContent,
-				},
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := AggregateFilters(tt.args...); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("AggregateFilters() = %+v, want %+v", got, tt.want)
-			}
-		})
-	}
-}
-
-func ExampleAggregateFilters() {
-	checks := Checks{
-		HasType(vocab.CreateType),
-		Authorized("https://federated.local/actors/jDoe"),
-		Object(SameID("https://federated.local/objects/1")),
-	}
-
-	findableCreate := &vocab.Activity{
-		ID:   "https://federated.local/1",
-		Type: vocab.CreateType,
-		To:   vocab.ItemCollection{vocab.IRI("https://federated.local/actors/jDoe")},
-		Object: &vocab.Object{
-			ID:   "https://federated.local/objects/1",
-			Type: vocab.NoteType,
+		&vocab.Activity{
+			ID:     "https://federated.local/4",
+			Type:   vocab.FlagType,
+			To:     vocab.ItemCollection{vocab.IRI("https://federated.local/~jdoe")},
+			Actor:  vocab.IRI("https://federated.local/~jdoe"),
+			Object: vocab.IRI("https://federated.local/objects/1"),
 		},
 	}
 
 	in := index.Full()
-	_ = in.Add(findableCreate)
+	// Add the activities to the index
+	_ = in.Add(activities...)
 
-	iris, err := in.Find(AggregateFilters(checks...)...)
+	findCreate := Checks{
+		HasType(vocab.CreateType),
+		Object(SameID("https://federated.local/objects/1")),
+	}
+	iris, err := SearchIndex(in, findCreate...)
+	fmt.Printf("Find Create:\n")
+	fmt.Printf("Error: %v\n", err)
+	fmt.Printf("IRIs: %#v\n", iris)
+
+	findBlock := Checks{
+		HasType(vocab.FlagType),
+		AttributedToLike("https://federated.local/~jdoe"),
+	}
+	iris, err = SearchIndex(in, findBlock...)
+	fmt.Printf("Find Flag:\n")
 	fmt.Printf("Error: %v\n", err)
 	fmt.Printf("IRIs: %#v\n", iris)
 
 	// Output:
+	// Find Create:
 	// Error: <nil>
 	// IRIs: []activitypub.IRI{https://federated.local/1}
+	// Find Flag:
+	// Error: <nil>
+	// IRIs: []activitypub.IRI{https://federated.local/4}
 }

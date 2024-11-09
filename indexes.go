@@ -1,61 +1,72 @@
 package filters
 
 import (
+	"github.com/RoaringBitmap/roaring"
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/filters/index"
 )
 
-// AggregateFilters converts the received [Checks] into a list of [index.BasicFilter] objects
-// that can be used to query an [index.Index].
-func AggregateFilters(fil ...Check) []index.BasicFilter {
-	if len(fil) == 0 {
+func (ff Checks) IndexMatch(indexes map[index.Type]index.Indexable) *roaring.Bitmap {
+	if len(ff) == 0 {
 		return nil
 	}
 
-	types := make([]index.BasicFilter, 0, len(fil))
-	for _, f := range fil {
+	ands := make([]*roaring.Bitmap, 0)
+	for _, f := range ff {
 		switch ff := f.(type) {
 		case naturalLanguageValCheck:
 			switch ff.typ {
 			case byName:
-				types = append(types, index.BasicFilter{Type: index.ByName, Values: []string{ff.checkValue}})
 				// NOTE(marius): the naturalLanguageValChecks have this idiosyncrasy of doing name searches for
-				// both Name and PreferredUsername fields.
-				types = append(types, index.BasicFilter{Type: index.ByPreferredUsername, Values: []string{ff.checkValue}})
+				// both Name and PreferredUsername fields, so until we split them, we should use the same logic here.
+				ors := []*roaring.Bitmap{
+					index.GetBitmaps[string](indexes[index.ByName], ff.checkValue),
+					index.GetBitmaps[string](indexes[index.ByPreferredUsername], ff.checkValue),
+				}
+				ands = append(ands, roaring.FastOr(ors...))
 			case bySummary:
-				types = append(types, index.BasicFilter{Type: index.BySummary, Values: []string{ff.checkValue}})
+				ands = append(ands, index.GetBitmaps[string](indexes[index.BySummary], ff.checkValue))
 			case byContent:
-				types = append(types, index.BasicFilter{Type: index.ByContent, Values: []string{ff.checkValue}})
+				ands = append(ands, index.GetBitmaps[string](indexes[index.ByContent], ff.checkValue))
 			default:
 			}
+		case withTypes:
+			ors := make([]*roaring.Bitmap, 0)
+			for _, tf := range ff {
+				ors = append(ors, index.GetBitmaps[string](indexes[index.ByType], string(tf)))
+			}
+			if len(ors) > 0 {
+				ands = append(ands, roaring.FastOr(ors...))
+			}
 		case actorChecks:
+			ors := make([]*roaring.Bitmap, 0)
 			if values := objectCheckValues(ff); len(values) > 0 {
-				types = append(types, index.BasicFilter{Type: index.ByActor, Op: index.OPEq, Values: values})
+				for _, val := range values {
+					ors = append(ors, index.GetBitmaps[vocab.IRI](indexes[index.ByActor], val))
+				}
+			}
+			if len(ors) > 0 {
+				ands = append(ands, roaring.FastOr(ors...))
 			}
 		case objectChecks:
+			ors := make([]*roaring.Bitmap, 0)
 			if values := objectCheckValues(ff); len(values) > 0 {
-				types = append(types, index.BasicFilter{Type: index.ByObject, Op: index.OPEq, Values: values})
+				for _, val := range values {
+					ors = append(ors, index.GetBitmaps[vocab.IRI](indexes[index.ByObject], val))
+				}
+			}
+			if len(ors) > 0 {
+				ands = append(ands, roaring.FastOr(ors...))
 			}
 		case attributedToEquals:
-			ie := vocab.IRI(ff)
-			types = append(types, index.BasicFilter{Type: index.ByAttributedTo, Op: index.OPEq, Values: []string{ie.String()}})
-		case withTypes:
-			values := make([]string, 0)
-			for _, tf := range ff {
-				values = append(values, string(tf))
-			}
-			if len(values) > 0 {
-				types = append(types, index.BasicFilter{Type: index.ByType, Op: index.OPEq, Values: values})
-			}
+			ands = append(ands, index.GetBitmaps[vocab.IRI](indexes[index.ByAttributedTo], string(ff)))
 		case authorized:
-			ie := vocab.IRI(ff)
-			types = append(types, index.BasicFilter{Type: index.ByRecipients, Op: index.OPEq, Values: []string{ie.String()}})
+			ands = append(ands, index.GetBitmaps[vocab.IRI](indexes[index.ByRecipients], string(ff)))
 		case recipients:
-			ie := vocab.IRI(ff)
-			types = append(types, index.BasicFilter{Type: index.ByRecipients, Op: index.OPEq, Values: []string{ie.String()}})
+			ands = append(ands, index.GetBitmaps[vocab.IRI](indexes[index.ByRecipients], string(ff)))
 		}
 	}
-	return types
+	return roaring.FastAnd(ands...)
 }
 
 func objectCheckValues(ff []Check) []string {
@@ -69,4 +80,17 @@ func objectCheckValues(ff []Check) []string {
 		}
 	}
 	return values
+}
+
+// SearchIndex does a fast index search for the received filters.
+func SearchIndex(i *index.Index, ff ...Check) ([]vocab.IRI, error) {
+	bmp := Checks(ff).IndexMatch(i.Indexes)
+	result := make([]vocab.IRI, 0, bmp.GetCardinality())
+	bmp.Iterate(func(x uint32) bool {
+		if iri, ok := i.Ref[x]; ok {
+			result = append(result, iri)
+		}
+		return true
+	})
+	return result, nil
 }
