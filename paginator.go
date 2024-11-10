@@ -5,6 +5,15 @@ import (
 	"strconv"
 )
 
+var firstPagePaginator = pagValues(url.Values{
+	keyMaxItems: []string{strconv.Itoa(MaxItems)},
+})
+
+// FirstPage returns the default url.Values for getting to the first page of a collection.
+func FirstPage() pagValues {
+	return firstPagePaginator
+}
+
 type pagValues url.Values
 
 // KeysetPaginator
