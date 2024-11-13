@@ -21,7 +21,7 @@ func PaginateCollection(it vocab.Item, filters ...Check) vocab.Item {
 		return nil
 	})
 
-	col, prevIRI, nextIRI := collectionPageFromItem(it, CursorChecks(filters...)...)
+	col, prevIRI, nextIRI := CursorFromItem(it, CursorChecks(filters...)...)
 	if vocab.IsNil(col) {
 		return it
 	}
@@ -108,7 +108,7 @@ func getURL(i vocab.IRI, f url.Values) vocab.IRI {
 	return i
 }
 
-func collectionPageFromItem(it vocab.Item, filters ...Check) (vocab.Item, vocab.Item, vocab.Item) {
+func CursorFromItem(it vocab.Item, filters ...Check) (vocab.Item, vocab.Item, vocab.Item) {
 	typ := it.GetType()
 
 	if !vocab.CollectionTypes.Contains(typ) {
@@ -207,10 +207,15 @@ func collectionPageFromItem(it vocab.Item, filters ...Check) (vocab.Item, vocab.
 		}
 	case vocab.CollectionOfItems:
 		_ = vocab.OnItemCollection(it, func(col *vocab.ItemCollection) error {
-			it, _, _ = filterCollection(sortItemsByPublishedUpdated(*col), filters...)
+			it, prev, next = filterCollection(sortItemsByPublishedUpdated(*col), filters...)
+			if len(prev) > 0 {
+				prevIRI = getURL(it.GetLink(), prev)
+			}
+			if len(next) > 0 {
+				nextIRI = getURL(it.GetLink(), next)
+			}
 			return nil
 		})
-		return it, nil, nil
 	}
 
 	return it, prevIRI, nextIRI

@@ -42,8 +42,6 @@ func ObjectChecks(fns ...Check) Checks {
 	c := make([]Check, 0)
 	for _, fn := range fns {
 		switch fns := fn.(type) {
-		case authorized:
-			c = append(c, fn)
 		case objectChecks:
 			c = append(c, fns...)
 		}
@@ -55,8 +53,6 @@ func ActorChecks(fns ...Check) Checks {
 	c := make([]Check, 0)
 	for _, fn := range fns {
 		switch fns := fn.(type) {
-		case authorized:
-			c = append(c, fn)
 		case actorChecks:
 			c = append(c, fns...)
 		}
@@ -68,8 +64,6 @@ func TargetChecks(fns ...Check) Checks {
 	c := make([]Check, 0)
 	for _, fn := range fns {
 		switch fns := fn.(type) {
-		case authorized:
-			c = append(c, fn)
 		case targetChecks:
 			c = append(c, fns...)
 		}
@@ -81,8 +75,6 @@ func ActivityChecks(fns ...Check) Checks {
 	c := make([]Check, 0)
 	for _, fn := range fns {
 		switch fns := fn.(type) {
-		case authorized:
-			c = append(c, fn)
 		case targetChecks:
 			c = append(c, fns...)
 		case objectChecks:
@@ -98,8 +90,6 @@ func IntransitiveActivityChecks(fns ...Check) Checks {
 	c := make([]Check, 0)
 	for _, fn := range fns {
 		switch fns := fn.(type) {
-		case authorized:
-			c = append(c, fn)
 		case targetChecks:
 			c = append(c, fns...)
 		case actorChecks:
@@ -114,6 +104,39 @@ func TypeChecks(fns ...Check) Checks {
 	for _, fn := range fns {
 		switch t := fn.(type) {
 		case withTypes:
+			c = append(c, t)
+		}
+	}
+	return c
+}
+
+func TagChecks(fns ...Check) Checks {
+	c := make([]Check, 0)
+	for _, fn := range fns {
+		switch t := fn.(type) {
+		case tagChecks:
+			c = append(c, t)
+		}
+	}
+	return c
+}
+
+func AuthorizedChecks(fns ...Check) Checks {
+	c := make([]Check, 0)
+	for _, fn := range fns {
+		switch t := fn.(type) {
+		case authorized:
+			c = append(c, t)
+		}
+	}
+	return c
+}
+
+func RecipientsChecks(fns ...Check) Checks {
+	c := make([]Check, 0)
+	for _, fn := range fns {
+		switch t := fn.(type) {
+		case recipients:
 			c = append(c, t)
 		}
 	}

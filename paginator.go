@@ -3,6 +3,8 @@ package filters
 import (
 	"net/url"
 	"strconv"
+
+	vocab "github.com/go-ap/activitypub"
 )
 
 var firstPagePaginator = pagValues(url.Values{
@@ -12,6 +14,14 @@ var firstPagePaginator = pagValues(url.Values{
 // FirstPage returns the default url.Values for getting to the first page of a collection.
 func FirstPage() pagValues {
 	return firstPagePaginator
+}
+
+func PrevPage(it vocab.Item) pagValues {
+	return pagValues{keyBefore: []string{string(it.GetLink())}}
+}
+
+func NextPage(it vocab.Item) pagValues {
+	return pagValues{keyAfter: []string{string(it.GetLink())}}
 }
 
 type pagValues url.Values
@@ -37,10 +47,12 @@ func (p pagValues) Before() string {
 	u := url.Values(p)
 	return u.Get(keyBefore)
 }
+
 func (p pagValues) After() string {
 	u := url.Values(p)
 	return u.Get(keyAfter)
 }
+
 func (p pagValues) Count() int {
 	u := url.Values(p)
 	cnt, err := strconv.ParseInt(u.Get(keyMaxItems), 10, 32)
@@ -49,6 +61,7 @@ func (p pagValues) Count() int {
 	}
 	return int(cnt)
 }
+
 func (p pagValues) Page() int {
 	return -1
 }

@@ -56,6 +56,7 @@ func (a checkAll) Apply(it vocab.Item) bool {
 	}
 	return true
 }
+
 func All(fns ...Check) Check {
 	if len(fns) == 1 {
 		return fns[0]
