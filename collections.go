@@ -33,23 +33,23 @@ func (cnt *counter) Apply(it vocab.Item) bool {
 //
 // Due to relying on the static check function return value the After is not reentrant.
 func After(fns ...Check) Check {
-	return &afterCrit{after: false, fns: fns}
+	return &afterCrit{check: false, fns: fns}
 }
 
 func (isAfter *afterCrit) Apply(it vocab.Item) bool {
 	if vocab.IsNil(it) {
-		return isAfter.after
+		return isAfter.check
 	}
 
 	if checkFn(isAfter.fns)(it) {
-		isAfter.after = true
+		isAfter.check = true
 		return false
 	}
-	return isAfter.after
+	return isAfter.check
 }
 
 type afterCrit struct {
-	after bool
+	check bool
 	fns   []Check
 }
 
