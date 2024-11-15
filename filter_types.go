@@ -20,7 +20,7 @@ func CursorChecks(fns ...Check) Checks {
 	return c
 }
 
-func MaxCountChecks(fns ...Check) Check {
+func MaxCountCheck(fns ...Check) Check {
 	for _, fn := range fns {
 		if f, ok := fn.(*counter); ok {
 			return f
@@ -36,6 +36,33 @@ func MaxCount(fns ...Check) int {
 		}
 	}
 	return -1
+}
+
+func Counted(fns ...Check) int {
+	for _, fn := range fns {
+		if f, ok := fn.(*counter); ok {
+			return f.cnt
+		}
+	}
+	return -1
+}
+
+func AfterChecks(fns ...Check) Checks {
+	for _, fn := range fns {
+		if f, ok := fn.(*afterCrit); ok {
+			return f.fns
+		}
+	}
+	return nil
+}
+
+func BeforeChecks(fns ...Check) Checks {
+	for _, fn := range fns {
+		if f, ok := fn.(*beforeCrit); ok {
+			return f.fns
+		}
+	}
+	return nil
 }
 
 func ObjectChecks(fns ...Check) Checks {
