@@ -19,9 +19,9 @@ func Not(fn Check) Check {
 	return notCrit([]Check{fn})
 }
 
-type anyCrit []Check
+type checkAny []Check
 
-func (a anyCrit) Apply(it vocab.Item) bool {
+func (a checkAny) Apply(it vocab.Item) bool {
 	for _, fn := range a {
 		if fn == nil {
 			continue
@@ -37,7 +37,7 @@ func Any(fns ...Check) Check {
 	if len(fns) == 1 {
 		return fns[0]
 	}
-	return anyCrit(fns)
+	return checkAny(fns)
 }
 
 type checkAll []Check
