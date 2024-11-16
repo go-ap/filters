@@ -10,6 +10,25 @@ func FilterChecks(fns ...Check) Checks {
 	return c
 }
 
+func ItemChecks(fns ...Check) Checks {
+	c := make([]Check, 0)
+	for _, fn := range fns {
+		switch check := fn.(type) {
+		case objectChecks:
+		case actorChecks:
+		case targetChecks:
+		case tagChecks:
+		case checkAny:
+			c = append(c, Any(ItemChecks(check...)...))
+		case checkAll:
+			c = append(c, All(ItemChecks(check...)...))
+		default:
+			c = append(c, check)
+		}
+	}
+	return c
+}
+
 func CursorChecks(fns ...Check) Checks {
 	c := make([]Check, 0)
 	for _, fn := range fns {
