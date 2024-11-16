@@ -288,6 +288,11 @@ func filterCollection(col vocab.ItemCollection, fns ...Check) (vocab.ItemCollect
 	if maxItems < 0 {
 		maxItems = MaxItems
 	}
+	if maxItems == 0 {
+		// NOTE(marius): this is a shortcut. We're assuming that if the calling code wants max 0 items in the
+		// list, they're ok with circumventing the rest of filtering and receiving a hard 0 items collection.
+		return vocab.ItemCollection{}, nil, nil
+	}
 	resetCounter(MaxCountCheck(fns...))
 	resetAfter(fns...)
 	resetBefore(fns...)
