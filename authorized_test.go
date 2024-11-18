@@ -6,7 +6,7 @@ import (
 	vocab "github.com/go-ap/activitypub"
 )
 
-func Test_Authorized_Apply(t *testing.T) {
+func Test_Authorized_Match(t *testing.T) {
 	tests := []struct {
 		name string
 		a    vocab.IRI
@@ -43,8 +43,8 @@ func Test_Authorized_Apply(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := Authorized(tt.a).Apply(tt.it); got != tt.want {
-				t.Errorf("Apply() = %v, want %v", got, tt.want)
+			if got := Authorized(tt.a).Match(tt.it); got != tt.want {
+				t.Errorf("Match() = %v, want %v", got, tt.want)
 			}
 		})
 	}

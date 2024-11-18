@@ -4,7 +4,7 @@ import vocab "github.com/go-ap/activitypub"
 
 type actorChecks []Check
 
-func (a actorChecks) Apply(it vocab.Item) bool {
+func (a actorChecks) Match(it vocab.Item) bool {
 	if vocab.IsNil(it) {
 		return false
 	}
@@ -12,7 +12,7 @@ func (a actorChecks) Apply(it vocab.Item) bool {
 	if err != nil {
 		return false
 	}
-	return All(a...).Apply(act.Actor)
+	return All(a...).Match(act.Actor)
 }
 
 func Actor(fns ...Check) Check {
@@ -21,7 +21,7 @@ func Actor(fns ...Check) Check {
 
 type targetChecks []Check
 
-func (t targetChecks) Apply(it vocab.Item) bool {
+func (t targetChecks) Match(it vocab.Item) bool {
 	if vocab.IsNil(it) {
 		return false
 	}
@@ -29,7 +29,7 @@ func (t targetChecks) Apply(it vocab.Item) bool {
 	if err != nil {
 		return false
 	}
-	return All(t...).Apply(act.Target)
+	return All(t...).Match(act.Target)
 }
 
 func Target(fns ...Check) Check {
@@ -38,7 +38,7 @@ func Target(fns ...Check) Check {
 
 type objectChecks []Check
 
-func (o objectChecks) Apply(it vocab.Item) bool {
+func (o objectChecks) Match(it vocab.Item) bool {
 	if vocab.IsNil(it) {
 		return false
 	}
@@ -46,7 +46,7 @@ func (o objectChecks) Apply(it vocab.Item) bool {
 	if err != nil {
 		return false
 	}
-	return All(o...).Apply(act.Object)
+	return All(o...).Match(act.Object)
 }
 
 func Object(fns ...Check) Check {

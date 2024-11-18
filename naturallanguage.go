@@ -24,7 +24,7 @@ type naturalLanguageValCheck struct {
 	typ        nlvType
 }
 
-func (n naturalLanguageValCheck) Apply(it vocab.Item) bool {
+func (n naturalLanguageValCheck) Match(it vocab.Item) bool {
 	return n.checkFn(n.accumFn(it), n.checkValue)
 }
 

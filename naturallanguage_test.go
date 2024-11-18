@@ -72,11 +72,11 @@ func TestNameIs(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			it := vocab.Object{Name: tt.args.toCheckNames}
-			if got := NameIs(tt.args.checkName).Apply(it); got != tt.want {
+			if got := NameIs(tt.args.checkName).Match(it); got != tt.want {
 				t.Errorf("NameIs(%q)(Object.Name=%v) = %v, want %v", tt.args.checkName, tt.args.toCheckNames, got, tt.want)
 			}
 			act := vocab.Actor{PreferredUsername: tt.args.toCheckNames}
-			if got := NameIs(tt.args.checkName).Apply(act); got != tt.want {
+			if got := NameIs(tt.args.checkName).Match(act); got != tt.want {
 				t.Errorf("NameIs(%q)(Actor.PreferredName=%v) = %v, want %v", tt.args.checkName, tt.args.toCheckNames, got, tt.want)
 			}
 		})
@@ -158,11 +158,11 @@ func TestNameLike(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			it := vocab.Object{Name: tt.args.toCheckNames}
-			if got := NameLike(tt.args.checkName).Apply(it); got != tt.want {
+			if got := NameLike(tt.args.checkName).Match(it); got != tt.want {
 				t.Errorf("NameIs(%q)(Object.Name=%v) = %v, want %v", tt.args.checkName, tt.args.toCheckNames, got, tt.want)
 			}
 			act := vocab.Actor{PreferredUsername: tt.args.toCheckNames}
-			if got := NameLike(tt.args.checkName).Apply(act); got != tt.want {
+			if got := NameLike(tt.args.checkName).Match(act); got != tt.want {
 				t.Errorf("NameIs(%q)(Actor.PreferredName=%v) = %v, want %v", tt.args.checkName, tt.args.toCheckNames, got, tt.want)
 			}
 		})
@@ -199,11 +199,11 @@ func TestNameEmpty(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			it := vocab.Object{Name: tt.toCheckNames}
-			if got := NameEmpty.Apply(it); got != tt.want {
+			if got := NameEmpty.Match(it); got != tt.want {
 				t.Errorf("NameEmpty()(Object.Name=%v) = %v, want %v", tt.toCheckNames, got, tt.want)
 			}
 			act := vocab.Actor{PreferredUsername: tt.toCheckNames}
-			if got := NameEmpty.Apply(act); got != tt.want {
+			if got := NameEmpty.Match(act); got != tt.want {
 				t.Errorf("NameEmpty()(Actor.PreferredName=%v) = %v, want %v", tt.toCheckNames, got, tt.want)
 			}
 		})
@@ -269,7 +269,7 @@ func TestContentIs(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			it := vocab.Object{Content: tt.args.toCheckContents}
-			if got := ContentIs(tt.args.checkContent).Apply(it); got != tt.want {
+			if got := ContentIs(tt.args.checkContent).Match(it); got != tt.want {
 				t.Errorf("ContentIs(%q)(Object.Content=%v) = %v, want %v", tt.args.checkContent, tt.args.toCheckContents, got, tt.want)
 			}
 		})
@@ -351,7 +351,7 @@ func TestContentLike(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			it := vocab.Object{Content: tt.args.toCheckContents}
-			if got := ContentLike(tt.args.checkContent).Apply(it); got != tt.want {
+			if got := ContentLike(tt.args.checkContent).Match(it); got != tt.want {
 				t.Errorf("ContentIs(%q)(Object.Content=%v) = %v, want %v", tt.args.checkContent, tt.args.toCheckContents, got, tt.want)
 			}
 		})
@@ -388,7 +388,7 @@ func TestContentEmpty(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			it := vocab.Object{Content: tt.toCheckContents}
-			if got := ContentEmpty.Apply(it); got != tt.want {
+			if got := ContentEmpty.Match(it); got != tt.want {
 				t.Errorf("ContentEmpty()(Object.Content=%v) = %v, want %v", tt.toCheckContents, got, tt.want)
 			}
 		})
@@ -454,7 +454,7 @@ func TestSummaryIs(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			it := vocab.Object{Summary: tt.args.toCheckSummarys}
-			if got := SummaryIs(tt.args.checkSummary).Apply(it); got != tt.want {
+			if got := SummaryIs(tt.args.checkSummary).Match(it); got != tt.want {
 				t.Errorf("SummaryIs(%q)(Object.Summary=%v) = %v, want %v", tt.args.checkSummary, tt.args.toCheckSummarys, got, tt.want)
 			}
 		})
@@ -536,7 +536,7 @@ func TestSummaryLike(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			it := vocab.Object{Summary: tt.args.toCheckSummarys}
-			if got := SummaryLike(tt.args.checkSummary).Apply(it); got != tt.want {
+			if got := SummaryLike(tt.args.checkSummary).Match(it); got != tt.want {
 				t.Errorf("SummaryIs(%q)(Object.Summary=%v) = %v, want %v", tt.args.checkSummary, tt.args.toCheckSummarys, got, tt.want)
 			}
 		})
@@ -573,7 +573,7 @@ func TestSummaryEmpty(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			it := vocab.Object{Summary: tt.toCheckSummarys}
-			if got := SummaryEmpty.Apply(it); got != tt.want {
+			if got := SummaryEmpty.Match(it); got != tt.want {
 				t.Errorf("SummaryEmpty()(Object.Summary=%v) = %v, want %v", tt.toCheckSummarys, got, tt.want)
 			}
 		})

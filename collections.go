@@ -16,7 +16,7 @@ func WithMaxCount(max int) Check {
 	return &counter{max: max}
 }
 
-func (cnt *counter) Apply(it vocab.Item) bool {
+func (cnt *counter) Match(it vocab.Item) bool {
 	if vocab.IsNil(it) {
 		return false
 	}
@@ -36,7 +36,7 @@ func After(fns ...Check) Check {
 	return &afterCrit{check: false, fns: fns}
 }
 
-func (isAfter *afterCrit) Apply(it vocab.Item) bool {
+func (isAfter *afterCrit) Match(it vocab.Item) bool {
 	if vocab.IsNil(it) {
 		return isAfter.check
 	}
@@ -67,7 +67,7 @@ func Before(fn ...Check) Check {
 	return &beforeCrit{check: true, fns: fn}
 }
 
-func (isBefore *beforeCrit) Apply(it vocab.Item) bool {
+func (isBefore *beforeCrit) Match(it vocab.Item) bool {
 	if vocab.IsNil(it) {
 		return true
 	}

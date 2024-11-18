@@ -4,7 +4,7 @@ import vocab "github.com/go-ap/activitypub"
 
 type authorized vocab.IRI
 
-func (a authorized) Apply(it vocab.Item) bool {
+func (a authorized) Match(it vocab.Item) bool {
 	if vocab.IsNil(it) {
 		return false
 	}
@@ -12,7 +12,7 @@ func (a authorized) Apply(it vocab.Item) bool {
 	return Any(
 		Actor(SameID(i)),
 		Any(Recipients(vocab.PublicNS), Recipients(i)),
-	).Apply(it)
+	).Match(it)
 }
 
 // Authorized creates a filter that checks the [vocab.IRI] against the recipients list of the item it gets applied on.

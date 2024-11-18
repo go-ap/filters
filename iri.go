@@ -10,7 +10,7 @@ import (
 
 type iriEquals vocab.IRI
 
-func (i iriEquals) Apply(it vocab.Item) bool {
+func (i iriEquals) Match(it vocab.Item) bool {
 	if vocab.IsNil(it) {
 		return len(i) == 0
 	}
@@ -24,7 +24,7 @@ func SameIRI(iri vocab.IRI) Check {
 
 type iriLike string
 
-func (frag iriLike) Apply(it vocab.Item) bool {
+func (frag iriLike) Match(it vocab.Item) bool {
 	if vocab.IsNil(it) {
 		return false
 	}
@@ -44,7 +44,7 @@ var NilIRI = iriNil{}
 
 type iriNil struct{}
 
-func (n iriNil) Apply(it vocab.Item) bool {
+func (n iriNil) Match(it vocab.Item) bool {
 	if vocab.IsNil(it) {
 		return true
 	}
@@ -56,7 +56,7 @@ func (n iriNil) Apply(it vocab.Item) bool {
 		})
 		return result
 	}
-	return Any(SameIRI(vocab.NilIRI), SameIRI(vocab.EmptyIRI)).Apply(it.GetLink())
+	return Any(SameIRI(vocab.NilIRI), SameIRI(vocab.EmptyIRI)).Match(it.GetLink())
 }
 
 // NotNilIRI checks if the activitypub.Object's URL property matches any of the two magic values

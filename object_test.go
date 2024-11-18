@@ -58,8 +58,8 @@ func TestType(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ob := vocab.Object{Type: tt.args.toCheckType}
-			if got := HasType(tt.args.checkTypes...).Apply(&ob); got != tt.want {
-				t.Errorf("Type(%v).Apply(Object.Type=%v) = %v, want %v", tt.args.checkTypes, tt.args.toCheckType, got, tt.want)
+			if got := HasType(tt.args.checkTypes...).Match(&ob); got != tt.want {
+				t.Errorf("Type(%v).Match(Object.Type=%v) = %v, want %v", tt.args.checkTypes, tt.args.toCheckType, got, tt.want)
 			}
 		})
 	}
@@ -146,8 +146,8 @@ func TestID(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ob := vocab.Object{ID: tt.args.toCheckIRI}
-			if got := SameID(tt.args.checkIRI).Apply(ob); got != tt.want {
-				t.Errorf("SameID(%s).Apply(Object.ID=%s) = %v, want %v", tt.args.checkIRI, tt.args.toCheckIRI, got, tt.want)
+			if got := SameID(tt.args.checkIRI).Match(ob); got != tt.want {
+				t.Errorf("SameID(%s).Match(Object.ID=%s) = %v, want %v", tt.args.checkIRI, tt.args.toCheckIRI, got, tt.want)
 			}
 		})
 	}
@@ -192,7 +192,7 @@ func TestNilID(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ob := vocab.Object{ID: tt.args.toCheckIRI}
-			if got := NilID.Apply(ob); got != tt.want {
+			if got := NilID.Match(ob); got != tt.want {
 				t.Errorf("NilID(Object.ID=%s) = %v, want %v", tt.args.toCheckIRI, got, tt.want)
 			}
 		})
@@ -279,12 +279,12 @@ func TestIRI(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := SameIRI(tt.args.checkIRI).Apply(tt.args.toCheckIRI); got != tt.want {
-				t.Errorf("IRI(%s).Apply(%s) = %v, want %v", tt.args.checkIRI, tt.args.toCheckIRI, got, tt.want)
+			if got := SameIRI(tt.args.checkIRI).Match(tt.args.toCheckIRI); got != tt.want {
+				t.Errorf("IRI(%s).Match(%s) = %v, want %v", tt.args.checkIRI, tt.args.toCheckIRI, got, tt.want)
 			}
 			ob := vocab.Object{ID: tt.args.toCheckIRI}
-			if got := SameIRI(tt.args.checkIRI).Apply(ob); got != tt.want {
-				t.Errorf("IRI(%s).Apply(Object.ID=%s) = %v, want %v", tt.args.checkIRI, tt.args.toCheckIRI, got, tt.want)
+			if got := SameIRI(tt.args.checkIRI).Match(ob); got != tt.want {
+				t.Errorf("IRI(%s).Match(Object.ID=%s) = %v, want %v", tt.args.checkIRI, tt.args.toCheckIRI, got, tt.want)
 			}
 		})
 	}
@@ -360,8 +360,8 @@ func TestIDLike(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ob := vocab.Object{ID: tt.args.toCheckIRI}
-			if got := IDLike(tt.args.checkFrag).Apply(ob); got != tt.want {
-				t.Errorf("IDLike(%s).Apply(Object.ID=%v) = %v, want %v", tt.args.checkFrag, tt.args.toCheckIRI, got, tt.want)
+			if got := IDLike(tt.args.checkFrag).Match(ob); got != tt.want {
+				t.Errorf("IDLike(%s).Match(Object.ID=%v) = %v, want %v", tt.args.checkFrag, tt.args.toCheckIRI, got, tt.want)
 			}
 		})
 	}
@@ -440,7 +440,7 @@ func Test_accumURLs(t *testing.T) {
 	testAccumFn(accumURLs)
 }
 
-func Test_inReplyToEquals_Apply(t *testing.T) {
+func Test_inReplyToEquals_Match(t *testing.T) {
 	tests := []struct {
 		name string
 		i    inReplyToEquals
@@ -563,14 +563,14 @@ func Test_inReplyToEquals_Apply(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.i.Apply(tt.it); got != tt.want {
-				t.Errorf("inReplyTo.Apply() = %v, want %v", got, tt.want)
+			if got := tt.i.Match(tt.it); got != tt.want {
+				t.Errorf("inReplyTo.Match() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func Test_attributedToEquals_Apply(t *testing.T) {
+func Test_attributedToEquals_Match(t *testing.T) {
 	tests := []struct {
 		name string
 		i    attributedToEquals
@@ -693,14 +693,14 @@ func Test_attributedToEquals_Apply(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.i.Apply(tt.it); got != tt.want {
-				t.Errorf("attributedTo.Apply() = %v, want %v", got, tt.want)
+			if got := tt.i.Match(tt.it); got != tt.want {
+				t.Errorf("attributedTo.Match() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func Test_contextEquals_Apply(t *testing.T) {
+func Test_contextEquals_Match(t *testing.T) {
 	tests := []struct {
 		name string
 		i    contextEquals
@@ -823,14 +823,14 @@ func Test_contextEquals_Apply(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.i.Apply(tt.it); got != tt.want {
-				t.Errorf("context.Apply() = %v, want %v", got, tt.want)
+			if got := tt.i.Match(tt.it); got != tt.want {
+				t.Errorf("context.Match() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func Test_URLEquals_Apply(t *testing.T) {
+func Test_URLEquals_Match(t *testing.T) {
 	tests := []struct {
 		name string
 		i    urlEquals
@@ -953,8 +953,8 @@ func Test_URLEquals_Apply(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.i.Apply(tt.it); got != tt.want {
-				t.Errorf("URL.Apply() = %v, want %v", got, tt.want)
+			if got := tt.i.Match(tt.it); got != tt.want {
+				t.Errorf("URL.Match() = %v, want %v", got, tt.want)
 			}
 		})
 	}

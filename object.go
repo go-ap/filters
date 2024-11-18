@@ -17,8 +17,8 @@ var NotNilID = Not(NilID)
 
 type idNil iriNil
 
-func (n idNil) Apply(it vocab.Item) bool {
-	return vocab.IsNil(it) || Any(SameIRI(vocab.NilIRI), SameIRI(vocab.EmptyIRI)).Apply(it.GetID())
+func (n idNil) Match(it vocab.Item) bool {
+	return vocab.IsNil(it) || Any(SameIRI(vocab.NilIRI), SameIRI(vocab.EmptyIRI)).Match(it.GetID())
 }
 
 // SameID checks a [vocab.Object]'s ID property against the received iri.
@@ -28,7 +28,7 @@ func SameID(i vocab.IRI) Check {
 
 type idEquals iriEquals
 
-func (i idEquals) Apply(item vocab.Item) bool {
+func (i idEquals) Match(item vocab.Item) bool {
 	if vocab.IsNil(item) {
 		return len(i) == 0
 	}
@@ -42,7 +42,7 @@ func IDLike(frag string) Check {
 
 type idLike iriLike
 
-func (l idLike) Apply(item vocab.Item) bool {
+func (l idLike) Match(item vocab.Item) bool {
 	if vocab.IsNil(item) {
 		return false
 	}
@@ -59,7 +59,7 @@ func HasType(ty ...vocab.ActivityVocabularyType) Check {
 
 type withTypes vocab.ActivityVocabularyTypes
 
-func (types withTypes) Apply(it vocab.Item) bool {
+func (types withTypes) Match(it vocab.Item) bool {
 	if vocab.IsNil(it) {
 		return len(types) == 0
 	}
@@ -90,7 +90,7 @@ func SameURL(iri vocab.IRI) Check {
 
 type urlEquals iriEquals
 
-func (i urlEquals) Apply(it vocab.Item) bool {
+func (i urlEquals) Match(it vocab.Item) bool {
 	if vocab.IsNil(it) {
 		return len(i) == 0
 	}
@@ -99,7 +99,7 @@ func (i urlEquals) Apply(it vocab.Item) bool {
 
 type urlLike iriLike
 
-func (frag urlLike) Apply(it vocab.Item) bool {
+func (frag urlLike) Match(it vocab.Item) bool {
 	if vocab.IsNil(it) {
 		return len(frag) == 0
 	}
@@ -132,7 +132,7 @@ func SameContext(iri vocab.IRI) Check {
 
 type contextEquals iriEquals
 
-func (c contextEquals) Apply(it vocab.Item) bool {
+func (c contextEquals) Match(it vocab.Item) bool {
 	if vocab.IsNil(it) {
 		return len(c) == 0
 	}
@@ -146,7 +146,7 @@ func ContextLike(frag string) Check {
 
 type contextLike iriLike
 
-func (c contextLike) Apply(it vocab.Item) bool {
+func (c contextLike) Match(it vocab.Item) bool {
 	if vocab.IsNil(it) {
 		return len(c) == 0
 	}
@@ -158,7 +158,7 @@ var NilContext = contextNil{}
 
 type contextNil iriNil
 
-func (c contextNil) Apply(it vocab.Item) bool {
+func (c contextNil) Match(it vocab.Item) bool {
 	if vocab.IsNil(it) {
 		return true
 	}
@@ -182,7 +182,7 @@ func SameAttributedTo(iri vocab.IRI) Check {
 
 type attributedToEquals iriEquals
 
-func (a attributedToEquals) Apply(it vocab.Item) bool {
+func (a attributedToEquals) Match(it vocab.Item) bool {
 	if vocab.IsNil(it) {
 		return len(a) == 0
 	}
@@ -198,7 +198,7 @@ func AttributedToLike(frag string) Check {
 
 type attributedToLike iriLike
 
-func (a attributedToLike) Apply(it vocab.Item) bool {
+func (a attributedToLike) Match(it vocab.Item) bool {
 	if vocab.IsNil(it) {
 		return len(a) == 0
 	}
@@ -216,7 +216,7 @@ var NilAttributedTo = attributedToNil{}
 
 type attributedToNil iriNil
 
-func (a attributedToNil) Apply(it vocab.Item) bool {
+func (a attributedToNil) Match(it vocab.Item) bool {
 	if vocab.IsNil(it) {
 		return true
 	}
@@ -236,7 +236,7 @@ var NilInReplyTo = inReplyToNil{}
 
 type inReplyToNil iriNil
 
-func (c inReplyToNil) Apply(it vocab.Item) bool {
+func (c inReplyToNil) Match(it vocab.Item) bool {
 	if vocab.IsNil(it) {
 		return true
 	}
@@ -249,7 +249,7 @@ func InReplyToLike(frag string) Check {
 
 type inReplyToLike iriLike
 
-func (a inReplyToLike) Apply(it vocab.Item) bool {
+func (a inReplyToLike) Match(it vocab.Item) bool {
 	if vocab.IsNil(it) {
 		return len(a) == 0
 	}
@@ -270,7 +270,7 @@ func SameInReplyTo(iri vocab.IRI) Check {
 
 type inReplyToEquals iriEquals
 
-func (i inReplyToEquals) Apply(it vocab.Item) bool {
+func (i inReplyToEquals) Match(it vocab.Item) bool {
 	if vocab.IsNil(it) {
 		return len(i) == 0
 	}

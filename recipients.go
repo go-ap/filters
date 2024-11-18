@@ -4,7 +4,7 @@ import vocab "github.com/go-ap/activitypub"
 
 type recipients vocab.IRI
 
-func (r recipients) Apply(it vocab.Item) bool {
+func (r recipients) Match(it vocab.Item) bool {
 	if vocab.IsNil(it) {
 		return false
 	}

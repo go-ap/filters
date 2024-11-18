@@ -8,7 +8,7 @@ import (
 
 type _mockCheck bool
 
-func (m _mockCheck) Apply(_ vocab.Item) bool {
+func (m _mockCheck) Match(_ vocab.Item) bool {
 	return bool(m)
 }
 
@@ -55,7 +55,7 @@ func TestAny(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ob := vocab.Object{}
-			if got := Any(tt.fns...).Apply(ob); got != tt.want {
+			if got := Any(tt.fns...).Match(ob); got != tt.want {
 				t.Errorf("Any() = %v, want %v", got, tt.want)
 			}
 		})
@@ -96,7 +96,7 @@ func TestAll(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ob := vocab.Object{}
-			if got := All(tt.fns...).Apply(ob); got != tt.want {
+			if got := All(tt.fns...).Match(ob); got != tt.want {
 				t.Errorf("All() = %v, want %v", got, tt.want)
 			}
 		})
@@ -127,7 +127,7 @@ func TestNot(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ob := vocab.Object{}
-			if got := Not(tt.fn).Apply(ob); got != tt.want {
+			if got := Not(tt.fn).Match(ob); got != tt.want {
 				t.Errorf("Not() = %v, want %v", got, tt.want)
 			}
 		})

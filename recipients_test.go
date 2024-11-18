@@ -6,7 +6,7 @@ import (
 	vocab "github.com/go-ap/activitypub"
 )
 
-func Test_Recipients_Apply(t *testing.T) {
+func Test_Recipients_Match(t *testing.T) {
 	tests := []struct {
 		name string
 		a    vocab.IRI
@@ -61,8 +61,8 @@ func Test_Recipients_Apply(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := Recipients(tt.a).Apply(tt.it); got != tt.want {
-				t.Errorf("Apply() = %v, want %v", got, tt.want)
+			if got := Recipients(tt.a).Match(tt.it); got != tt.want {
+				t.Errorf("Match() = %v, want %v", got, tt.want)
 			}
 		})
 	}

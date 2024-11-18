@@ -10,14 +10,13 @@ import (
 	vocab "github.com/go-ap/activitypub"
 )
 
-type Runnable interface {
-	Run(vocab.Item) vocab.Item
-}
-
+// Check represents an interface for a filter that can be applied on a [vocab.Item]
+// and it returns true if it matches and false if it does not.
 type Check interface {
-	Apply(vocab.Item) bool
+	Match(vocab.Item) bool
 }
 
+// Checks aggregates a list of Check functions to be tested on a [vocab.Item].
 type Checks []Check
 
 func (ff Checks) Filter(item vocab.Item) vocab.Item {
@@ -63,9 +62,9 @@ func checkFn(ff Checks) func(vocab.Item) bool {
 		}
 	}
 	if len(ff) == 1 && ff[0] != nil {
-		return Check(ff[0]).Apply
+		return Check(ff[0]).Match
 	}
-	return All(ff...).Apply
+	return All(ff...).Match
 }
 
 func (ff Checks) runOnItems(col vocab.ItemCollection) vocab.ItemCollection {
@@ -83,6 +82,9 @@ func (ff Checks) runOnItems(col vocab.ItemCollection) vocab.ItemCollection {
 	return result
 }
 
+// VocabularyTypesFilter converts the received list of strings to a list of ActivityVocabularyTypes
+// that can be used with the HasType filter function.
+// The individual strings are not validated against the known vocabulary types.
 func VocabularyTypesFilter(types ...string) vocab.ActivityVocabularyTypes {
 	r := make(vocab.ActivityVocabularyTypes, 0, len(types))
 	for _, t := range types {

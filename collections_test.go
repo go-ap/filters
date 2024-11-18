@@ -54,7 +54,7 @@ func TestBefore(t *testing.T) {
 
 			for i, it := range tt.with {
 				t.Run(fmt.Sprintf("it(%s)", it), func(t *testing.T) {
-					if got := beforeFn.Apply(it); got != tt.want[i] {
+					if got := beforeFn.Match(it); got != tt.want[i] {
 						t.Errorf("Before() = %t, want %t", got, tt.want[i])
 					}
 				})
@@ -110,7 +110,7 @@ func TestAfter(t *testing.T) {
 			afterFn := After(SameID(tt.checkIRI))
 			for i, it := range tt.with {
 				t.Run(fmt.Sprintf("it(%d)", i), func(t *testing.T) {
-					if got := afterFn.Apply(it); got != tt.want[i] {
+					if got := afterFn.Match(it); got != tt.want[i] {
 						t.Errorf("After() = %t, want %t", got, tt.want[i])
 					}
 				})

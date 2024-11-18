@@ -8,7 +8,7 @@ func Tag(fns ...Check) Check {
 
 type tagChecks []Check
 
-func (a tagChecks) Apply(it vocab.Item) bool {
+func (a tagChecks) Match(it vocab.Item) bool {
 	if vocab.IsNil(it) {
 		return false
 	}
@@ -16,5 +16,5 @@ func (a tagChecks) Apply(it vocab.Item) bool {
 	if err != nil {
 		return false
 	}
-	return All(a...).Apply(ob.Tag)
+	return All(a...).Match(ob.Tag)
 }

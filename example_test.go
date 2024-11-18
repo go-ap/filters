@@ -57,7 +57,7 @@ func ExampleFilter() {
 
 	result := make(vocab.ItemCollection, 0)
 	for _, it := range collection {
-		if filterFn.Apply(it) {
+		if filterFn.Match(it) {
 			result = append(result, it)
 		}
 	}

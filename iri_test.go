@@ -1,9 +1,10 @@
 package filters
 
 import (
-	vocab "github.com/go-ap/activitypub"
 	"reflect"
 	"testing"
+
+	vocab "github.com/go-ap/activitypub"
 )
 
 func TestIRILike(t *testing.T) {
@@ -56,7 +57,7 @@ func TestSameIRI(t *testing.T) {
 	}
 }
 
-func Test_iriEquals_Apply(t *testing.T) {
+func Test_iriEquals_Match(t *testing.T) {
 	tests := []struct {
 		name string
 		i    iriEquals
@@ -112,14 +113,14 @@ func Test_iriEquals_Apply(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.i.Apply(tt.it); got != tt.want {
-				t.Errorf("Apply(%v // %v) = %v, want %v", tt.i, tt.it, got, tt.want)
+			if got := tt.i.Match(tt.it); got != tt.want {
+				t.Errorf("Match(%v // %v) = %v, want %v", tt.i, tt.it, got, tt.want)
 			}
 		})
 	}
 }
 
-func Test_iriLike_Apply(t *testing.T) {
+func Test_iriLike_Match(t *testing.T) {
 	tests := []struct {
 		name string
 		i    iriLike
@@ -186,14 +187,14 @@ func Test_iriLike_Apply(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.i.Apply(tt.it); got != tt.want {
-				t.Errorf("Apply(%v // %v) = %v, want %v", tt.i, tt.it, got, tt.want)
+			if got := tt.i.Match(tt.it); got != tt.want {
+				t.Errorf("Match(%v // %v) = %v, want %v", tt.i, tt.it, got, tt.want)
 			}
 		})
 	}
 }
 
-func Test_iriNil_Apply(t *testing.T) {
+func Test_iriNil_Match(t *testing.T) {
 	tests := []struct {
 		name string
 		it   vocab.Item
@@ -247,8 +248,8 @@ func Test_iriNil_Apply(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			n := iriNil{}
-			if got := n.Apply(tt.it); got != tt.want {
-				t.Errorf("iriNil.Apply(%v) = %v, want %v", tt.it, got, tt.want)
+			if got := n.Match(tt.it); got != tt.want {
+				t.Errorf("iriNil.Match(%v) = %v, want %v", tt.it, got, tt.want)
 			}
 		})
 	}
