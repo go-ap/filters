@@ -10,7 +10,7 @@ import (
 )
 
 type (
-	tokener interface{ ~string }
+	tokener interface{ ~string | uint32 }
 
 	Indexable interface {
 		Add(vocab.LinkOrIRI) (uint32, error)
