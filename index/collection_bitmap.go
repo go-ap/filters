@@ -9,36 +9,36 @@ import (
 	vocab "github.com/go-ap/activitypub"
 )
 
-// CollectionBitmap uses a slightly different logic than a regular index.
+// CollectionBitmap uses a slightly different logic than a regular tokenMap.
 // For collections, instead of storing the item's extracted tokens to the reference of the object's IRI
 // we use the collection IRI as a token, and we store the references to the collection's items in the bitmap.
 func CollectionBitmap() Indexable {
 	return &colIndex{
-		tokenMap:  make(map[vocab.IRI]*roaring.Bitmap),
+		m:         make(map[vocab.IRI]*roaring.Bitmap),
 		extractFn: ExtractCollectionItems,
 	}
 }
 
-type colIndex index[vocab.IRI]
+type colIndex tokenMap[vocab.IRI]
 
 func (i *colIndex) MarshalBinary() ([]byte, error) {
 	buff := bytes.Buffer{}
-	err := gob.NewEncoder(&buff).Encode(i.tokenMap)
+	err := gob.NewEncoder(&buff).Encode(i.m)
 	return buff.Bytes(), err
 }
 
 func (i *colIndex) UnmarshalBinary(data []byte) error {
-	if i.tokenMap == nil {
-		i.tokenMap = make(map[vocab.IRI]*roaring.Bitmap)
+	if i.m == nil {
+		i.m = make(map[vocab.IRI]*roaring.Bitmap)
 	}
-	return gob.NewDecoder(bytes.NewReader(data)).Decode(&i.tokenMap)
+	return gob.NewDecoder(bytes.NewReader(data)).Decode(&i.m)
 }
 
 var _ encoding.BinaryMarshaler = new(colIndex)
 var _ encoding.BinaryUnmarshaler = new(colIndex)
 
 func (i *colIndex) get(key vocab.IRI) (*roaring.Bitmap, bool) {
-	b, ok := i.tokenMap[key]
+	b, ok := i.m[key]
 	return b, ok
 }
 
@@ -51,15 +51,15 @@ func (i *colIndex) Add(li vocab.LinkOrIRI) (uint32, error) {
 		return cref, nil
 	}
 
-	if _, ok := i.tokenMap[tok]; !ok {
-		i.tokenMap[tok] = roaring.New()
+	if _, ok := i.m[tok]; !ok {
+		i.m[tok] = roaring.New()
 	}
 	for _, iri := range iris {
 		ref := HashFn(iri)
 		if ref == 0 {
 			continue
 		}
-		i.tokenMap[tok].Add(ref)
+		i.m[tok].Add(ref)
 	}
 	return cref, nil
 }

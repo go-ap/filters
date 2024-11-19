@@ -37,25 +37,25 @@ func murmurHash(it vocab.LinkOrIRI) uint32 {
 
 var HashFn HashFnType = murmurHash
 
-type index[T tokener] struct {
-	tokenMap  map[T]*roaring.Bitmap
+type tokenMap[T tokener] struct {
+	m         map[T]*roaring.Bitmap
 	extractFn ExtractFnType[T]
 }
 
-func (i *index[T]) MarshalBinary() ([]byte, error) {
+func (i *tokenMap[T]) MarshalBinary() ([]byte, error) {
 	buff := bytes.Buffer{}
-	err := gob.NewEncoder(&buff).Encode(i.tokenMap)
+	err := gob.NewEncoder(&buff).Encode(i.m)
 	return buff.Bytes(), err
 }
 
-func (i *index[T]) UnmarshalBinary(data []byte) error {
-	if i.tokenMap == nil {
-		i.tokenMap = make(map[T]*roaring.Bitmap)
+func (i *tokenMap[T]) UnmarshalBinary(data []byte) error {
+	if i.m == nil {
+		i.m = make(map[T]*roaring.Bitmap)
 	}
-	return gob.NewDecoder(bytes.NewReader(data)).Decode(&i.tokenMap)
+	return gob.NewDecoder(bytes.NewReader(data)).Decode(&i.m)
 }
 
-func (i *index[T]) Add(li vocab.LinkOrIRI) (uint32, error) {
+func (i *tokenMap[T]) Add(li vocab.LinkOrIRI) (uint32, error) {
 	ref := HashFn(li)
 	if ref == 0 {
 		return 0, nil
@@ -67,22 +67,22 @@ func (i *index[T]) Add(li vocab.LinkOrIRI) (uint32, error) {
 	}
 
 	for _, tok := range tokens {
-		if _, ok := i.tokenMap[tok]; !ok {
-			i.tokenMap[tok] = roaring.New()
+		if _, ok := i.m[tok]; !ok {
+			i.m[tok] = roaring.New()
 		}
-		i.tokenMap[tok].Add(ref)
+		i.m[tok].Add(ref)
 	}
 	return ref, nil
 }
 
-func (i *index[T]) get(key T) (*roaring.Bitmap, bool) {
-	b, ok := i.tokenMap[key]
+func (i *tokenMap[T]) get(key T) (*roaring.Bitmap, bool) {
+	b, ok := i.m[key]
 	return b, ok
 }
 
 func TokenBitmap[T tokener](extractFn ExtractFnType[T]) Indexable {
-	return &index[T]{
-		tokenMap:  make(map[T]*roaring.Bitmap),
+	return &tokenMap[T]{
+		m:         make(map[T]*roaring.Bitmap),
 		extractFn: extractFn,
 	}
 }

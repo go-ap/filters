@@ -13,7 +13,7 @@ func Test_IRI_TokenBitmap(t *testing.T) {
 	type testCase[T tokener] struct {
 		name string
 		arg  ExtractFnType[T]
-		want index[T]
+		want tokenMap[T]
 	}
 	tests := []testCase[vocab.IRI]{
 		{
@@ -22,27 +22,27 @@ func Test_IRI_TokenBitmap(t *testing.T) {
 		{
 			name: "iri attributedTo",
 			arg:  ExtractAttributedTo,
-			want: index[vocab.IRI]{tokenMap: make(map[vocab.IRI]*roaring.Bitmap), extractFn: ExtractAttributedTo},
+			want: tokenMap[vocab.IRI]{m: make(map[vocab.IRI]*roaring.Bitmap), extractFn: ExtractAttributedTo},
 		},
 		{
 			name: "iri Actor",
 			arg:  ExtractActor,
-			want: index[vocab.IRI]{tokenMap: make(map[vocab.IRI]*roaring.Bitmap), extractFn: ExtractActor},
+			want: tokenMap[vocab.IRI]{m: make(map[vocab.IRI]*roaring.Bitmap), extractFn: ExtractActor},
 		},
 		{
 			name: "iri Object",
 			arg:  ExtractObject,
-			want: index[vocab.IRI]{tokenMap: make(map[vocab.IRI]*roaring.Bitmap), extractFn: ExtractObject},
+			want: tokenMap[vocab.IRI]{m: make(map[vocab.IRI]*roaring.Bitmap), extractFn: ExtractObject},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, ok := TokenBitmap(tt.arg).(*index[vocab.IRI])
+			got, ok := TokenBitmap(tt.arg).(*tokenMap[vocab.IRI])
 			if !ok {
 				t.Errorf("TokenBitmap() = invalid type %T for result", got)
 			}
-			if got.tokenMap != nil && tt.want.tokenMap != nil && !reflect.DeepEqual(got.tokenMap, tt.want.tokenMap) {
-				t.Errorf("TokenBitmap() = invalid token map %+v, expected %+v", got.tokenMap, tt.want.tokenMap)
+			if got.m != nil && tt.want.m != nil && !reflect.DeepEqual(got.m, tt.want.m) {
+				t.Errorf("TokenBitmap() = invalid token map %+v, expected %+v", got.m, tt.want.m)
 			}
 			if !sameFunc(got.extractFn, tt.want.extractFn) {
 				t.Errorf("TokenBitmap() = invalid extractFn %p, expected %p", got.extractFn, tt.want.extractFn)
@@ -55,7 +55,7 @@ func Test_Stringy_TokenBitmap(t *testing.T) {
 	type testCase[T tokener] struct {
 		name string
 		arg  ExtractFnType[T]
-		want index[T]
+		want tokenMap[T]
 	}
 	tests := []testCase[string]{
 		{
@@ -64,27 +64,27 @@ func Test_Stringy_TokenBitmap(t *testing.T) {
 		{
 			name: "stringy preferred username",
 			arg:  ExtractPreferredUsername,
-			want: index[string]{tokenMap: make(map[string]*roaring.Bitmap), extractFn: ExtractPreferredUsername},
+			want: tokenMap[string]{m: make(map[string]*roaring.Bitmap), extractFn: ExtractPreferredUsername},
 		},
 		{
 			name: "stringy name",
 			arg:  ExtractName,
-			want: index[string]{tokenMap: make(map[string]*roaring.Bitmap), extractFn: ExtractName},
+			want: tokenMap[string]{m: make(map[string]*roaring.Bitmap), extractFn: ExtractName},
 		},
 		{
 			name: "stringy content",
 			arg:  ExtractContent,
-			want: index[string]{tokenMap: make(map[string]*roaring.Bitmap), extractFn: ExtractContent},
+			want: tokenMap[string]{m: make(map[string]*roaring.Bitmap), extractFn: ExtractContent},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, ok := TokenBitmap(tt.arg).(*index[string])
+			got, ok := TokenBitmap(tt.arg).(*tokenMap[string])
 			if !ok {
 				t.Errorf("TokenBitmap() = invalid type %T for result", got)
 			}
-			if got.tokenMap != nil && tt.want.tokenMap != nil && !reflect.DeepEqual(got.tokenMap, tt.want.tokenMap) {
-				t.Errorf("TokenBitmap() = invalid token map %+v, expected %+v", got.tokenMap, tt.want.tokenMap)
+			if got.m != nil && tt.want.m != nil && !reflect.DeepEqual(got.m, tt.want.m) {
+				t.Errorf("TokenBitmap() = invalid token map %+v, expected %+v", got.m, tt.want.m)
 			}
 			if !sameFunc(got.extractFn, tt.want.extractFn) {
 				t.Errorf("TokenBitmap() = invalid extractFn %p, expected %p", got.extractFn, tt.want.extractFn)
@@ -124,7 +124,7 @@ func tMap[T tokener](fns ...func(map[T]*roaring.Bitmap)) map[T]*roaring.Bitmap {
 func Test_IRI_index_Add(t *testing.T) {
 	type testCase[T tokener] struct {
 		name    string
-		i       index[T]
+		i       tokenMap[T]
 		arg     vocab.LinkOrIRI
 		want    map[T]*roaring.Bitmap
 		wantErr bool
@@ -135,13 +135,13 @@ func Test_IRI_index_Add(t *testing.T) {
 		},
 		{
 			name: "iri attributedTo",
-			i:    index[vocab.IRI]{tokenMap: make(map[vocab.IRI]*roaring.Bitmap), extractFn: ExtractAttributedTo},
+			i:    tokenMap[vocab.IRI]{m: make(map[vocab.IRI]*roaring.Bitmap), extractFn: ExtractAttributedTo},
 			arg:  &vocab.Object{ID: "https://example.com/1", AttributedTo: vocab.IRI("https://example.com/~jane")},
 			want: tMap(tk(vocab.IRI("https://example.com/~jane"), vocab.IRI("https://example.com/1"))),
 		},
 		{
 			name: "iri Actor",
-			i:    index[vocab.IRI]{tokenMap: make(map[vocab.IRI]*roaring.Bitmap), extractFn: ExtractActor},
+			i:    tokenMap[vocab.IRI]{m: make(map[vocab.IRI]*roaring.Bitmap), extractFn: ExtractActor},
 			arg:  &vocab.Activity{ID: "https://example.com/2", Actor: vocab.IRI("https://example.com/~jane")},
 			want: tMap(tk(vocab.IRI("https://example.com/~jane"), vocab.IRI("https://example.com/2"))),
 		},
@@ -152,8 +152,8 @@ func Test_IRI_index_Add(t *testing.T) {
 				t.Errorf("Add() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			got := tt.i
-			if got.tokenMap != nil && tt.want != nil && !reflect.DeepEqual(got.tokenMap, tt.want) {
-				t.Errorf("Add() = invalid token map %+v, expected %+v", got.tokenMap, tt.want)
+			if got.m != nil && tt.want != nil && !reflect.DeepEqual(got.m, tt.want) {
+				t.Errorf("Add() = invalid token map %+v, expected %+v", got.m, tt.want)
 			}
 		})
 	}
@@ -162,7 +162,7 @@ func Test_IRI_index_Add(t *testing.T) {
 func Test_Stringy_index_Add(t *testing.T) {
 	type testCase[T tokener] struct {
 		name    string
-		i       index[T]
+		i       tokenMap[T]
 		arg     vocab.LinkOrIRI
 		want    map[T]*roaring.Bitmap
 		wantErr bool
@@ -173,7 +173,7 @@ func Test_Stringy_index_Add(t *testing.T) {
 		},
 		{
 			name: "type",
-			i:    index[string]{tokenMap: make(map[string]*roaring.Bitmap), extractFn: ExtractType},
+			i:    tokenMap[string]{m: make(map[string]*roaring.Bitmap), extractFn: ExtractType},
 			arg:  &vocab.Object{ID: "https://example.com/1", Type: vocab.NoteType},
 			want: tMap(tk("Note", vocab.IRI("https://example.com/1"))),
 		},
@@ -184,8 +184,8 @@ func Test_Stringy_index_Add(t *testing.T) {
 				t.Errorf("Add() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			got := tt.i
-			if got.tokenMap != nil && tt.want != nil && !reflect.DeepEqual(got.tokenMap, tt.want) {
-				t.Errorf("Add() = invalid token map %+v, expected %+v", got.tokenMap, tt.want)
+			if got.m != nil && tt.want != nil && !reflect.DeepEqual(got.m, tt.want) {
+				t.Errorf("Add() = invalid token map %+v, expected %+v", got.m, tt.want)
 			}
 		})
 	}
@@ -248,13 +248,13 @@ var recipientsIndex = []byte{0x10, 0xff, 0x87, 0x4, 0x1, 0x2, 0xff, 0x88, 0x0, 0
 	0x0, 0x0, 0x0, 0xa3, 0x94,
 }
 
-var strIndex = index[string]{
-	tokenMap:  make(map[string]*roaring.Bitmap),
+var strIndex = tokenMap[string]{
+	m:         make(map[string]*roaring.Bitmap),
 	extractFn: ExtractType,
 }
 
-var iriIndex = index[vocab.IRI]{
-	tokenMap:  make(map[vocab.IRI]*roaring.Bitmap),
+var iriIndex = tokenMap[vocab.IRI]{
+	m:         make(map[vocab.IRI]*roaring.Bitmap),
 	extractFn: ExtractRecipients,
 }
 
@@ -269,19 +269,19 @@ func Test_Stringy_index_MarshalBinary(t *testing.T) {
 
 	type testCase[T tokener] struct {
 		name    string
-		i       index[T]
+		i       tokenMap[T]
 		want    []byte
 		wantErr bool
 	}
 	tests := []testCase[string]{
 		{
 			name:    "empty",
-			i:       index[string]{},
+			i:       tokenMap[string]{},
 			want:    emptyStrIndex,
 			wantErr: false,
 		},
 		{
-			name:    "index with type",
+			name:    "tokenMap with type",
 			i:       strIndex,
 			want:    typeIndex,
 			wantErr: false,
@@ -306,14 +306,14 @@ func Test_IRI_index_MarshalBinary(t *testing.T) {
 
 	type testCase[T tokener] struct {
 		name    string
-		i       index[T]
+		i       tokenMap[T]
 		want    []byte
 		wantErr bool
 	}
 	tests := []testCase[vocab.IRI]{
 		{
 			name:    "empty",
-			i:       index[vocab.IRI]{},
+			i:       tokenMap[vocab.IRI]{},
 			want:    emptyIRIIndex,
 			wantErr: false,
 		},
@@ -341,14 +341,14 @@ func Test_IRI_index_MarshalBinary(t *testing.T) {
 func Test_Stringy_index_UnmarshalBinary(t *testing.T) {
 	type testCase[T tokener] struct {
 		name    string
-		i       index[T]
+		i       tokenMap[T]
 		arg     []byte
 		wantErr bool
 	}
 	tests := []testCase[string]{
 		{
 			name:    "empty",
-			i:       index[string]{},
+			i:       tokenMap[string]{},
 			arg:     emptyStrIndex,
 			wantErr: false,
 		},
@@ -371,14 +371,14 @@ func Test_Stringy_index_UnmarshalBinary(t *testing.T) {
 func Test_IRI_index_UnmarshalBinary(t *testing.T) {
 	type testCase[T tokener] struct {
 		name    string
-		i       index[T]
+		i       tokenMap[T]
 		arg     []byte
 		wantErr bool
 	}
 	tests := []testCase[vocab.IRI]{
 		{
 			name:    "empty",
-			i:       index[vocab.IRI]{},
+			i:       tokenMap[vocab.IRI]{},
 			arg:     emptyIRIIndex,
 			wantErr: false,
 		},

@@ -13,7 +13,8 @@ import (
 type Type int8
 
 const (
-	ByType Type = iota
+	ByID Type = iota
+	ByType
 	ByName
 	ByPreferredUsername
 	BySummary
@@ -35,7 +36,7 @@ type Index struct {
 }
 
 var objectIndexTypes = []Type{
-	ByType,
+	ByID, ByType,
 	ByRecipients, ByAttributedTo,
 	ByName, BySummary, ByContent,
 }
@@ -64,6 +65,8 @@ func Partial(types ...Type) *Index {
 	}
 	for _, typ := range types {
 		switch typ {
+		case ByID:
+			i.Indexes[typ] = TokenBitmap(ExtractID)
 		case ByType:
 			i.Indexes[typ] = TokenBitmap(ExtractType)
 		case ByName:

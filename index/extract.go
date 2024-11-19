@@ -149,7 +149,7 @@ func ExtractAttributedTo(li vocab.LinkOrIRI) []vocab.IRI {
 	}
 	iris := make([]vocab.IRI, 0)
 	_ = vocab.OnObject(it, func(ob *vocab.Object) error {
-		iris = derefObject(ob.AttributedTo)
+		iris = append(iris, derefObject(ob.AttributedTo)...)
 		return nil
 	})
 	return iris
@@ -163,9 +163,28 @@ func ExtractObject(li vocab.LinkOrIRI) []vocab.IRI {
 		return nil
 	}
 
-	var iris []vocab.IRI
+	iris := make(vocab.IRIs, 0)
 	_ = vocab.OnActivity(it, func(act *vocab.Activity) error {
-		iris = derefObject(act.Object)
+		iris = append(iris, derefObject(act.Object)...)
+		return nil
+	})
+	if len(iris) == 0 {
+		return nil
+	}
+	return iris
+}
+
+// ExtractID returns the [vocab.IRI] token corresponding to the "ID" property of
+// the received [vocab.Item]
+func ExtractID(li vocab.LinkOrIRI) []vocab.IRI {
+	it, ok := li.(vocab.Item)
+	if !ok {
+		return nil
+	}
+
+	iris := make(vocab.IRIs, 0)
+	_ = vocab.OnObject(it, func(ob *vocab.Object) error {
+		iris = append(iris, ob.ID)
 		return nil
 	})
 	return iris
@@ -179,11 +198,14 @@ func ExtractActor(li vocab.LinkOrIRI) []vocab.IRI {
 		return nil
 	}
 
-	var iris []vocab.IRI
+	iris := make(vocab.IRIs, 0)
 	_ = vocab.OnIntransitiveActivity(it, func(act *vocab.IntransitiveActivity) error {
-		iris = derefObject(act.Actor)
+		iris = append(iris, derefObject(act.Actor)...)
 		return nil
 	})
+	if len(iris) == 0 {
+		return nil
+	}
 	return iris
 }
 
@@ -192,7 +214,7 @@ func derefObject(it vocab.Item) []vocab.IRI {
 	if vocab.IsNil(it) {
 		return nil
 	}
-	var iris []vocab.IRI
+	iris := make(vocab.IRIs, 0)
 	if it.IsCollection() {
 		_ = vocab.OnCollectionIntf(it, func(c vocab.CollectionInterface) error {
 			for _, ob := range c.Collection() {
@@ -201,7 +223,7 @@ func derefObject(it vocab.Item) []vocab.IRI {
 			return nil
 		})
 	} else {
-		iris = []vocab.IRI{it.GetLink()}
+		iris = append(iris, it.GetLink())
 	}
 	return iris
 }
