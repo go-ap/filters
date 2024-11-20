@@ -304,51 +304,40 @@ func filterCollection(col vocab.ItemCollection, fns ...Check) (vocab.ItemCollect
 	var lastPage vocab.ItemCollection
 	var result vocab.ItemCollection
 
-	if len(col) > maxItems {
-		fpEnd := len(col) - 1
-		if fpEnd > maxItems {
-			fpEnd = maxItems
-		}
-		bpEnd := 0
-		bpEnd = (len(col) / maxItems) * maxItems
-
-		firstPage = col[0:fpEnd]
-		lastPage = col[bpEnd:]
-	} else {
-		firstPage = col
-		lastPage = col
-	}
 	result = Checks(fns).runOnItems(col)
 	if len(result) == 0 {
 		return result, pp, np
 	}
-	first := result.First()
-	if len(col) > maxItems {
-		pp.Add(keyMaxItems, strconv.Itoa(maxItems))
-		np.Add(keyMaxItems, strconv.Itoa(maxItems))
 
-		for _, top := range firstPage {
-			if onFirstPage = first.GetLink().Equals(top.GetLink(), true); onFirstPage {
+	first := result.First()
+	if len(result) <= maxItems {
+		return result, pp, np
+	}
+
+	pp.Add(keyMaxItems, strconv.Itoa(maxItems))
+	np.Add(keyMaxItems, strconv.Itoa(maxItems))
+
+	for _, top := range firstPage {
+		if onFirstPage = first.GetLink().Equals(top.GetLink(), true); onFirstPage {
+			break
+		}
+	}
+	if !onFirstPage {
+		pp.Add(keyBefore, first.GetLink().String())
+	} else {
+		pp = nil
+	}
+	if len(result) >= 1 && len(col) > maxItems+1 {
+		last := result[len(result)-1]
+		for _, bottom := range lastPage {
+			if onLastPage = last.GetLink().Equals(bottom.GetLink(), true); onLastPage {
 				break
 			}
 		}
-		if !onFirstPage {
-			pp.Add(keyBefore, first.GetLink().String())
+		if !onLastPage {
+			np.Add(keyAfter, last.GetLink().String())
 		} else {
-			pp = nil
-		}
-		if len(result) > 1 && len(col) > maxItems+1 {
-			last := result[len(result)-1]
-			for _, bottom := range lastPage {
-				if onLastPage = last.GetLink().Equals(bottom.GetLink(), true); onLastPage {
-					break
-				}
-			}
-			if !onLastPage {
-				np.Add(keyAfter, last.GetLink().String())
-			} else {
-				np = nil
-			}
+			np = nil
 		}
 	}
 	return result, pp, np

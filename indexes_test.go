@@ -106,6 +106,7 @@ var indexableActivities = []vocab.LinkOrIRI{
 		ID:     "https://federated.local/1",
 		Type:   vocab.CreateType,
 		To:     vocab.ItemCollection{vocab.IRI("https://federated.local/~jdoe")},
+		CC:     vocab.ItemCollection{vocab.PublicNS},
 		Actor:  vocab.IRI("https://federated.local/~jdoe"),
 		Object: vocab.IRI("https://federated.local/objects/1"),
 	},
@@ -240,12 +241,18 @@ func TestChecks_IndexMatch(t *testing.T) {
 			want:    wantedBmp("https://federated.local/objects/1"),
 		},
 		{
-			name: "by authorized public",
+			name: "authorized:public",
 			ff: Checks{
 				Authorized("https://www.w3.org/ns/activitystreams#Public"),
 			},
 			indexes: idx,
-			want:    wantedBmp("https://federated.local/objects/1"),
+			want:    wantedBmp("https://federated.local/objects/1", "https://federated.local/1"),
+		},
+		{
+			name:    "authorized:~alice",
+			ff:      Checks{Authorized("https://federated.local/~alice")},
+			indexes: idx,
+			want:    wantedBmp("https://federated.local/objects/1", "https://federated.local/1", "https://federated.local/5"),
 		},
 		{
 			name: "by recipients",

@@ -11,9 +11,9 @@ func extractBitmaps(checks Checks, indexes map[index.Type]index.Indexable) []*ro
 	for _, check := range checks {
 		switch fil := check.(type) {
 		case idEquals:
-			result = append(result, index.GetBitmaps[vocab.IRI](indexes[index.ByID], vocab.IRI(fil)))
+			result = append(result, index.GetBitmaps[vocab.IRI](indexes[index.ByID], vocab.IRI(fil))...)
 		case iriEquals:
-			result = append(result, index.GetBitmaps[vocab.IRI](indexes[index.ByID], vocab.IRI(fil)))
+			result = append(result, index.GetBitmaps[vocab.IRI](indexes[index.ByID], vocab.IRI(fil))...)
 		case checkAny:
 			anys := extractBitmaps(Checks(fil), indexes)
 			result = append(result, roaring.FastOr(anys...))
@@ -25,21 +25,20 @@ func extractBitmaps(checks Checks, indexes map[index.Type]index.Indexable) []*ro
 			case byName:
 				// NOTE(marius): the naturalLanguageValChecks have this idiosyncrasy of doing name searches for
 				// both Name and PreferredUsername fields, so until we split them, we should use the same logic here.
-				ors := []*roaring.Bitmap{
-					index.GetBitmaps[string](indexes[index.ByName], fil.checkValue),
-					index.GetBitmaps[string](indexes[index.ByPreferredUsername], fil.checkValue),
-				}
+				ors := make([]*roaring.Bitmap, 0)
+				ors = append(ors, index.GetBitmaps[string](indexes[index.ByName], fil.checkValue)...)
+				ors = append(ors, index.GetBitmaps[string](indexes[index.ByPreferredUsername], fil.checkValue)...)
 				result = append(result, roaring.FastOr(ors...))
 			case bySummary:
-				result = append(result, index.GetBitmaps[string](indexes[index.BySummary], fil.checkValue))
+				result = append(result, index.GetBitmaps[string](indexes[index.BySummary], fil.checkValue)...)
 			case byContent:
-				result = append(result, index.GetBitmaps[string](indexes[index.ByContent], fil.checkValue))
+				result = append(result, index.GetBitmaps[string](indexes[index.ByContent], fil.checkValue)...)
 			default:
 			}
 		case withTypes:
 			ors := make([]*roaring.Bitmap, 0)
 			for _, tf := range fil {
-				ors = append(ors, index.GetBitmaps[string](indexes[index.ByType], string(tf)))
+				ors = append(ors, index.GetBitmaps[string](indexes[index.ByType], string(tf))...)
 			}
 			if len(ors) > 0 {
 				result = append(result, roaring.FastOr(ors...))
@@ -48,7 +47,7 @@ func extractBitmaps(checks Checks, indexes map[index.Type]index.Indexable) []*ro
 			ors := make([]*roaring.Bitmap, 0)
 			if values := objectCheckValues(fil); len(values) > 0 {
 				for _, val := range values {
-					ors = append(ors, index.GetBitmaps[vocab.IRI](indexes[index.ByActor], vocab.IRI(val)))
+					ors = append(ors, index.GetBitmaps[vocab.IRI](indexes[index.ByActor], vocab.IRI(val))...)
 				}
 			}
 			if len(ors) > 0 {
@@ -58,18 +57,26 @@ func extractBitmaps(checks Checks, indexes map[index.Type]index.Indexable) []*ro
 			ors := make([]*roaring.Bitmap, 0)
 			if values := objectCheckValues(fil); len(values) > 0 {
 				for _, val := range values {
-					ors = append(ors, index.GetBitmaps[vocab.IRI](indexes[index.ByObject], vocab.IRI(val)))
+					ors = append(ors, index.GetBitmaps[vocab.IRI](indexes[index.ByObject], vocab.IRI(val))...)
 				}
 			}
 			if len(ors) > 0 {
 				result = append(result, roaring.FastOr(ors...))
 			}
 		case attributedToEquals:
-			result = append(result, index.GetBitmaps[vocab.IRI](indexes[index.ByAttributedTo], vocab.IRI(fil)))
+			result = append(result, index.GetBitmaps[vocab.IRI](indexes[index.ByAttributedTo], vocab.IRI(fil))...)
 		case authorized:
-			result = append(result, index.GetBitmaps[vocab.IRI](indexes[index.ByRecipients], vocab.IRI(fil)))
+			if iri := vocab.IRI(fil); iri.Equals(vocab.PublicNS, true) {
+				result = append(result, index.GetBitmaps[vocab.IRI](indexes[index.ByRecipients], iri)...)
+			} else {
+				result = append(result,
+					roaring.FastOr(
+						index.GetBitmaps[vocab.IRI](indexes[index.ByRecipients], vocab.IRIs{vocab.PublicNS, iri}...)...,
+					),
+				)
+			}
 		case recipients:
-			result = append(result, index.GetBitmaps[vocab.IRI](indexes[index.ByRecipients], vocab.IRI(fil)))
+			result = append(result, index.GetBitmaps[vocab.IRI](indexes[index.ByRecipients], vocab.IRI(fil))...)
 		}
 	}
 	return result
