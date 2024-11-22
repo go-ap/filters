@@ -32,9 +32,9 @@ func extractBitmaps(checks Checks, indexes map[index.Type]index.Indexable) []*ro
 	for _, check := range checks {
 		switch fil := check.(type) {
 		case idEquals:
-			result = append(result, index.GetBitmaps[vocab.IRI](indexes[index.ByID], vocab.IRI(fil))...)
+			result = append(result, index.GetBitmaps[uint32](indexes[index.ByID], hFn(vocab.IRI(fil)))...)
 		case iriEquals:
-			result = append(result, index.GetBitmaps[vocab.IRI](indexes[index.ByID], vocab.IRI(fil))...)
+			result = append(result, index.GetBitmaps[uint32](indexes[index.ByID], hFn(vocab.IRI(fil)))...)
 		case checkAny:
 			anys := extractBitmaps(Checks(fil), indexes)
 			result = append(result, roaring.FastOr(anys...))
@@ -97,24 +97,6 @@ func (ff Checks) IndexMatch(indexes map[index.Type]index.Indexable) *roaring.Bit
 	// We can therefore use an AND operator for the bitmaps.
 	ands := extractBitmaps(ff, indexes)
 	return roaring.FastAnd(ands...)
-}
-
-func objectCheckValues(ff []Check) []string {
-	values := make([]string, 0, len(ff))
-	for _, af := range ff {
-		if ie, ok := af.(iriEquals); ok {
-			values = append(values, vocab.IRI(ie).String())
-		}
-		if ie, ok := af.(idEquals); ok {
-			values = append(values, vocab.IRI(ie).String())
-		}
-		if ie, ok := af.(withTypes); ok {
-			for _, typ := range ie {
-				values = append(values, string(typ))
-			}
-		}
-	}
-	return values
 }
 
 // SearchIndex does a fast index search for the received filters.

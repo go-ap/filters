@@ -10,18 +10,19 @@ import (
 )
 
 type (
-	tokener interface{ ~string | uint32 }
+	Tokenizable interface{ ~string | uint32 }
 
 	Indexable interface {
 		Add(vocab.LinkOrIRI) (uint32, error)
 	}
 
-	bitmaps[T tokener] interface {
-		get(key T) (*roaring.Bitmap, bool)
+	bitmaps[T Tokenizable] interface {
+		get(key T) *roaring.Bitmap
+		not(key T) *roaring.Bitmap
 	}
 
-	HashFnType               func(vocab.LinkOrIRI) uint32
-	ExtractFnType[T tokener] func(vocab.LinkOrIRI) []T
+	HashFnType                   func(vocab.LinkOrIRI) uint32
+	ExtractFnType[T Tokenizable] func(vocab.LinkOrIRI) []T
 )
 
 var HashSeed uint32 = 666
@@ -37,7 +38,7 @@ func murmurHash(it vocab.LinkOrIRI) uint32 {
 
 var HashFn HashFnType = murmurHash
 
-type tokenMap[T tokener] struct {
+type tokenMap[T Tokenizable] struct {
 	m         map[T]*roaring.Bitmap
 	extractFn ExtractFnType[T]
 }
@@ -75,12 +76,16 @@ func (i *tokenMap[T]) Add(li vocab.LinkOrIRI) (uint32, error) {
 	return ref, nil
 }
 
-func (i *tokenMap[T]) get(key T) (*roaring.Bitmap, bool) {
+// get returns the bitmap values corresponding to the key.
+func (i *tokenMap[T]) get(key T) *roaring.Bitmap {
 	b, ok := i.m[key]
-	return b, ok
+	if !ok {
+		return roaring.New()
+	}
+	return b
 }
 
-func TokenBitmap[T tokener](extractFn ExtractFnType[T]) Indexable {
+func TokenBitmap[T Tokenizable](extractFn ExtractFnType[T]) Indexable {
 	return &tokenMap[T]{
 		m:         make(map[T]*roaring.Bitmap),
 		extractFn: extractFn,

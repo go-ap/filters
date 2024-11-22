@@ -176,7 +176,7 @@ func ExtractObject(li vocab.LinkOrIRI) []uint32 {
 
 // ExtractID returns the [vocab.IRI] token corresponding to the "ID" property of
 // the received [vocab.Item]
-func ExtractID(li vocab.LinkOrIRI) []vocab.IRI {
+func ExtractID(li vocab.LinkOrIRI) []uint32 {
 	it, ok := li.(vocab.Item)
 	if !ok {
 		return nil
@@ -187,7 +187,7 @@ func ExtractID(li vocab.LinkOrIRI) []vocab.IRI {
 		iris = append(iris, ob.ID)
 		return nil
 	})
-	return iris
+	return iriToRefs(iris...)
 }
 
 func iriToRefs(iris ...vocab.IRI) []uint32 {

@@ -176,15 +176,19 @@ func TestChecks_IndexMatch(t *testing.T) {
 			ff:   nil,
 		},
 		{
-			name: "byType Flag",
-			ff: Checks{
-				HasType(vocab.FlagType),
-			},
+			name:    "id:/4",
+			ff:      Checks{SameID("https://federated.local/4")},
+			indexes: idx,
+			want:    wantedBmp("https://federated.local/4"),
+		},
+		{
+			name:    "type:Flag",
+			ff:      Checks{HasType(vocab.FlagType)},
 			indexes: idx,
 			want:    wantedBmp("https://federated.local/4", "https://federated.local/5"),
 		},
 		{
-			name: "byType Flag with actor",
+			name: "type:Flag,actor.id=/~jdoe",
 			ff: Checks{
 				HasType(vocab.FlagType),
 				Actor(SameID("https://federated.local/~jdoe")),
@@ -193,7 +197,7 @@ func TestChecks_IndexMatch(t *testing.T) {
 			want:    wantedBmp("https://federated.local/4"),
 		},
 		{
-			name: "byType Flag with object",
+			name: "type:Flag,object.id=objects/1",
 			ff: Checks{
 				HasType(vocab.FlagType),
 				Object(SameID("https://federated.local/objects/1")),

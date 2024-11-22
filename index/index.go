@@ -144,18 +144,15 @@ func (i *Index) UnmarshalBinary(data []byte) error {
 	return nil
 }
 
-// GetBitmaps returns the ORing of the underlying search bitmaps corresponding to the received values.
-func GetBitmaps[T tokener](in Indexable, tokens ...T) []*roaring.Bitmap {
+// GetBitmaps returns the ORing of the underlying search bitmaps corresponding to the received tokens.
+func GetBitmaps[T Tokenizable](in Indexable, tokens ...T) []*roaring.Bitmap {
 	bmp, ok := in.(bitmaps[T])
 	if !ok {
 		return nil
 	}
 	ors := make([]*roaring.Bitmap, 0, len(tokens))
 	for _, typ := range tokens {
-		ti, ok := bmp.get(typ)
-		if !ok {
-			continue
-		}
+		ti := bmp.get(typ)
 		ors = append(ors, ti)
 	}
 	return ors

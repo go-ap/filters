@@ -10,7 +10,7 @@ import (
 )
 
 func Test_IRI_TokenBitmap(t *testing.T) {
-	type testCase[T tokener] struct {
+	type testCase[T Tokenizable] struct {
 		name string
 		arg  ExtractFnType[T]
 		want tokenMap[T]
@@ -52,7 +52,7 @@ func Test_IRI_TokenBitmap(t *testing.T) {
 }
 
 func Test_Stringy_TokenBitmap(t *testing.T) {
-	type testCase[T tokener] struct {
+	type testCase[T Tokenizable] struct {
 		name string
 		arg  ExtractFnType[T]
 		want tokenMap[T]
@@ -107,13 +107,13 @@ func hashAll(vals ...vocab.LinkOrIRI) []uint32 {
 	return ints
 }
 
-func tk[T tokener](k T, vals ...vocab.LinkOrIRI) func(mm map[T]*roaring.Bitmap) {
+func tk[T Tokenizable](k T, vals ...vocab.LinkOrIRI) func(mm map[T]*roaring.Bitmap) {
 	return func(mm map[T]*roaring.Bitmap) {
 		mm[k] = roaring.BitmapOf(hashAll(vals...)...)
 	}
 }
 
-func tMap[T tokener](fns ...func(map[T]*roaring.Bitmap)) map[T]*roaring.Bitmap {
+func tMap[T Tokenizable](fns ...func(map[T]*roaring.Bitmap)) map[T]*roaring.Bitmap {
 	m := make(map[T]*roaring.Bitmap)
 	for _, fn := range fns {
 		fn(m)
@@ -126,7 +126,7 @@ func getRef[T ~string](v T) uint32 {
 }
 
 func Test_IRI_index_Add(t *testing.T) {
-	type testCase[T tokener] struct {
+	type testCase[T Tokenizable] struct {
 		name    string
 		i       tokenMap[T]
 		arg     vocab.LinkOrIRI
@@ -164,7 +164,7 @@ func Test_IRI_index_Add(t *testing.T) {
 }
 
 func Test_Stringy_index_Add(t *testing.T) {
-	type testCase[T tokener] struct {
+	type testCase[T Tokenizable] struct {
 		name    string
 		i       tokenMap[T]
 		arg     vocab.LinkOrIRI
@@ -268,7 +268,7 @@ var Ob = &vocab.Object{
 func Test_Stringy_index_MarshalBinary(t *testing.T) {
 	_, _ = strIndex.Add(Ob)
 
-	type testCase[T tokener] struct {
+	type testCase[T Tokenizable] struct {
 		name    string
 		i       tokenMap[T]
 		want    []byte
@@ -305,7 +305,7 @@ func Test_Stringy_index_MarshalBinary(t *testing.T) {
 func Test_IRI_index_MarshalBinary(t *testing.T) {
 	_, _ = iriIndex.Add(Ob)
 
-	type testCase[T tokener] struct {
+	type testCase[T Tokenizable] struct {
 		name    string
 		i       tokenMap[T]
 		want    []byte
@@ -340,7 +340,7 @@ func Test_IRI_index_MarshalBinary(t *testing.T) {
 }
 
 func Test_Stringy_index_UnmarshalBinary(t *testing.T) {
-	type testCase[T tokener] struct {
+	type testCase[T Tokenizable] struct {
 		name    string
 		i       tokenMap[T]
 		arg     []byte
@@ -370,7 +370,7 @@ func Test_Stringy_index_UnmarshalBinary(t *testing.T) {
 }
 
 func Test_IRI_index_UnmarshalBinary(t *testing.T) {
-	type testCase[T tokener] struct {
+	type testCase[T Tokenizable] struct {
 		name    string
 		i       tokenMap[T]
 		arg     []byte
