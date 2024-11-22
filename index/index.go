@@ -7,7 +7,6 @@ import (
 
 	"github.com/RoaringBitmap/roaring"
 	vocab "github.com/go-ap/activitypub"
-	"github.com/go-ap/errors"
 )
 
 type Type int8
@@ -23,7 +22,6 @@ const (
 	ByObject
 	ByRecipients
 	ByAttributedTo
-	ByCollection
 )
 
 // Index represents a full index
@@ -45,8 +43,6 @@ var actorIndexTypes = append(objectIndexTypes, ByPreferredUsername)
 
 var activityIndexTypes = append(objectIndexTypes, ByActor, ByObject)
 
-var collectionIndexTypes = append(objectIndexTypes /*, ByCollection*/)
-
 var allIndexTypes = append(append(objectIndexTypes, actorIndexTypes...), activityIndexTypes...)
 
 // Full returns a full index data type.
@@ -66,7 +62,7 @@ func Partial(types ...Type) *Index {
 	for _, typ := range types {
 		switch typ {
 		case ByID:
-			i.Indexes[typ] = TokenBitmap(ExtractID)
+			i.Indexes[typ] = new(full)
 		case ByType:
 			i.Indexes[typ] = TokenBitmap(ExtractType)
 		case ByName:
@@ -85,37 +81,28 @@ func Partial(types ...Type) *Index {
 			i.Indexes[typ] = TokenBitmap(ExtractRecipients)
 		case ByAttributedTo:
 			i.Indexes[typ] = TokenBitmap(ExtractAttributedTo)
-		case ByCollection:
-			i.Indexes[typ] = CollectionBitmap()
 		}
 	}
 	return &i
 }
 
 // Add adds a [vocab.LinkOrIRI] object to the index.
-func (i *Index) Add(items ...vocab.LinkOrIRI) error {
+func (i *Index) Add(items ...vocab.LinkOrIRI) {
 	i.w.Lock()
 	defer i.w.Unlock()
 
-	errs := make([]error, 0)
 	for _, li := range items {
 		ref := HashFn(li)
 		if ref == 0 {
-			errs = append(errs, errors.Newf("invalid hash"))
 			continue
 		}
 
 		i.Ref[ref] = li.GetLink()
 
 		for _, bmp := range i.Indexes {
-			if _, err := bmp.Add(li); err != nil {
-				errs = append(errs, err)
-				continue
-			}
+			_ = bmp.Add(li)
 		}
 	}
-
-	return errors.Join(errs...)
 }
 
 type bareIndex struct {
@@ -144,16 +131,33 @@ func (i *Index) UnmarshalBinary(data []byte) error {
 	return nil
 }
 
-// GetBitmaps returns the ORing of the underlying search bitmaps corresponding to the received tokens.
+// GetBitmaps returns the ORing of the underlying search bitmaps corresponding to the received tokens,
+// or to the reverse of the returned tokens if the neg parameter is set.
 func GetBitmaps[T Tokenizable](in Indexable, tokens ...T) []*roaring.Bitmap {
-	bmp, ok := in.(bitmaps[T])
-	if !ok {
-		return nil
+	if f, ok := in.(*full); ok {
+		b := (*roaring.Bitmap)(f).Clone()
+		refs := make([]uint32, len(tokens))
+		for i, tok := range tokens {
+			if ref, _ := any(tok).(uint32); ref > 0 {
+				refs[i] = ref
+			}
+		}
+
+		if len(refs) > 0 {
+			b.And(roaring.BitmapOf(refs...))
+		}
+		return []*roaring.Bitmap{b}
 	}
-	ors := make([]*roaring.Bitmap, 0, len(tokens))
-	for _, typ := range tokens {
-		ti := bmp.get(typ)
-		ors = append(ors, ti)
+
+	if bmp, ok := in.(bitmaps[T]); ok {
+		getFn := bmp.get
+
+		ors := make([]*roaring.Bitmap, 0, len(tokens))
+		for _, typ := range tokens {
+			ti := getFn(typ)
+			ors = append(ors, ti)
+		}
+		return ors
 	}
-	return ors
+	return nil
 }

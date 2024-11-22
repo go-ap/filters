@@ -29,8 +29,16 @@ func extractBitmapsForSubprop(checks Checks, indexes map[index.Type]index.Indexa
 
 func extractBitmaps(checks Checks, indexes map[index.Type]index.Indexable) []*roaring.Bitmap {
 	result := make([]*roaring.Bitmap, 0)
+	var not *roaring.Bitmap
 	for _, check := range checks {
 		switch fil := check.(type) {
+		case notCrit:
+			not = roaring.FastOr(extractBitmaps(Checks(fil), indexes)...)
+			if remaining := index.GetBitmaps[uint32](indexes[index.ByID]); len(remaining) == 1 {
+				noted := remaining[0]
+				noted.AndNot(not)
+				result = append(result, remaining[0])
+			}
 		case idEquals:
 			result = append(result, index.GetBitmaps[uint32](indexes[index.ByID], hFn(vocab.IRI(fil)))...)
 		case iriEquals:
@@ -49,7 +57,9 @@ func extractBitmaps(checks Checks, indexes map[index.Type]index.Indexable) []*ro
 				ors := make([]*roaring.Bitmap, 0)
 				ors = append(ors, index.GetBitmaps[string](indexes[index.ByName], fil.checkValue)...)
 				ors = append(ors, index.GetBitmaps[string](indexes[index.ByPreferredUsername], fil.checkValue)...)
-				result = append(result, roaring.FastOr(ors...))
+				if len(ors) > 0 {
+					result = append(result, roaring.FastOr(ors...))
+				}
 			case bySummary:
 				result = append(result, index.GetBitmaps[string](indexes[index.BySummary], fil.checkValue)...)
 			case byContent:
@@ -65,9 +75,11 @@ func extractBitmaps(checks Checks, indexes map[index.Type]index.Indexable) []*ro
 				result = append(result, roaring.FastOr(ors...))
 			}
 		case actorChecks:
-			result = append(result, roaring.FastOr(extractBitmapsForSubprop(Checks(fil), indexes, index.ByActor)...))
+			actorRefs := extractBitmapsForSubprop(Checks(fil), indexes, index.ByActor)
+			result = append(result, roaring.FastOr(actorRefs...))
 		case objectChecks:
-			result = append(result, roaring.FastOr(extractBitmapsForSubprop(Checks(fil), indexes, index.ByObject)...))
+			objectRefs := extractBitmapsForSubprop(Checks(fil), indexes, index.ByObject)
+			result = append(result, roaring.FastOr(objectRefs...))
 		case attributedToEquals:
 			result = append(result, index.GetBitmaps[uint32](indexes[index.ByAttributedTo], hFn(vocab.IRI(fil)))...)
 		case authorized:

@@ -13,7 +13,7 @@ type (
 	Tokenizable interface{ ~string | uint32 }
 
 	Indexable interface {
-		Add(vocab.LinkOrIRI) (uint32, error)
+		Add(vocab.LinkOrIRI) uint32
 	}
 
 	bitmaps[T Tokenizable] interface {
@@ -56,15 +56,15 @@ func (i *tokenMap[T]) UnmarshalBinary(data []byte) error {
 	return gob.NewDecoder(bytes.NewReader(data)).Decode(&i.m)
 }
 
-func (i *tokenMap[T]) Add(li vocab.LinkOrIRI) (uint32, error) {
+func (i *tokenMap[T]) Add(li vocab.LinkOrIRI) uint32 {
 	ref := HashFn(li)
 	if ref == 0 {
-		return 0, nil
+		return 0
 	}
 
 	tokens := i.extractFn(li)
 	if len(tokens) == 0 {
-		return ref, nil
+		return ref
 	}
 
 	for _, tok := range tokens {
@@ -73,7 +73,7 @@ func (i *tokenMap[T]) Add(li vocab.LinkOrIRI) (uint32, error) {
 		}
 		i.m[tok].Add(ref)
 	}
-	return ref, nil
+	return ref
 }
 
 // get returns the bitmap values corresponding to the key.
@@ -81,6 +81,19 @@ func (i *tokenMap[T]) get(key T) *roaring.Bitmap {
 	b, ok := i.m[key]
 	if !ok {
 		return roaring.New()
+	}
+	return b
+}
+
+// not returns the OR'ed bitmap values for all token maps not corresponding
+// to the key.
+func (i *tokenMap[T]) not(key T) *roaring.Bitmap {
+	b := roaring.New()
+	for k, v := range i.m {
+		if k == key {
+			continue
+		}
+		b.Or(v)
 	}
 	return b
 }

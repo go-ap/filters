@@ -152,9 +152,7 @@ func Test_IRI_index_Add(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if _, err := tt.i.Add(tt.arg); (err != nil) != tt.wantErr {
-				t.Errorf("Add() error = %v, wantErr %v", err, tt.wantErr)
-			}
+			_ = tt.i.Add(tt.arg)
 			got := tt.i
 			if got.m != nil && tt.want != nil && !reflect.DeepEqual(got.m, tt.want) {
 				t.Errorf("Add() = invalid token map %+v, expected %+v", got.m, tt.want)
@@ -184,9 +182,7 @@ func Test_Stringy_index_Add(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if _, err := tt.i.Add(tt.arg); (err != nil) != tt.wantErr {
-				t.Errorf("Add() error = %v, wantErr %v", err, tt.wantErr)
-			}
+			_ = tt.i.Add(tt.arg)
 			got := tt.i
 			if got.m != nil && tt.want != nil && !reflect.DeepEqual(got.m, tt.want) {
 				t.Errorf("Add() = invalid token map %+v, expected %+v", got.m, tt.want)
@@ -266,7 +262,7 @@ var Ob = &vocab.Object{
 }
 
 func Test_Stringy_index_MarshalBinary(t *testing.T) {
-	_, _ = strIndex.Add(Ob)
+	_ = strIndex.Add(Ob)
 
 	type testCase[T Tokenizable] struct {
 		name    string
@@ -303,7 +299,7 @@ func Test_Stringy_index_MarshalBinary(t *testing.T) {
 }
 
 func Test_IRI_index_MarshalBinary(t *testing.T) {
-	_, _ = iriIndex.Add(Ob)
+	_ = iriIndex.Add(Ob)
 
 	type testCase[T Tokenizable] struct {
 		name    string

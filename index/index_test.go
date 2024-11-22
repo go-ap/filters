@@ -54,16 +54,14 @@ func TestIndex_Add(t *testing.T) {
 		Indexes map[Type]Indexable
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		arg     vocab.LinkOrIRI
-		wantErr bool
+		name   string
+		fields fields
+		arg    vocab.LinkOrIRI
 	}{
 		{
-			name:    "empty",
-			fields:  fields{},
-			arg:     nil,
-			wantErr: true,
+			name:   "empty",
+			fields: fields{},
+			arg:    nil,
 		},
 	}
 	for _, tt := range tests {
@@ -73,9 +71,7 @@ func TestIndex_Add(t *testing.T) {
 				Ref:     tt.fields.Ref,
 				Indexes: tt.fields.Indexes,
 			}
-			if err := i.Add(tt.arg); (err != nil) != tt.wantErr {
-				t.Errorf("Add() error = %v, wantErr %v", err, tt.wantErr)
-			}
+			i.Add(tt.arg)
 		})
 	}
 }
