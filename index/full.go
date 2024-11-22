@@ -7,6 +7,10 @@ import (
 
 type full roaring.Bitmap
 
+func All() Indexable {
+	return (*full)(new(roaring.Bitmap))
+}
+
 func (f *full) Add(i vocab.LinkOrIRI) uint32 {
 	bmp := (*roaring.Bitmap)(f)
 	r := HashFn(i)
