@@ -29,15 +29,17 @@ func extractBitmapsForSubprop(checks Checks, indexes map[index.Type]index.Indexa
 
 func extractBitmaps(checks Checks, indexes map[index.Type]index.Indexable) []*roaring.Bitmap {
 	result := make([]*roaring.Bitmap, 0)
-	var not *roaring.Bitmap
 	for _, check := range checks {
 		switch fil := check.(type) {
 		case notCrit:
-			not = roaring.FastOr(extractBitmaps(Checks(fil), indexes)...)
-			if remaining := index.GetBitmaps[uint32](indexes[index.ByID]); len(remaining) == 1 {
-				noted := remaining[0]
-				noted.AndNot(not)
-				result = append(result, remaining[0])
+			toExclude := roaring.FastOr(extractBitmaps(Checks(fil), indexes)...)
+			if toExclude.GetCardinality() == 0 {
+				continue
+			}
+			all := roaring.FastOr(index.GetBitmaps[uint32](indexes[index.ByID])...)
+			if all.GetCardinality() > 0 {
+				all.AndNot(toExclude)
+				result = append(result, all)
 			}
 		case idEquals:
 			result = append(result, index.GetBitmaps[uint32](indexes[index.ByID], hFn(vocab.IRI(fil)))...)
