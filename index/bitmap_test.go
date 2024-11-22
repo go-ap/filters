@@ -15,29 +15,29 @@ func Test_IRI_TokenBitmap(t *testing.T) {
 		arg  ExtractFnType[T]
 		want tokenMap[T]
 	}
-	tests := []testCase[vocab.IRI]{
+	tests := []testCase[uint32]{
 		{
 			name: "empty",
 		},
 		{
 			name: "iri attributedTo",
 			arg:  ExtractAttributedTo,
-			want: tokenMap[vocab.IRI]{m: make(map[vocab.IRI]*roaring.Bitmap), extractFn: ExtractAttributedTo},
+			want: tokenMap[uint32]{m: make(map[uint32]*roaring.Bitmap), extractFn: ExtractAttributedTo},
 		},
 		{
 			name: "iri Actor",
 			arg:  ExtractActor,
-			want: tokenMap[vocab.IRI]{m: make(map[vocab.IRI]*roaring.Bitmap), extractFn: ExtractActor},
+			want: tokenMap[uint32]{m: make(map[uint32]*roaring.Bitmap), extractFn: ExtractActor},
 		},
 		{
 			name: "iri Object",
 			arg:  ExtractObject,
-			want: tokenMap[vocab.IRI]{m: make(map[vocab.IRI]*roaring.Bitmap), extractFn: ExtractObject},
+			want: tokenMap[uint32]{m: make(map[uint32]*roaring.Bitmap), extractFn: ExtractObject},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, ok := TokenBitmap(tt.arg).(*tokenMap[vocab.IRI])
+			got, ok := TokenBitmap(tt.arg).(*tokenMap[uint32])
 			if !ok {
 				t.Errorf("TokenBitmap() = invalid type %T for result", got)
 			}
@@ -121,6 +121,10 @@ func tMap[T tokener](fns ...func(map[T]*roaring.Bitmap)) map[T]*roaring.Bitmap {
 	return m
 }
 
+func getRef[T ~string](v T) uint32 {
+	return HashFn(vocab.IRI(v))
+}
+
 func Test_IRI_index_Add(t *testing.T) {
 	type testCase[T tokener] struct {
 		name    string
@@ -129,21 +133,21 @@ func Test_IRI_index_Add(t *testing.T) {
 		want    map[T]*roaring.Bitmap
 		wantErr bool
 	}
-	tests := []testCase[vocab.IRI]{
+	tests := []testCase[uint32]{
 		{
 			name: "empty",
 		},
 		{
 			name: "iri attributedTo",
-			i:    tokenMap[vocab.IRI]{m: make(map[vocab.IRI]*roaring.Bitmap), extractFn: ExtractAttributedTo},
+			i:    tokenMap[uint32]{m: make(map[uint32]*roaring.Bitmap), extractFn: ExtractAttributedTo},
 			arg:  &vocab.Object{ID: "https://example.com/1", AttributedTo: vocab.IRI("https://example.com/~jane")},
-			want: tMap(tk(vocab.IRI("https://example.com/~jane"), vocab.IRI("https://example.com/1"))),
+			want: tMap(tk(getRef("https://example.com/~jane"), vocab.IRI("https://example.com/1"))),
 		},
 		{
 			name: "iri Actor",
-			i:    tokenMap[vocab.IRI]{m: make(map[vocab.IRI]*roaring.Bitmap), extractFn: ExtractActor},
+			i:    tokenMap[uint32]{m: make(map[uint32]*roaring.Bitmap), extractFn: ExtractActor},
 			arg:  &vocab.Activity{ID: "https://example.com/2", Actor: vocab.IRI("https://example.com/~jane")},
-			want: tMap(tk(vocab.IRI("https://example.com/~jane"), vocab.IRI("https://example.com/2"))),
+			want: tMap(tk(getRef("https://example.com/~jane"), vocab.IRI("https://example.com/2"))),
 		},
 	}
 	for _, tt := range tests {
@@ -236,16 +240,13 @@ var typeIndex = []byte{0xf, 0xff, 0x81, 0x4, 0x1, 0x2, 0xff, 0x82, 0x0, 0x1, 0xc
 	0x12, 0x3a, 0x30, 0x0, 0x0, 0x1, 0x0, 0x0, 0x0, 0x28, 0x7a, 0x0, 0x0, 0x10, 0x0, 0x0, 0x0, 0xa3, 0x94,
 }
 
-var emptyIRIIndex = []byte{0x10, 0xff, 0x87, 0x4, 0x1, 0x2, 0xff, 0x88, 0x0, 0x1, 0xff, 0x86, 0x1, 0xff, 0x80, 0x0, 0x0,
-	0xa, 0xff, 0x85, 0x5, 0x1, 0x2, 0xff, 0x86, 0x0, 0x0, 0x0, 0x9, 0x7f, 0x6, 0x1, 0x2, 0xff, 0x84, 0x0, 0x0, 0x0, 0x4,
-	0xff, 0x88, 0x0, 0x0,
+var emptyIRIIndex = []byte{0xf, 0xff, 0x85, 0x4, 0x1, 0x2, 0xff, 0x86, 0x0, 0x1, 0x6, 0x1, 0xff, 0x80, 0x0, 0x0, 0x9,
+	0x7f, 0x6, 0x1, 0x2, 0xff, 0x84, 0x0, 0x0, 0x0, 0x4, 0xff, 0x86, 0x0, 0x0,
 }
 
-var recipientsIndex = []byte{0x10, 0xff, 0x87, 0x4, 0x1, 0x2, 0xff, 0x88, 0x0, 0x1, 0xff, 0x86, 0x1, 0xff, 0x80, 0x0,
-	0x0, 0xa, 0xff, 0x85, 0x5, 0x1, 0x2, 0xff, 0x86, 0x0, 0x0, 0x0, 0x9, 0x7f, 0x6, 0x1, 0x2, 0xff, 0x84, 0x0, 0x0, 0x0,
-	0x2b, 0xff, 0x88, 0x0, 0x1, 0x13, 0x68, 0x74, 0x74, 0x70, 0x73, 0x3a, 0x2f, 0x2f, 0x65, 0x78, 0x61, 0x6d, 0x70,
-	0x6c, 0x65, 0x2e, 0x63, 0x6f, 0x6d, 0x12, 0x3a, 0x30, 0x0, 0x0, 0x1, 0x0, 0x0, 0x0, 0x28, 0x7a, 0x0, 0x0, 0x10,
-	0x0, 0x0, 0x0, 0xa3, 0x94,
+var recipientsIndex = []byte{0xf, 0xff, 0x85, 0x4, 0x1, 0x2, 0xff, 0x86, 0x0, 0x1, 0x6, 0x1, 0xff, 0x80, 0x0, 0x0, 0x9,
+	0x7f, 0x6, 0x1, 0x2, 0xff, 0x84, 0x0, 0x0, 0x0, 0x1c, 0xff, 0x86, 0x0, 0x1, 0xfc, 0xc1, 0x95, 0xfe, 0xf1, 0x12,
+	0x3a, 0x30, 0x0, 0x0, 0x1, 0x0, 0x0, 0x0, 0x28, 0x7a, 0x0, 0x0, 0x10, 0x0, 0x0, 0x0, 0xa3, 0x94,
 }
 
 var strIndex = tokenMap[string]{
@@ -253,8 +254,8 @@ var strIndex = tokenMap[string]{
 	extractFn: ExtractType,
 }
 
-var iriIndex = tokenMap[vocab.IRI]{
-	m:         make(map[vocab.IRI]*roaring.Bitmap),
+var iriIndex = tokenMap[uint32]{
+	m:         make(map[uint32]*roaring.Bitmap),
 	extractFn: ExtractRecipients,
 }
 
@@ -310,10 +311,10 @@ func Test_IRI_index_MarshalBinary(t *testing.T) {
 		want    []byte
 		wantErr bool
 	}
-	tests := []testCase[vocab.IRI]{
+	tests := []testCase[uint32]{
 		{
 			name:    "empty",
-			i:       tokenMap[vocab.IRI]{},
+			i:       tokenMap[uint32]{},
 			want:    emptyIRIIndex,
 			wantErr: false,
 		},
@@ -375,10 +376,10 @@ func Test_IRI_index_UnmarshalBinary(t *testing.T) {
 		arg     []byte
 		wantErr bool
 	}
-	tests := []testCase[vocab.IRI]{
+	tests := []testCase[uint32]{
 		{
 			name:    "empty",
-			i:       tokenMap[vocab.IRI]{},
+			i:       tokenMap[uint32]{},
 			arg:     emptyIRIIndex,
 			wantErr: false,
 		},

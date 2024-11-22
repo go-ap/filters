@@ -12,17 +12,24 @@ import (
 
 func ExampleSearchIndex() {
 	activities := []vocab.LinkOrIRI{
+		// NOTE(marius): if the object for the Create activity is not indexed independently, like we have here,
+		// it will not be findable in the index, and the composite search by activity type: Create,
+		// and object ID:https://federated.local/objects/1 will fail.
+		// In a previous version of this example this object was embedded in the activity directly,
+		// but we decided that the logic to add embedded objects to the index, would be too complicated,
+		// so this is the compromise.
+		&vocab.Object{
+			ID:   "https://federated.local/objects/1",
+			Type: vocab.PageType,
+			Name: vocab.NaturalLanguageValues{{Ref: "-", Value: vocab.Content("Link to example.com")}},
+			URL:  vocab.IRI("https://example.com"),
+		},
 		&vocab.Activity{
-			ID:    "https://federated.local/1",
-			Type:  vocab.CreateType,
-			To:    vocab.ItemCollection{vocab.IRI("https://federated.local/~jdoe")},
-			Actor: vocab.IRI("https://federated.local/~jdoe"),
-			Object: &vocab.Object{
-				ID:   "https://federated.local/objects/1",
-				Type: vocab.PageType,
-				Name: vocab.NaturalLanguageValues{{Ref: "-", Value: vocab.Content("Link to example.com")}},
-				URL:  vocab.IRI("https://example.com"),
-			},
+			ID:     "https://federated.local/1",
+			Type:   vocab.CreateType,
+			To:     vocab.ItemCollection{vocab.IRI("https://federated.local/~jdoe")},
+			Actor:  vocab.IRI("https://federated.local/~jdoe"),
+			Object: vocab.IRI("https://federated.local/objects/1"),
 		},
 		&vocab.Activity{
 			ID:     "https://federated.local/2",
@@ -292,6 +299,33 @@ func TestChecks_IndexMatch(t *testing.T) {
 				"https://federated.local/4",
 				"https://federated.local/5",
 			),
+		},
+		{
+			name: "all(type:Flag,actor.name=~jDoe)",
+			ff: Checks{
+				HasType(vocab.FlagType),
+				Actor(NameIs("jDoe")),
+			},
+			indexes: idx,
+			want:    wantedBmp("https://federated.local/4"),
+		},
+		{
+			name: "all(type:Create,object.id=objects/1)",
+			ff: Checks{
+				HasType(vocab.CreateType),
+				Object(SameID("https://federated.local/objects/1")),
+			},
+			indexes: idx,
+			want:    wantedBmp("https://federated.local/1"),
+		},
+		{
+			name: "all(type:Create,object.summary=example)",
+			ff: Checks{
+				HasType(vocab.CreateType),
+				Object(SummaryIs("example")),
+			},
+			indexes: idx,
+			want:    wantedBmp("https://federated.local/1"),
 		},
 	}
 	for _, tt := range tests {

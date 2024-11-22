@@ -6,6 +6,27 @@ import (
 	"github.com/go-ap/filters/index"
 )
 
+var hFn = index.HashFn
+
+func extractBitmapsForSubprop(checks Checks, indexes map[index.Type]index.Indexable, typ index.Type) []*roaring.Bitmap {
+	found := roaring.FastAnd(extractBitmaps(checks, indexes)...)
+	if found.GetCardinality() == 0 {
+		return nil
+	}
+
+	iter := found.Iterator()
+	if iter == nil {
+		return nil
+	}
+
+	refs := make([]uint32, 0, found.GetCardinality())
+	for x := iter.PeekNext(); iter.HasNext(); x = iter.Next() {
+		refs = append(refs, x)
+	}
+
+	return index.GetBitmaps[uint32](indexes[typ], refs...)
+}
+
 func extractBitmaps(checks Checks, indexes map[index.Type]index.Indexable) []*roaring.Bitmap {
 	result := make([]*roaring.Bitmap, 0)
 	for _, check := range checks {
@@ -44,39 +65,23 @@ func extractBitmaps(checks Checks, indexes map[index.Type]index.Indexable) []*ro
 				result = append(result, roaring.FastOr(ors...))
 			}
 		case actorChecks:
-			ors := make([]*roaring.Bitmap, 0)
-			if values := objectCheckValues(fil); len(values) > 0 {
-				for _, val := range values {
-					ors = append(ors, index.GetBitmaps[vocab.IRI](indexes[index.ByActor], vocab.IRI(val))...)
-				}
-			}
-			if len(ors) > 0 {
-				result = append(result, roaring.FastOr(ors...))
-			}
+			result = append(result, roaring.FastOr(extractBitmapsForSubprop(Checks(fil), indexes, index.ByActor)...))
 		case objectChecks:
-			ors := make([]*roaring.Bitmap, 0)
-			if values := objectCheckValues(fil); len(values) > 0 {
-				for _, val := range values {
-					ors = append(ors, index.GetBitmaps[vocab.IRI](indexes[index.ByObject], vocab.IRI(val))...)
-				}
-			}
-			if len(ors) > 0 {
-				result = append(result, roaring.FastOr(ors...))
-			}
+			result = append(result, roaring.FastOr(extractBitmapsForSubprop(Checks(fil), indexes, index.ByObject)...))
 		case attributedToEquals:
-			result = append(result, index.GetBitmaps[vocab.IRI](indexes[index.ByAttributedTo], vocab.IRI(fil))...)
+			result = append(result, index.GetBitmaps[uint32](indexes[index.ByAttributedTo], hFn(vocab.IRI(fil)))...)
 		case authorized:
 			if iri := vocab.IRI(fil); iri.Equals(vocab.PublicNS, true) {
-				result = append(result, index.GetBitmaps[vocab.IRI](indexes[index.ByRecipients], iri)...)
+				result = append(result, index.GetBitmaps[uint32](indexes[index.ByRecipients], hFn(iri))...)
 			} else {
 				result = append(result,
 					roaring.FastOr(
-						index.GetBitmaps[vocab.IRI](indexes[index.ByRecipients], vocab.IRIs{vocab.PublicNS, iri}...)...,
+						index.GetBitmaps[uint32](indexes[index.ByRecipients], hFn(vocab.PublicNS), hFn(iri))...,
 					),
 				)
 			}
 		case recipients:
-			result = append(result, index.GetBitmaps[vocab.IRI](indexes[index.ByRecipients], vocab.IRI(fil))...)
+			result = append(result, index.GetBitmaps[uint32](indexes[index.ByRecipients], hFn(vocab.IRI(fil)))...)
 		}
 	}
 	return result
@@ -115,8 +120,17 @@ func objectCheckValues(ff []Check) []string {
 // SearchIndex does a fast index search for the received filters.
 func SearchIndex(i *index.Index, ff ...Check) ([]vocab.IRI, error) {
 	bmp := Checks(ff).IndexMatch(i.Indexes)
-	result := make([]vocab.IRI, 0, bmp.GetCardinality())
+
+	if bmp.GetCardinality() == 0 {
+		return nil, nil
+	}
+
 	it := bmp.Iterator()
+	if it == nil {
+		return nil, nil
+	}
+
+	result := make([]vocab.IRI, 0, bmp.GetCardinality())
 	for x := it.PeekNext(); it.HasNext(); x = it.Next() {
 		if iri, ok := i.Ref[x]; ok {
 			result = append(result, iri)
