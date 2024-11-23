@@ -297,10 +297,6 @@ func filterCollection(col vocab.ItemCollection, fns ...Check) (vocab.ItemCollect
 	resetAfter(fns...)
 	resetBefore(fns...)
 
-	onFirstPage := len(AfterChecks(fns...)) == 0
-	onLastPage := len(BeforeChecks(fns...)) == 0
-
-	var firstPage vocab.ItemCollection
 	var lastPage vocab.ItemCollection
 	var result vocab.ItemCollection
 
@@ -309,8 +305,12 @@ func filterCollection(col vocab.ItemCollection, fns ...Check) (vocab.ItemCollect
 		return result, pp, np
 	}
 
+	onLastPage := len(AfterChecks(fns...)) > 0 && len(result) < maxItems
+	onFirstPage := len(AfterChecks(fns...)) == 0 && result.First().GetLink().Equals(col.First().GetLink(), true)
+
+	var firstPage vocab.ItemCollection
 	first := result.First()
-	if len(result) <= maxItems {
+	if len(col) <= maxItems {
 		return result, pp, np
 	}
 
