@@ -23,13 +23,13 @@ func TestBefore(t *testing.T) {
 			name:     "one iri",
 			checkIRI: "https://example.com",
 			with:     vocab.ItemCollection{vocab.IRI("http://example.com")},
-			want:     []bool{true},
+			want:     []bool{false},
 		},
 		{
 			name:     "two iris - at the end",
 			checkIRI: "https://example.com",
 			with:     vocab.ItemCollection{vocab.IRI("https://example1.com"), vocab.IRI("http://example.com")},
-			want:     []bool{true, true},
+			want:     []bool{true, false},
 		},
 		{
 			name:     "two iris - at start",

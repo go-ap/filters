@@ -108,7 +108,7 @@ func TestID(t *testing.T) {
 				checkIRI:   "https://example.com",
 				toCheckIRI: "http://example.com",
 			},
-			want: false,
+			want: true,
 		},
 		{
 			name: "non matching iris - different domain",

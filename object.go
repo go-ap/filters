@@ -32,7 +32,7 @@ func (i idEquals) Match(item vocab.Item) bool {
 	if vocab.IsNil(item) {
 		return len(i) == 0
 	}
-	return item.GetID().Equals(vocab.IRI(i), true)
+	return item.GetID().Equals(vocab.IRI(i), false)
 }
 
 // IDLike
