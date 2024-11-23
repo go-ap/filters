@@ -1,6 +1,8 @@
 package index
 
 import (
+	"encoding"
+
 	"github.com/RoaringBitmap/roaring"
 	vocab "github.com/go-ap/activitypub"
 )
@@ -17,3 +19,14 @@ func (f *full) Add(i vocab.LinkOrIRI) uint32 {
 	bmp.Add(r)
 	return r
 }
+
+func (f *full) UnmarshalBinary(data []byte) error {
+	return (*roaring.Bitmap)(f).UnmarshalBinary(data)
+}
+
+func (f *full) MarshalBinary() (data []byte, err error) {
+	return (*roaring.Bitmap)(f).MarshalBinary()
+}
+
+var _ encoding.BinaryMarshaler = new(full)
+var _ encoding.BinaryUnmarshaler = new(full)
