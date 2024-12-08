@@ -639,3 +639,52 @@ func Test_fromValues(t *testing.T) {
 		})
 	}
 }
+
+func Test_urlValue(t *testing.T) {
+	tests := []struct {
+		name string
+		arg  Check
+		want url.Values
+	}{
+		{
+			name: "empty",
+			arg:  nil,
+			want: nil,
+		},
+		{
+			name: "id",
+			arg:  idEquals("https://example.com"),
+			want: url.Values{
+				keyID: []string{"https://example.com"},
+			},
+		},
+		{
+			name: "iri",
+			arg:  iriEquals("https://example.com"),
+			want: url.Values{
+				keyIRI: []string{"https://example.com"},
+			},
+		},
+		{
+			name: "maxItems",
+			arg:  WithMaxCount(666),
+			want: url.Values{
+				keyMaxItems: []string{"666"},
+			},
+		},
+		{
+			name: "after",
+			arg:  After(SameID("https://example.com")),
+			want: url.Values{
+				keyAfter: []string{"https://example.com"},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := urlValue(tt.arg); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("urlValue() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

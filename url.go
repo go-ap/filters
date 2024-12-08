@@ -393,3 +393,74 @@ func fromValues(q url.Values) Checks {
 	}
 	return Checks{All(f...)}
 }
+
+func urlValue(f Check) url.Values {
+	if f == nil {
+		return nil
+	}
+
+	q := url.Values{}
+	switch check := f.(type) {
+	case iriEquals:
+		q[keyIRI] = []string{string(check)}
+	case idEquals:
+		q[keyID] = []string{string(check)}
+	case objectChecks:
+		p := keyObject
+		for kk, vv := range ToValues(check...) {
+			q[p+"."+kk] = vv
+		}
+	case actorChecks:
+		p := keyActor
+		for kk, vv := range ToValues(check...) {
+			q[p+"."+kk] = vv
+		}
+	case targetChecks:
+		p := keyTarget
+		for kk, vv := range ToValues(check...) {
+			q[p+"."+kk] = vv
+		}
+	case tagChecks:
+		p := keyTag
+		for kk, vv := range ToValues(check...) {
+			q[p+"."+kk] = vv
+		}
+	case *beforeCrit:
+		if len(check.fns) >= 1 {
+			if sameId, ok := check.fns[0].(iriEquals); ok {
+				q.Set(keyBefore, string(sameId))
+			}
+			if sameId, ok := check.fns[0].(idEquals); ok {
+				q.Set(keyBefore, string(sameId))
+			}
+		}
+	case *afterCrit:
+		if len(check.fns) >= 1 {
+			if sameId, ok := check.fns[0].(iriEquals); ok {
+				q.Set(keyAfter, string(sameId))
+			}
+			if sameId, ok := check.fns[0].(idEquals); ok {
+				q.Set(keyAfter, string(sameId))
+			}
+		}
+	case *counter:
+		q.Set(keyMaxItems, strconv.FormatInt(int64(check.max), 10))
+	}
+	return q
+}
+
+func urlValues(ff ...Check) url.Values {
+	q := url.Values{}
+	for _, f := range ff {
+		if qq := urlValue(f); len(qq) > 0 {
+			for k, v := range qq {
+				q[k] = v
+			}
+		}
+	}
+	return q
+}
+
+func ToValues(ff ...Check) url.Values {
+	return urlValues(ff...)
+}
