@@ -1,15 +1,15 @@
 package filters
 
 import (
-	"github.com/RoaringBitmap/roaring"
+	"github.com/RoaringBitmap/roaring/roaring64"
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/filters/index"
 )
 
 var hFn = index.HashFn
 
-func extractBitmapsForSubprop(checks Checks, indexes map[index.Type]index.Indexable, typ index.Type) []*roaring.Bitmap {
-	found := roaring.FastAnd(extractBitmaps(checks, indexes)...)
+func extractBitmapsForSubprop(checks Checks, indexes map[index.Type]index.Indexable, typ index.Type) []*roaring64.Bitmap {
+	found := roaring64.FastAnd(extractBitmaps(checks, indexes)...)
 	if found.GetCardinality() == 0 {
 		return nil
 	}
@@ -19,89 +19,103 @@ func extractBitmapsForSubprop(checks Checks, indexes map[index.Type]index.Indexa
 		return nil
 	}
 
-	refs := make([]uint32, 0, found.GetCardinality())
+	refs := make([]uint64, 0, found.GetCardinality())
 	for x := iter.PeekNext(); iter.HasNext(); x = iter.Next() {
 		refs = append(refs, x)
 	}
 
-	return index.GetBitmaps[uint32](indexes[typ], refs...)
+	return index.GetBitmaps[uint64](indexes[typ], refs...)
 }
 
-func extractBitmaps(checks Checks, indexes map[index.Type]index.Indexable) []*roaring.Bitmap {
-	result := make([]*roaring.Bitmap, 0)
+const (
+	ByID index.Type = iota
+	ByType
+	ByName
+	ByPreferredUsername
+	BySummary
+	ByContent
+	ByActor
+	ByObject
+	ByRecipients
+	ByAttributedTo
+	ByCollection
+)
+
+func extractBitmaps(checks Checks, indexes map[index.Type]index.Indexable) []*roaring64.Bitmap {
+	result := make([]*roaring64.Bitmap, 0)
 	for _, check := range checks {
 		switch fil := check.(type) {
 		case notCrit:
-			toExclude := roaring.FastOr(extractBitmaps(Checks(fil), indexes)...)
+			toExclude := roaring64.FastOr(extractBitmaps(Checks(fil), indexes)...)
 			if toExclude.GetCardinality() == 0 {
 				continue
 			}
-			all := roaring.FastOr(index.GetBitmaps[uint32](indexes[index.ByID])...)
+			all := roaring64.FastOr(index.GetBitmaps[uint64](indexes[ByID])...)
 			if all.GetCardinality() > 0 {
 				all.AndNot(toExclude)
 				result = append(result, all)
 			}
 		case idEquals:
-			result = append(result, index.GetBitmaps[uint32](indexes[index.ByID], hFn(vocab.IRI(fil)))...)
+			result = append(result, index.GetBitmaps[uint64](indexes[ByID], hFn(vocab.IRI(fil)))...)
 		case iriEquals:
-			result = append(result, index.GetBitmaps[uint32](indexes[index.ByID], hFn(vocab.IRI(fil)))...)
+			result = append(result, index.GetBitmaps[uint64](indexes[ByID], hFn(vocab.IRI(fil)))...)
 		case checkAny:
 			anys := extractBitmaps(Checks(fil), indexes)
-			result = append(result, roaring.FastOr(anys...))
+			result = append(result, roaring64.FastOr(anys...))
 		case checkAll:
 			alls := extractBitmaps(Checks(fil), indexes)
-			result = append(result, roaring.FastAnd(alls...))
+			result = append(result, roaring64.FastAnd(alls...))
 		case naturalLanguageValCheck:
 			switch fil.typ {
 			case byName:
 				// NOTE(marius): the naturalLanguageValChecks have this idiosyncrasy of doing name searches for
 				// both Name and PreferredUsername fields, so until we split them, we should use the same logic here.
-				ors := make([]*roaring.Bitmap, 0)
-				ors = append(ors, index.GetBitmaps[string](indexes[index.ByName], fil.checkValue)...)
-				ors = append(ors, index.GetBitmaps[string](indexes[index.ByPreferredUsername], fil.checkValue)...)
+				ors := make([]*roaring64.Bitmap, 0)
+				ors = append(ors, index.GetBitmaps[string](indexes[ByName], fil.checkValue)...)
+				ors = append(ors, index.GetBitmaps[string](indexes[ByPreferredUsername], fil.checkValue)...)
 				if len(ors) > 0 {
-					result = append(result, roaring.FastOr(ors...))
+					result = append(result, roaring64.FastOr(ors...))
 				}
 			case bySummary:
-				result = append(result, index.GetBitmaps[string](indexes[index.BySummary], fil.checkValue)...)
+				result = append(result, index.GetBitmaps[string](indexes[BySummary], fil.checkValue)...)
 			case byContent:
-				result = append(result, index.GetBitmaps[string](indexes[index.ByContent], fil.checkValue)...)
+				result = append(result, index.GetBitmaps[string](indexes[ByContent], fil.checkValue)...)
 			default:
 			}
 		case withTypes:
-			ors := make([]*roaring.Bitmap, 0)
+			ors := make([]*roaring64.Bitmap, 0)
 			for _, tf := range fil {
-				ors = append(ors, index.GetBitmaps[string](indexes[index.ByType], string(tf))...)
+				ors = append(ors, index.GetBitmaps[string](indexes[ByType], string(tf))...)
 			}
 			if len(ors) > 0 {
-				result = append(result, roaring.FastOr(ors...))
+				result = append(result, roaring64.FastOr(ors...))
 			}
 		case actorChecks:
-			actorRefs := extractBitmapsForSubprop(Checks(fil), indexes, index.ByActor)
-			result = append(result, roaring.FastOr(actorRefs...))
+			actorRefs := extractBitmapsForSubprop(Checks(fil), indexes, ByActor)
+			result = append(result, roaring64.FastOr(actorRefs...))
 		case objectChecks:
-			objectRefs := extractBitmapsForSubprop(Checks(fil), indexes, index.ByObject)
-			result = append(result, roaring.FastOr(objectRefs...))
+			objectRefs := extractBitmapsForSubprop(Checks(fil), indexes, ByObject)
+			result = append(result, roaring64.FastOr(objectRefs...))
 		case attributedToEquals:
-			result = append(result, index.GetBitmaps[uint32](indexes[index.ByAttributedTo], hFn(vocab.IRI(fil)))...)
+			result = append(result, index.GetBitmaps[uint64](indexes[ByAttributedTo], hFn(vocab.IRI(fil)))...)
 		case authorized:
 			if iri := vocab.IRI(fil); iri.Equals(vocab.PublicNS, true) {
-				result = append(result, index.GetBitmaps[uint32](indexes[index.ByRecipients], hFn(iri))...)
+				result = append(result, index.GetBitmaps[uint64](indexes[ByRecipients], hFn(iri))...)
 			} else {
 				result = append(result,
-					roaring.FastOr(
-						index.GetBitmaps[uint32](indexes[index.ByRecipients], hFn(vocab.PublicNS), hFn(iri))...,
+					roaring64.FastOr(
+						index.GetBitmaps[uint64](indexes[ByRecipients], hFn(vocab.PublicNS), hFn(iri))...,
 					),
 				)
 			}
 		case recipients:
-			result = append(result, index.GetBitmaps[uint32](indexes[index.ByRecipients], hFn(vocab.IRI(fil)))...)
+			result = append(result, index.GetBitmaps[uint64](indexes[ByRecipients], hFn(vocab.IRI(fil)))...)
 		}
 	}
 	return result
 }
 
-func (ff Checks) IndexMatch(indexes map[index.Type]index.Indexable) *roaring.Bitmap {
+func (ff Checks) IndexMatch(indexes map[index.Type]index.Indexable) *roaring64.Bitmap {
 	if len(ff) == 0 {
 		return nil
 	}
@@ -110,7 +124,7 @@ func (ff Checks) IndexMatch(indexes map[index.Type]index.Indexable) *roaring.Bit
 	// to a filter equivalent of All(Checks...).
 	// We can therefore use an AND operator for the bitmaps.
 	ands := extractBitmaps(ff, indexes)
-	return roaring.FastAnd(ands...)
+	return roaring64.FastAnd(ands...)
 }
 
 // SearchIndex does a fast index search for the received filters.

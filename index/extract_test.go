@@ -312,7 +312,7 @@ func Test_ExtractActor(t *testing.T) {
 	tests := []struct {
 		name string
 		arg  vocab.LinkOrIRI
-		want []uint32
+		want []uint64
 	}{
 		{
 			name: "empty",
@@ -330,22 +330,22 @@ func Test_ExtractActor(t *testing.T) {
 		{
 			name: "*Activity",
 			arg:  &vocab.Activity{Actor: vocab.IRI("https://example.com/~johnDoe")},
-			want: []uint32{getRef("https://example.com/~johnDoe")},
+			want: []uint64{getRef("https://example.com/~johnDoe")},
 		},
 		{
 			name: "*IntransitiveActivity",
 			arg:  &vocab.IntransitiveActivity{Actor: vocab.IRI("https://example.com/~johnDoe")},
-			want: []uint32{getRef("https://example.com/~johnDoe")},
+			want: []uint64{getRef("https://example.com/~johnDoe")},
 		},
 		{
 			name: "Activity",
 			arg:  vocab.Activity{Actor: vocab.IRI("https://example.com/~johnDoe")},
-			want: []uint32{getRef("https://example.com/~johnDoe")},
+			want: []uint64{getRef("https://example.com/~johnDoe")},
 		},
 		{
 			name: "IntransitiveActivity",
 			arg:  vocab.IntransitiveActivity{Actor: vocab.IRI("https://example.com/~johnDoe")},
-			want: []uint32{getRef("https://example.com/~johnDoe")},
+			want: []uint64{getRef("https://example.com/~johnDoe")},
 		},
 		{
 			name: "*Activity",
@@ -355,7 +355,7 @@ func Test_ExtractActor(t *testing.T) {
 					"https://example.com/~alice",
 				},
 			},
-			want: []uint32{getRef("https://example.com/~johnDoe"), getRef("https://example.com/~alice")},
+			want: []uint64{getRef("https://example.com/~johnDoe"), getRef("https://example.com/~alice")},
 		},
 		{
 			name: "*IntransitiveActivity",
@@ -365,7 +365,7 @@ func Test_ExtractActor(t *testing.T) {
 					"https://example.com/~alice",
 				},
 			},
-			want: []uint32{getRef("https://example.com/~johnDoe"), getRef("https://example.com/~alice")},
+			want: []uint64{getRef("https://example.com/~johnDoe"), getRef("https://example.com/~alice")},
 		},
 		{
 			name: "Activity",
@@ -375,7 +375,7 @@ func Test_ExtractActor(t *testing.T) {
 					"https://example.com/~alice",
 				},
 			},
-			want: []uint32{getRef("https://example.com/~johnDoe"), getRef("https://example.com/~alice")},
+			want: []uint64{getRef("https://example.com/~johnDoe"), getRef("https://example.com/~alice")},
 		},
 		{
 			name: "IntransitiveActivity",
@@ -385,7 +385,7 @@ func Test_ExtractActor(t *testing.T) {
 					"https://example.com/~alice",
 				},
 			},
-			want: []uint32{
+			want: []uint64{
 				getRef("https://example.com/~johnDoe"),
 				getRef("https://example.com/~alice"),
 			},
@@ -404,7 +404,7 @@ func Test_ExtractObject(t *testing.T) {
 	tests := []struct {
 		name string
 		arg  vocab.LinkOrIRI
-		want []uint32
+		want []uint64
 	}{
 		{
 			name: "empty",
@@ -417,12 +417,12 @@ func Test_ExtractObject(t *testing.T) {
 		{
 			name: "*Activity",
 			arg:  &vocab.Activity{Object: vocab.IRI("https://example.com/~johnDoe")},
-			want: []uint32{getRef("https://example.com/~johnDoe")},
+			want: []uint64{getRef("https://example.com/~johnDoe")},
 		},
 		{
 			name: "Activity",
 			arg:  vocab.Activity{Object: vocab.IRI("https://example.com/~johnDoe")},
-			want: []uint32{getRef("https://example.com/~johnDoe")},
+			want: []uint64{getRef("https://example.com/~johnDoe")},
 		},
 		{
 			name: "*Activity",
@@ -432,7 +432,7 @@ func Test_ExtractObject(t *testing.T) {
 					"https://example.com/2",
 				},
 			},
-			want: []uint32{getRef("https://example.com/1"), getRef("https://example.com/2")},
+			want: []uint64{getRef("https://example.com/1"), getRef("https://example.com/2")},
 		},
 		{
 			name: "Activity",
@@ -442,7 +442,7 @@ func Test_ExtractObject(t *testing.T) {
 					"https://example.com/~alice",
 				},
 			},
-			want: []uint32{getRef("https://example.com/~johnDoe"), getRef("https://example.com/~alice")},
+			want: []uint64{getRef("https://example.com/~johnDoe"), getRef("https://example.com/~alice")},
 		},
 	}
 	for _, tt := range tests {
@@ -458,7 +458,7 @@ func Test_ExtractRecipients(t *testing.T) {
 	tests := []struct {
 		name string
 		arg  vocab.LinkOrIRI
-		want []uint32
+		want []uint64
 	}{
 		{
 			name: "empty",
@@ -471,7 +471,7 @@ func Test_ExtractRecipients(t *testing.T) {
 		{
 			name: "Object",
 			arg:  &vocab.Object{To: vocab.ItemCollection{vocab.IRI("https://example.com/~johnDoe")}},
-			want: []uint32{getRef("https://example.com/~johnDoe")},
+			want: []uint64{getRef("https://example.com/~johnDoe")},
 		},
 		{
 			name: "Object with multiple recipients",
@@ -481,7 +481,7 @@ func Test_ExtractRecipients(t *testing.T) {
 					vocab.IRI("https://example.com/~alice"),
 				},
 			},
-			want: []uint32{getRef("https://example.com/~johnDoe"), getRef("https://example.com/~alice")},
+			want: []uint64{getRef("https://example.com/~johnDoe"), getRef("https://example.com/~alice")},
 		},
 		{
 			name: "Object with all addressing filled",
@@ -500,7 +500,7 @@ func Test_ExtractRecipients(t *testing.T) {
 					vocab.IRI("https://example.com/~pif"),
 				},
 			},
-			want: []uint32{
+			want: []uint64{
 				getRef("https://example.com/~johnDoe"),
 				getRef("https://example.com/~alice"),
 				getRef("https://example.com/~bob"),

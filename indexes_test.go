@@ -2,10 +2,10 @@ package filters
 
 import (
 	"fmt"
+	"github.com/RoaringBitmap/roaring/roaring64"
 	"reflect"
 	"testing"
 
-	"github.com/RoaringBitmap/roaring"
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/filters/index"
 )
@@ -155,12 +155,12 @@ func buildIndex() map[index.Type]index.Indexable {
 	return f.Indexes
 }
 
-func wantedBmp[T ~string](x ...T) *roaring.Bitmap {
-	dat := make([]uint32, len(x))
+func wantedBmp[T ~string](x ...T) *roaring64.Bitmap {
+	dat := make([]uint64, len(x))
 	for i, tt := range x {
 		dat[i] = index.HashFn(vocab.IRI(tt))
 	}
-	return roaring.BitmapOf(dat...)
+	return roaring64.BitmapOf(dat...)
 }
 
 func TestChecks_IndexMatch(t *testing.T) {
@@ -170,7 +170,7 @@ func TestChecks_IndexMatch(t *testing.T) {
 		name    string
 		ff      Checks
 		indexes map[index.Type]index.Indexable
-		want    *roaring.Bitmap
+		want    *roaring64.Bitmap
 	}{
 		{
 			name: "empty",

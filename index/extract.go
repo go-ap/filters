@@ -119,7 +119,7 @@ func tokenizeNatLangVal(nlv vocab.NaturalLanguageValues) []string {
 // ExtractRecipients returns the [vocab.IRI] tokens corresponding to the various addressing properties of
 // the received [vocab.Item].
 // NOTE(marius): Currently it includes *all* the addressing fields, not removing the "blind" ones (Bto and BCC)
-func ExtractRecipients(li vocab.LinkOrIRI) []uint32 {
+func ExtractRecipients(li vocab.LinkOrIRI) []uint64 {
 	it, ok := li.(vocab.Item)
 	if !ok {
 		return nil
@@ -142,7 +142,7 @@ func ExtractRecipients(li vocab.LinkOrIRI) []uint32 {
 
 // ExtractAttributedTo returns the [vocab.IRI] tokens corresponding to the "attributedTo" property of
 // the received [vocab.Item]
-func ExtractAttributedTo(li vocab.LinkOrIRI) []uint32 {
+func ExtractAttributedTo(li vocab.LinkOrIRI) []uint64 {
 	it, ok := li.(vocab.Item)
 	if !ok {
 		return nil
@@ -157,7 +157,7 @@ func ExtractAttributedTo(li vocab.LinkOrIRI) []uint32 {
 
 // ExtractObject returns the [vocab.IRI] tokens corresponding to the "object" property of
 // the received [vocab.Activity]
-func ExtractObject(li vocab.LinkOrIRI) []uint32 {
+func ExtractObject(li vocab.LinkOrIRI) []uint64 {
 	it, ok := li.(vocab.Item)
 	if !ok {
 		return nil
@@ -176,7 +176,7 @@ func ExtractObject(li vocab.LinkOrIRI) []uint32 {
 
 // ExtractID returns the [vocab.IRI] token corresponding to the "ID" property of
 // the received [vocab.Item]
-func ExtractID(li vocab.LinkOrIRI) []uint32 {
+func ExtractID(li vocab.LinkOrIRI) []uint64 {
 	it, ok := li.(vocab.Item)
 	if !ok {
 		return nil
@@ -190,8 +190,8 @@ func ExtractID(li vocab.LinkOrIRI) []uint32 {
 	return iriToRefs(iris...)
 }
 
-func iriToRefs(iris ...vocab.IRI) []uint32 {
-	refs := make([]uint32, len(iris))
+func iriToRefs(iris ...vocab.IRI) []uint64 {
+	refs := make([]uint64, len(iris))
 	for i, iri := range iris {
 		refs[i] = HashFn(iri)
 	}
@@ -200,7 +200,7 @@ func iriToRefs(iris ...vocab.IRI) []uint32 {
 
 // ExtractActor returns the [vocab.IRI] tokens corresponding to the "actor" property of
 // the received [vocab.IntransitiveActivity]
-func ExtractActor(li vocab.LinkOrIRI) []uint32 {
+func ExtractActor(li vocab.LinkOrIRI) []uint64 {
 	it, ok := li.(vocab.Item)
 	if !ok {
 		return nil

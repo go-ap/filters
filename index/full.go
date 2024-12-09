@@ -3,29 +3,29 @@ package index
 import (
 	"encoding"
 
-	"github.com/RoaringBitmap/roaring"
+	"github.com/RoaringBitmap/roaring/roaring64"
 	vocab "github.com/go-ap/activitypub"
 )
 
-type full roaring.Bitmap
+type full roaring64.Bitmap
 
 func All() Indexable {
-	return (*full)(new(roaring.Bitmap))
+	return (*full)(new(roaring64.Bitmap))
 }
 
-func (f *full) Add(i vocab.LinkOrIRI) uint32 {
-	bmp := (*roaring.Bitmap)(f)
+func (f *full) Add(i vocab.LinkOrIRI) uint64 {
+	bmp := (*roaring64.Bitmap)(f)
 	r := HashFn(i)
 	bmp.Add(r)
 	return r
 }
 
 func (f *full) UnmarshalBinary(data []byte) error {
-	return (*roaring.Bitmap)(f).UnmarshalBinary(data)
+	return (*roaring64.Bitmap)(f).UnmarshalBinary(data)
 }
 
 func (f *full) MarshalBinary() (data []byte, err error) {
-	return (*roaring.Bitmap)(f).MarshalBinary()
+	return (*roaring64.Bitmap)(f).MarshalBinary()
 }
 
 var _ encoding.BinaryMarshaler = new(full)

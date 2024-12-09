@@ -5,11 +5,8 @@ import (
 	"encoding/gob"
 	"sync"
 
-	"github.com/RoaringBitmap/roaring"
 	vocab "github.com/go-ap/activitypub"
 )
-
-type Type int8
 
 const (
 	ByID Type = iota
@@ -29,7 +26,7 @@ const (
 // [vocab.IRI] list that results after resolving the bitmap searches.
 type Index struct {
 	w       sync.RWMutex
-	Ref     map[uint32]vocab.IRI
+	Ref     map[uint64]vocab.IRI
 	Indexes map[Type]Indexable
 }
 
@@ -56,7 +53,7 @@ func Full() *Index {
 func Partial(types ...Type) *Index {
 	i := Index{
 		w:       sync.RWMutex{},
-		Ref:     make(map[uint32]vocab.IRI),
+		Ref:     make(map[uint64]vocab.IRI),
 		Indexes: make(map[Type]Indexable),
 	}
 	for _, typ := range types {
@@ -106,7 +103,7 @@ func (i *Index) Add(items ...vocab.LinkOrIRI) {
 }
 
 type bareIndex struct {
-	Ref     map[uint32]vocab.IRI
+	Ref     map[uint64]vocab.IRI
 	Indexes map[Type]Indexable
 }
 
@@ -119,7 +116,7 @@ func (i *Index) MarshalBinary() ([]byte, error) {
 
 func (i *Index) UnmarshalBinary(data []byte) error {
 	b := bareIndex{
-		Ref:     make(map[uint32]vocab.IRI),
+		Ref:     make(map[uint64]vocab.IRI),
 		Indexes: make(map[Type]Indexable),
 	}
 	err := gob.NewDecoder(bytes.NewReader(data)).Decode(&b)
@@ -128,36 +125,5 @@ func (i *Index) UnmarshalBinary(data []byte) error {
 	}
 	i.Ref = b.Ref
 	i.Indexes = b.Indexes
-	return nil
-}
-
-// GetBitmaps returns the ORing of the underlying search bitmaps corresponding to the received tokens,
-// or to the reverse of the returned tokens if the neg parameter is set.
-func GetBitmaps[T Tokenizable](in Indexable, tokens ...T) []*roaring.Bitmap {
-	if f, ok := in.(*full); ok {
-		b := (*roaring.Bitmap)(f).Clone()
-		refs := make([]uint32, len(tokens))
-		for i, tok := range tokens {
-			if ref, _ := any(tok).(uint32); ref > 0 {
-				refs[i] = ref
-			}
-		}
-
-		if len(refs) > 0 {
-			b.And(roaring.BitmapOf(refs...))
-		}
-		return []*roaring.Bitmap{b}
-	}
-
-	if bmp, ok := in.(bitmaps[T]); ok {
-		getFn := bmp.get
-
-		ors := make([]*roaring.Bitmap, 0, len(tokens))
-		for _, typ := range tokens {
-			ti := getFn(typ)
-			ors = append(ors, ti)
-		}
-		return ors
-	}
 	return nil
 }
