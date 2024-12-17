@@ -155,6 +155,21 @@ func ExtractAttributedTo(li vocab.LinkOrIRI) []uint64 {
 	return iriToRefs(iris...)
 }
 
+// ExtractInReplyTo returns the [vocab.IRI] tokens corresponding to the "inReplyTo" property of
+// the received [vocab.Item]
+func ExtractInReplyTo(li vocab.LinkOrIRI) []uint64 {
+	it, ok := li.(vocab.Item)
+	if !ok {
+		return nil
+	}
+	iris := make([]vocab.IRI, 0)
+	_ = vocab.OnObject(it, func(ob *vocab.Object) error {
+		iris = append(iris, derefObject(ob.InReplyTo)...)
+		return nil
+	})
+	return iriToRefs(iris...)
+}
+
 // ExtractObject returns the [vocab.IRI] tokens corresponding to the "object" property of
 // the received [vocab.Activity]
 func ExtractObject(li vocab.LinkOrIRI) []uint64 {

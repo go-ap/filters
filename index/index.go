@@ -19,6 +19,7 @@ const (
 	ByObject
 	ByRecipients
 	ByAttributedTo
+	ByInReplyTo
 )
 
 // Index represents a full index
@@ -32,7 +33,7 @@ type Index struct {
 
 var objectIndexTypes = []Type{
 	ByID, ByType,
-	ByRecipients, ByAttributedTo,
+	ByRecipients, ByAttributedTo, ByInReplyTo,
 	ByName, BySummary, ByContent,
 }
 
@@ -78,6 +79,8 @@ func Partial(types ...Type) *Index {
 			i.Indexes[typ] = TokenBitmap(ExtractRecipients)
 		case ByAttributedTo:
 			i.Indexes[typ] = TokenBitmap(ExtractAttributedTo)
+		case ByInReplyTo:
+			i.Indexes[typ] = TokenBitmap(ExtractInReplyTo)
 		}
 	}
 	return &i

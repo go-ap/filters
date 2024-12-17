@@ -481,7 +481,10 @@ func Test_ExtractRecipients(t *testing.T) {
 					vocab.IRI("https://example.com/~alice"),
 				},
 			},
-			want: []uint64{getRef("https://example.com/~johnDoe"), getRef("https://example.com/~alice")},
+			want: []uint64{
+				getRef("https://example.com/~johnDoe"),
+				getRef("https://example.com/~alice"),
+			},
 		},
 		{
 			name: "Object with all addressing filled",
@@ -514,6 +517,47 @@ func Test_ExtractRecipients(t *testing.T) {
 			got := ExtractRecipients(tt.arg)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ExtractRecipients() = %#v, want %#v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestExtractInReplyTo(t *testing.T) {
+	tests := []struct {
+		name string
+		arg  vocab.LinkOrIRI
+		want []uint64
+	}{
+		{
+			name: "empty",
+			arg:  nil,
+			want: nil,
+		},
+		{
+			name: "empty",
+			arg: &vocab.Object{
+				InReplyTo: vocab.IRI("https://example.com"),
+			},
+			want: []uint64{getRef(vocab.IRI("https://example.com"))},
+		},
+		{
+			name: "Object in reply to multiple objects",
+			arg: &vocab.Object{
+				InReplyTo: vocab.ItemCollection{
+					vocab.IRI("https://example.com/one"),
+					vocab.IRI("https://example.com/two"),
+				},
+			},
+			want: []uint64{
+				getRef("https://example.com/one"),
+				getRef("https://example.com/two"),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ExtractInReplyTo(tt.arg); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ExtractInReplyTo() = %v, want %v", got, tt.want)
 			}
 		})
 	}
