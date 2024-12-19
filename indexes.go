@@ -28,17 +28,17 @@ func extractBitmapsForSubprop(checks Checks, indexes map[index.Type]index.Indexa
 }
 
 const (
-	ByID index.Type = iota
-	ByType
-	ByName
-	ByPreferredUsername
-	BySummary
-	ByContent
-	ByActor
-	ByObject
-	ByRecipients
-	ByAttributedTo
-	ByCollection
+	ByID                = index.ByID
+	ByType              = index.ByType
+	ByName              = index.ByName
+	ByPreferredUsername = index.ByPreferredUsername
+	BySummary           = index.BySummary
+	ByContent           = index.ByContent
+	ByActor             = index.ByActor
+	ByObject            = index.ByObject
+	ByRecipients        = index.ByRecipients
+	ByAttributedTo      = index.ByAttributedTo
+	ByInReplyTo         = index.ByInReplyTo
 )
 
 func extractBitmaps(checks Checks, indexes map[index.Type]index.Indexable) []*roaring64.Bitmap {
@@ -98,6 +98,8 @@ func extractBitmaps(checks Checks, indexes map[index.Type]index.Indexable) []*ro
 			result = append(result, roaring64.FastOr(objectRefs...))
 		case attributedToEquals:
 			result = append(result, index.GetBitmaps[uint64](indexes[ByAttributedTo], hFn(vocab.IRI(fil)))...)
+		case inReplyToEquals:
+			result = append(result, index.GetBitmaps[uint64](indexes[ByInReplyTo], hFn(vocab.IRI(fil)))...)
 		case authorized:
 			if iri := vocab.IRI(fil); iri.Equals(vocab.PublicNS, true) {
 				result = append(result, index.GetBitmaps[uint64](indexes[ByRecipients], hFn(iri))...)
