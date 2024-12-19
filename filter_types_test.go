@@ -39,6 +39,13 @@ func TestMaxCount(t *testing.T) {
 			},
 			want: 666,
 		},
+		{
+			name: "all checks with max 665 and additional filter",
+			fns: Checks{
+				All(HasType(vocab.PersonType), &counter{max: 665}),
+			},
+			want: 665,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

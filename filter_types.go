@@ -50,8 +50,15 @@ func MaxCountCheck(fns ...Check) Check {
 
 func MaxCount(fns ...Check) int {
 	for _, fn := range fns {
-		if f, ok := fn.(*counter); ok {
-			return f.max
+		switch ff := fn.(type) {
+		case *counter:
+			return ff.max
+		case checkAll:
+			a := []Check(ff)
+			return MaxCount(a...)
+		case checkAny:
+			a := []Check(ff)
+			return MaxCount(a...)
 		}
 	}
 	return -1
