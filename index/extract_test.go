@@ -629,3 +629,47 @@ func TestExtractUpdated(t *testing.T) {
 		})
 	}
 }
+
+func TestExtractCollectionItems(t *testing.T) {
+	tests := []struct {
+		name string
+		arg  vocab.LinkOrIRI
+		want []uint64
+	}{
+		{
+			name: "empty",
+		},
+		{
+			name: "no items in non collection",
+			arg:  &vocab.Object{},
+			want: nil,
+		},
+		{
+			name: "no items in empty item collection",
+			arg:  vocab.ItemCollection{},
+			want: nil,
+		},
+		{
+			name: "no items in empty ordered collection",
+			arg:  &vocab.OrderedCollection{},
+			want: nil,
+		},
+		{
+			name: "one item in an ordered collection",
+			arg: &vocab.OrderedCollection{
+				Type: vocab.OrderedCollectionType, // NOTE(marius): the type is used in the OnCollectionIntf function
+				OrderedItems: vocab.ItemCollection{
+					vocab.IRI("https://example.com"),
+				},
+			},
+			want: []uint64{getRef("https://example.com")},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ExtractCollectionItems(tt.arg); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ExtractCollectionItems() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

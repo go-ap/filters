@@ -290,3 +290,27 @@ func ExtractUpdated(li vocab.LinkOrIRI) []uint64 {
 	}
 	return []uint64{uint64(upd.UnixMicro())}
 }
+
+// ExtractCollectionItems returns the [vocab.IRI] tokens corresponding to the items in the collection
+// of the received [vocab.Item]
+func ExtractCollectionItems(li vocab.LinkOrIRI) []uint64 {
+	it, ok := li.(vocab.Item)
+	if !ok || !it.IsCollection() {
+		return nil
+	}
+
+	var iris vocab.IRIs
+	_ = vocab.OnCollectionIntf(it, func(col vocab.CollectionInterface) error {
+		iris = col.Collection().IRIs()
+		return nil
+	})
+	if len(iris) == 0 {
+		return nil
+	}
+
+	refs := make([]uint64, 0, len(iris))
+	for _, iri := range iris {
+		refs = append(refs, HashFn(iri))
+	}
+	return refs
+}
