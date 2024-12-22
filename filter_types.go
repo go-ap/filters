@@ -1,6 +1,9 @@
 package filters
 
 func FilterChecks(fns ...Check) Checks {
+	if len(fns) == 0 {
+		return nil
+	}
 	c := make([]Check, 0)
 	for _, fn := range fns {
 		if isFilterFn(fn) {

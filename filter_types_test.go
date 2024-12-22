@@ -67,7 +67,6 @@ func TestMaxCount(t *testing.T) {
 }
 
 func TestFilterChecks(t *testing.T) {
-	t.Skipf("apparently reflect.DeepEquals fails on slices")
 	tests := []struct {
 		name string
 		args Checks
@@ -75,6 +74,23 @@ func TestFilterChecks(t *testing.T) {
 	}{
 		{
 			name: "empty",
+		},
+		{
+			name: "empty when passing only a maxCount",
+			args: Checks{WithMaxCount(5)},
+			want: Checks{},
+		},
+		{
+			name: "remove a maxCount",
+			args: Checks{
+				All(HasType(vocab.PersonType)),
+				WithMaxCount(5),
+				SameIRI("https://example.com"),
+			},
+			want: Checks{
+				All(HasType(vocab.PersonType)),
+				SameIRI("https://example.com"),
+			},
 		},
 	}
 	for _, tt := range tests {
