@@ -4,7 +4,14 @@ func FilterChecks(fns ...Check) Checks {
 	c := make([]Check, 0)
 	for _, fn := range fns {
 		if isFilterFn(fn) {
-			c = append(c, fn)
+			switch ff := fn.(type) {
+			case checkAny:
+				c = append(c, Any(FilterChecks(Checks(ff)...)...))
+			case checkAll:
+				c = append(c, All(FilterChecks(Checks(ff)...)...))
+			default:
+				c = append(c, fn)
+			}
 		}
 	}
 	return c

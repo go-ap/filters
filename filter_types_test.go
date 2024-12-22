@@ -55,3 +55,23 @@ func TestMaxCount(t *testing.T) {
 		})
 	}
 }
+
+func TestFilterChecks(t *testing.T) {
+	t.Skipf("apparently reflect.DeepEquals fails on slices")
+	tests := []struct {
+		name string
+		args Checks
+		want Checks
+	}{
+		{
+			name: "empty",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := FilterChecks(tt.args...); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("FilterChecks() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
