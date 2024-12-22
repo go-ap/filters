@@ -273,7 +273,7 @@ func ExtractPublished(li vocab.LinkOrIRI) []uint64 {
 	if pub.IsZero() {
 		return nil
 	}
-	return []uint64{uint64(pub.UnixMicro())}
+	return []uint64{uint64(pub.Round(time.Hour).UnixMicro())}
 }
 
 // ExtractUpdated returns the [vocab.IRI] tokens corresponding to the Updated property
@@ -292,7 +292,7 @@ func ExtractUpdated(li vocab.LinkOrIRI) []uint64 {
 	if upd.IsZero() {
 		return nil
 	}
-	return []uint64{uint64(upd.UnixMicro())}
+	return []uint64{uint64(upd.Round(time.Hour).UnixMicro())}
 }
 
 // ExtractCollectionItems returns the [vocab.IRI] tokens corresponding to the items in the collection

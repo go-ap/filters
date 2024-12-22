@@ -583,9 +583,9 @@ func TestExtractPublished(t *testing.T) {
 		{
 			name: "non nil published",
 			arg: &vocab.Object{
-				Published: time.Unix(1666, 0),
+				Published: time.Unix(7213, 0),
 			},
-			want: []uint64{uint64(time.Unix(1666, 0).UnixMicro())},
+			want: []uint64{uint64(time.Unix(7200, 0).UnixMicro())},
 		},
 	}
 	for _, tt := range tests {
@@ -616,9 +616,9 @@ func TestExtractUpdated(t *testing.T) {
 		{
 			name: "non nil updated",
 			arg: &vocab.Object{
-				Updated: time.Unix(666, 0),
+				Updated: time.Unix(3666, 0),
 			},
-			want: []uint64{uint64(time.Unix(666, 0).UnixMicro())},
+			want: []uint64{uint64(time.Unix(3600, 0).UnixMicro())},
 		},
 	}
 	for _, tt := range tests {
