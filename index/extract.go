@@ -157,6 +157,10 @@ func ExtractAttributedTo(li vocab.LinkOrIRI) []uint64 {
 	return iriToRefs(iris...)
 }
 
+func iriRefFn(li vocab.LinkOrIRI) []uint64 {
+	return []uint64{HashFn(li)}
+}
+
 // ExtractInReplyTo returns the [vocab.IRI] tokens corresponding to the "inReplyTo" property of
 // the received [vocab.Item]
 func ExtractInReplyTo(li vocab.LinkOrIRI) []uint64 {

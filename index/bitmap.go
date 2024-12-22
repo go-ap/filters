@@ -41,8 +41,9 @@ func murmurHash(it vocab.LinkOrIRI) uint64 {
 var HashFn HashFnType = murmurHash
 
 type tokenMap[T Tokenizable] struct {
-	m         map[T]*roaring64.Bitmap
-	extractFn ExtractFnType[T]
+	m               map[T]*roaring64.Bitmap
+	refsExtractFn   ExtractFnType[uint64]
+	tokensExtractFn ExtractFnType[T]
 }
 
 func (i *tokenMap[T]) MarshalBinary() ([]byte, error) {
@@ -59,23 +60,29 @@ func (i *tokenMap[T]) UnmarshalBinary(data []byte) error {
 }
 
 func (i *tokenMap[T]) Add(li vocab.LinkOrIRI) uint64 {
-	ref := HashFn(li)
-	if ref == 0 {
+	if i.refsExtractFn == nil {
+		i.refsExtractFn = iriRefFn
+	}
+	refs := i.refsExtractFn(li)
+	if len(refs) == 0 {
+		return 0
+	}
+	if i.tokensExtractFn == nil {
 		return 0
 	}
 
-	tokens := i.extractFn(li)
+	tokens := i.tokensExtractFn(li)
 	if len(tokens) == 0 {
-		return ref
+		return refs[0]
 	}
 
 	for _, tok := range tokens {
 		if _, ok := i.m[tok]; !ok {
 			i.m[tok] = roaring64.New()
 		}
-		i.m[tok].Add(ref)
+		i.m[tok].AddMany(refs)
 	}
-	return ref
+	return refs[0]
 }
 
 // get returns the bitmap values corresponding to the key.
@@ -100,10 +107,19 @@ func (i *tokenMap[T]) not(key T) *roaring64.Bitmap {
 	return b
 }
 
+func NewIndex[T Tokenizable](refsExtractFn ExtractFnType[uint64], tokExtractFn ExtractFnType[T]) Indexable {
+	return &tokenMap[T]{
+		m:               make(map[T]*roaring64.Bitmap),
+		refsExtractFn:   refsExtractFn,
+		tokensExtractFn: tokExtractFn,
+	}
+}
+
 func TokenBitmap[T Tokenizable](extractFn ExtractFnType[T]) Indexable {
 	return &tokenMap[T]{
-		m:         make(map[T]*roaring64.Bitmap),
-		extractFn: extractFn,
+		m:               make(map[T]*roaring64.Bitmap),
+		refsExtractFn:   iriRefFn,
+		tokensExtractFn: extractFn,
 	}
 }
 

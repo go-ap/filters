@@ -22,17 +22,17 @@ func Test_IRI_TokenBitmap(t *testing.T) {
 		{
 			name: "iri attributedTo",
 			arg:  ExtractAttributedTo,
-			want: tokenMap[uint64]{m: make(map[uint64]*roaring64.Bitmap), extractFn: ExtractAttributedTo},
+			want: tokenMap[uint64]{m: make(map[uint64]*roaring64.Bitmap), tokensExtractFn: ExtractAttributedTo},
 		},
 		{
 			name: "iri Actor",
 			arg:  ExtractActor,
-			want: tokenMap[uint64]{m: make(map[uint64]*roaring64.Bitmap), extractFn: ExtractActor},
+			want: tokenMap[uint64]{m: make(map[uint64]*roaring64.Bitmap), tokensExtractFn: ExtractActor},
 		},
 		{
 			name: "iri Object",
 			arg:  ExtractObject,
-			want: tokenMap[uint64]{m: make(map[uint64]*roaring64.Bitmap), extractFn: ExtractObject},
+			want: tokenMap[uint64]{m: make(map[uint64]*roaring64.Bitmap), tokensExtractFn: ExtractObject},
 		},
 	}
 	for _, tt := range tests {
@@ -44,8 +44,8 @@ func Test_IRI_TokenBitmap(t *testing.T) {
 			if got.m != nil && tt.want.m != nil && !reflect.DeepEqual(got.m, tt.want.m) {
 				t.Errorf("TokenBitmap() = invalid token map %+v, expected %+v", got.m, tt.want.m)
 			}
-			if !sameFunc(got.extractFn, tt.want.extractFn) {
-				t.Errorf("TokenBitmap() = invalid extractFn %p, expected %p", got.extractFn, tt.want.extractFn)
+			if !sameFunc(got.tokensExtractFn, tt.want.tokensExtractFn) {
+				t.Errorf("TokenBitmap() = invalid tokensExtractFn %p, expected %p", got.tokensExtractFn, tt.want.tokensExtractFn)
 			}
 		})
 	}
@@ -64,17 +64,17 @@ func Test_Stringy_TokenBitmap(t *testing.T) {
 		{
 			name: "stringy preferred username",
 			arg:  ExtractPreferredUsername,
-			want: tokenMap[string]{m: make(map[string]*roaring64.Bitmap), extractFn: ExtractPreferredUsername},
+			want: tokenMap[string]{m: make(map[string]*roaring64.Bitmap), tokensExtractFn: ExtractPreferredUsername},
 		},
 		{
 			name: "stringy name",
 			arg:  ExtractName,
-			want: tokenMap[string]{m: make(map[string]*roaring64.Bitmap), extractFn: ExtractName},
+			want: tokenMap[string]{m: make(map[string]*roaring64.Bitmap), tokensExtractFn: ExtractName},
 		},
 		{
 			name: "stringy content",
 			arg:  ExtractContent,
-			want: tokenMap[string]{m: make(map[string]*roaring64.Bitmap), extractFn: ExtractContent},
+			want: tokenMap[string]{m: make(map[string]*roaring64.Bitmap), tokensExtractFn: ExtractContent},
 		},
 	}
 	for _, tt := range tests {
@@ -86,8 +86,8 @@ func Test_Stringy_TokenBitmap(t *testing.T) {
 			if got.m != nil && tt.want.m != nil && !reflect.DeepEqual(got.m, tt.want.m) {
 				t.Errorf("TokenBitmap() = invalid token map %+v, expected %+v", got.m, tt.want.m)
 			}
-			if !sameFunc(got.extractFn, tt.want.extractFn) {
-				t.Errorf("TokenBitmap() = invalid extractFn %p, expected %p", got.extractFn, tt.want.extractFn)
+			if !sameFunc(got.tokensExtractFn, tt.want.tokensExtractFn) {
+				t.Errorf("TokenBitmap() = invalid tokensExtractFn %p, expected %p", got.tokensExtractFn, tt.want.tokensExtractFn)
 			}
 		})
 	}
@@ -139,13 +139,13 @@ func Test_IRI_index_Add(t *testing.T) {
 		},
 		{
 			name: "iri attributedTo",
-			i:    tokenMap[uint64]{m: make(map[uint64]*roaring64.Bitmap), extractFn: ExtractAttributedTo},
+			i:    tokenMap[uint64]{m: make(map[uint64]*roaring64.Bitmap), tokensExtractFn: ExtractAttributedTo},
 			arg:  &vocab.Object{ID: "https://example.com/1", AttributedTo: vocab.IRI("https://example.com/~jane")},
 			want: tMap(tk(getRef("https://example.com/~jane"), vocab.IRI("https://example.com/1"))),
 		},
 		{
 			name: "iri Actor",
-			i:    tokenMap[uint64]{m: make(map[uint64]*roaring64.Bitmap), extractFn: ExtractActor},
+			i:    tokenMap[uint64]{m: make(map[uint64]*roaring64.Bitmap), tokensExtractFn: ExtractActor},
 			arg:  &vocab.Activity{ID: "https://example.com/2", Actor: vocab.IRI("https://example.com/~jane")},
 			want: tMap(tk(getRef("https://example.com/~jane"), vocab.IRI("https://example.com/2"))),
 		},
@@ -175,7 +175,7 @@ func Test_Stringy_index_Add(t *testing.T) {
 		},
 		{
 			name: "type",
-			i:    tokenMap[string]{m: make(map[string]*roaring64.Bitmap), extractFn: ExtractType},
+			i:    tokenMap[string]{m: make(map[string]*roaring64.Bitmap), tokensExtractFn: ExtractType},
 			arg:  &vocab.Object{ID: "https://example.com/1", Type: vocab.NoteType},
 			want: tMap(tk("Note", vocab.IRI("https://example.com/1"))),
 		},
@@ -248,13 +248,13 @@ var recipientsIndex = []byte{0xf, 0xff, 0x85, 0x4, 0x1, 0x2, 0xff, 0x86, 0x0, 0x
 }
 
 var strIndex = tokenMap[string]{
-	m:         make(map[string]*roaring64.Bitmap),
-	extractFn: ExtractType,
+	m:               make(map[string]*roaring64.Bitmap),
+	tokensExtractFn: ExtractType,
 }
 
 var iriIndex = tokenMap[uint64]{
-	m:         make(map[uint64]*roaring64.Bitmap),
-	extractFn: ExtractRecipients,
+	m:               make(map[uint64]*roaring64.Bitmap),
+	tokensExtractFn: ExtractRecipients,
 }
 
 var Ob = &vocab.Object{
