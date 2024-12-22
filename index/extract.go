@@ -1,6 +1,8 @@
 package index
 
 import (
+	"time"
+
 	vocab "github.com/go-ap/activitypub"
 	"github.com/jdkato/prose/tokenize"
 )
@@ -249,4 +251,42 @@ func derefObject(it vocab.Item) []vocab.IRI {
 		iris = append(iris, it.GetLink())
 	}
 	return iris
+}
+
+// ExtractPublished returns the [vocab.IRI] tokens corresponding to the Published property
+// the received [vocab.Object]
+func ExtractPublished(li vocab.LinkOrIRI) []uint64 {
+	it, ok := li.(vocab.Item)
+	if !ok {
+		return nil
+	}
+
+	var pub time.Time
+	_ = vocab.OnObject(it, func(ob *vocab.Object) error {
+		pub = ob.Published
+		return nil
+	})
+	if pub.IsZero() {
+		return nil
+	}
+	return []uint64{uint64(pub.UnixMicro())}
+}
+
+// ExtractUpdated returns the [vocab.IRI] tokens corresponding to the Updated property
+// the received [vocab.Object]
+func ExtractUpdated(li vocab.LinkOrIRI) []uint64 {
+	it, ok := li.(vocab.Item)
+	if !ok {
+		return nil
+	}
+
+	var upd time.Time
+	_ = vocab.OnObject(it, func(ob *vocab.Object) error {
+		upd = ob.Updated
+		return nil
+	})
+	if upd.IsZero() {
+		return nil
+	}
+	return []uint64{uint64(upd.UnixMicro())}
 }

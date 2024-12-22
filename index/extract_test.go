@@ -3,6 +3,7 @@ package index
 import (
 	"reflect"
 	"testing"
+	"time"
 
 	vocab "github.com/go-ap/activitypub"
 )
@@ -558,6 +559,72 @@ func TestExtractInReplyTo(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := ExtractInReplyTo(tt.arg); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ExtractInReplyTo() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestExtractPublished(t *testing.T) {
+	tests := []struct {
+		name string
+		arg  vocab.LinkOrIRI
+		want []uint64
+	}{
+		{
+			name: "empty",
+			arg:  nil,
+			want: nil,
+		},
+		{
+			name: "nil published",
+			arg:  &vocab.Object{},
+			want: nil,
+		},
+		{
+			name: "non nil published",
+			arg: &vocab.Object{
+				Published: time.Unix(1666, 0),
+			},
+			want: []uint64{uint64(time.Unix(1666, 0).UnixMicro())},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ExtractPublished(tt.arg); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ExtractPublished() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestExtractUpdated(t *testing.T) {
+	tests := []struct {
+		name string
+		arg  vocab.LinkOrIRI
+		want []uint64
+	}{
+		{
+			name: "empty",
+			arg:  nil,
+			want: nil,
+		},
+		{
+			name: "nil updated",
+			arg:  &vocab.Object{},
+			want: nil,
+		},
+		{
+			name: "non nil updated",
+			arg: &vocab.Object{
+				Updated: time.Unix(666, 0),
+			},
+			want: []uint64{uint64(time.Unix(666, 0).UnixMicro())},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ExtractUpdated(tt.arg); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ExtractUpdated() = %v, want %v", got, tt.want)
 			}
 		})
 	}
