@@ -1,6 +1,7 @@
 package filters
 
 import (
+	"reflect"
 	"testing"
 
 	vocab "github.com/go-ap/activitypub"
@@ -45,6 +46,15 @@ func TestMaxCount(t *testing.T) {
 				All(HasType(vocab.PersonType), &counter{max: 665}),
 			},
 			want: 665,
+		},
+		{
+			name: "random all checks, and max 5 and additional filter",
+			fns: Checks{
+				All(HasType(vocab.PersonType)),
+				WithMaxCount(5),
+				SameIRI("https://example.com"),
+			},
+			want: 5,
 		},
 	}
 	for _, tt := range tests {
