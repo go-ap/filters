@@ -65,25 +65,25 @@ func Partial(types ...Type) *Index {
 		case ByID:
 			i.Indexes[typ] = All()
 		case ByType:
-			i.Indexes[typ] = TokenBitmap(ExtractType)
+			i.Indexes[typ] = NewTokenIndex(ExtractType)
 		case ByName:
-			i.Indexes[typ] = TokenBitmap(ExtractName)
+			i.Indexes[typ] = NewTokenIndex(ExtractName)
 		case ByPreferredUsername:
-			i.Indexes[typ] = TokenBitmap(ExtractPreferredUsername)
+			i.Indexes[typ] = NewTokenIndex(ExtractPreferredUsername)
 		case BySummary:
-			i.Indexes[typ] = TokenBitmap(ExtractSummary)
+			i.Indexes[typ] = NewTokenIndex(ExtractSummary)
 		case ByContent:
-			i.Indexes[typ] = TokenBitmap(ExtractContent)
+			i.Indexes[typ] = NewTokenIndex(ExtractContent)
 		case ByActor:
-			i.Indexes[typ] = TokenBitmap(ExtractActor)
+			i.Indexes[typ] = NewTokenIndex(ExtractActor)
 		case ByObject:
-			i.Indexes[typ] = TokenBitmap(ExtractObject)
+			i.Indexes[typ] = NewTokenIndex(ExtractObject)
 		case ByRecipients:
-			i.Indexes[typ] = TokenBitmap(ExtractRecipients)
+			i.Indexes[typ] = NewTokenIndex(ExtractRecipients)
 		case ByAttributedTo:
-			i.Indexes[typ] = TokenBitmap(ExtractAttributedTo)
+			i.Indexes[typ] = NewTokenIndex(ExtractAttributedTo)
 		case ByInReplyTo:
-			i.Indexes[typ] = TokenBitmap(ExtractInReplyTo)
+			i.Indexes[typ] = NewTokenIndex(ExtractInReplyTo)
 		case ByPublished:
 			i.Indexes[typ] = NewIndex(ExtractPublished, ExtractID)
 		case ByUpdated:

@@ -107,6 +107,8 @@ func (i *tokenMap[T]) not(key T) *roaring64.Bitmap {
 	return b
 }
 
+// NewTokenIndex intializes a new tokenMap index where the function to extract the references that get
+// indexed is passed directly.
 func NewIndex[T Tokenizable](refsExtractFn ExtractFnType[uint64], tokExtractFn ExtractFnType[T]) Indexable {
 	return &tokenMap[T]{
 		m:               make(map[T]*roaring64.Bitmap),
@@ -115,7 +117,9 @@ func NewIndex[T Tokenizable](refsExtractFn ExtractFnType[uint64], tokExtractFn E
 	}
 }
 
-func TokenBitmap[T Tokenizable](extractFn ExtractFnType[T]) Indexable {
+// NewTokenIndex intializes a new tokenMap index where the reference extraction function returns
+// the indexed reference based on the ActivityPub Object ID.
+func NewTokenIndex[T Tokenizable](extractFn ExtractFnType[T]) Indexable {
 	return &tokenMap[T]{
 		m:               make(map[T]*roaring64.Bitmap),
 		refsExtractFn:   iriRefFn,

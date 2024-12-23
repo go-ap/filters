@@ -9,7 +9,7 @@ import (
 	vocab "github.com/go-ap/activitypub"
 )
 
-func Test_IRI_TokenBitmap(t *testing.T) {
+func Test_IRI_NewTokenIndex(t *testing.T) {
 	type testCase[T Tokenizable] struct {
 		name string
 		arg  ExtractFnType[T]
@@ -37,21 +37,21 @@ func Test_IRI_TokenBitmap(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, ok := TokenBitmap(tt.arg).(*tokenMap[uint64])
+			got, ok := NewTokenIndex(tt.arg).(*tokenMap[uint64])
 			if !ok {
-				t.Errorf("TokenBitmap() = invalid type %T for result", got)
+				t.Errorf("NewTokenIndex() = invalid type %T for result", got)
 			}
 			if got.m != nil && tt.want.m != nil && !reflect.DeepEqual(got.m, tt.want.m) {
-				t.Errorf("TokenBitmap() = invalid token map %+v, expected %+v", got.m, tt.want.m)
+				t.Errorf("NewTokenIndex() = invalid token map %+v, expected %+v", got.m, tt.want.m)
 			}
 			if !sameFunc(got.tokensExtractFn, tt.want.tokensExtractFn) {
-				t.Errorf("TokenBitmap() = invalid tokensExtractFn %p, expected %p", got.tokensExtractFn, tt.want.tokensExtractFn)
+				t.Errorf("NewTokenIndex() = invalid tokensExtractFn %p, expected %p", got.tokensExtractFn, tt.want.tokensExtractFn)
 			}
 		})
 	}
 }
 
-func Test_Stringy_TokenBitmap(t *testing.T) {
+func Test_Stringy_NewTokenIndex(t *testing.T) {
 	type testCase[T Tokenizable] struct {
 		name string
 		arg  ExtractFnType[T]
@@ -79,15 +79,15 @@ func Test_Stringy_TokenBitmap(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, ok := TokenBitmap(tt.arg).(*tokenMap[string])
+			got, ok := NewTokenIndex(tt.arg).(*tokenMap[string])
 			if !ok {
-				t.Errorf("TokenBitmap() = invalid type %T for result", got)
+				t.Errorf("NewTokenIndex() = invalid type %T for result", got)
 			}
 			if got.m != nil && tt.want.m != nil && !reflect.DeepEqual(got.m, tt.want.m) {
-				t.Errorf("TokenBitmap() = invalid token map %+v, expected %+v", got.m, tt.want.m)
+				t.Errorf("NewTokenIndex() = invalid token map %+v, expected %+v", got.m, tt.want.m)
 			}
 			if !sameFunc(got.tokensExtractFn, tt.want.tokensExtractFn) {
-				t.Errorf("TokenBitmap() = invalid tokensExtractFn %p, expected %p", got.tokensExtractFn, tt.want.tokensExtractFn)
+				t.Errorf("NewTokenIndex() = invalid tokensExtractFn %p, expected %p", got.tokensExtractFn, tt.want.tokensExtractFn)
 			}
 		})
 	}
