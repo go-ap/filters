@@ -126,6 +126,19 @@ func accumContexts(item vocab.Item) vocab.IRIs {
 	return items.IRIs()
 }
 
+type urlNil iriNil
+
+func URLNil() Check {
+	return iriNil{}
+}
+
+func (frag urlNil) Match(it vocab.Item) bool {
+	if vocab.IsNil(it) {
+		return true
+	}
+	return len(accumURLs(it)) > 0
+}
+
 func SameContext(iri vocab.IRI) Check {
 	return contextEquals(iri)
 }
