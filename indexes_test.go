@@ -2,10 +2,10 @@ package filters
 
 import (
 	"fmt"
-	"github.com/RoaringBitmap/roaring/roaring64"
 	"reflect"
 	"testing"
 
+	"github.com/RoaringBitmap/roaring/roaring64"
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/filters/index"
 )
@@ -174,7 +174,7 @@ func TestChecks_IndexMatch(t *testing.T) {
 	}{
 		{
 			name: "empty",
-			ff:   nil,
+			want: &roaring64.Bitmap{},
 		},
 		{
 			name:    "id:/4",

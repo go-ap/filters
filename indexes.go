@@ -119,7 +119,7 @@ func extractBitmaps(checks Checks, indexes map[index.Type]index.Indexable) []*ro
 
 func (ff Checks) IndexMatch(indexes map[index.Type]index.Indexable) *roaring64.Bitmap {
 	if len(ff) == 0 {
-		return nil
+		return roaring64.New()
 	}
 
 	// NOTE(marius): A normal list of Check functions in this package corresponds

@@ -130,6 +130,9 @@ func NewTokenIndex[T Tokenizable](extractFn ExtractFnType[T]) Indexable {
 // GetBitmaps returns the ORing of the underlying search bitmaps corresponding to the received tokens,
 // or to the reverse of the returned tokens if the neg parameter is set.
 func GetBitmaps[T Tokenizable](in Indexable, tokens ...T) []*roaring64.Bitmap {
+	if in == nil {
+		return nil
+	}
 	if f, ok := in.(*full); ok {
 		b := (*roaring64.Bitmap)(f).Clone()
 		refs := make([]uint64, len(tokens))
