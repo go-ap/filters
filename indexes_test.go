@@ -253,7 +253,7 @@ func TestChecks_IndexMatch(t *testing.T) {
 		{
 			name: "by name",
 			ff: Checks{
-				NameIs("Link"),
+				NameIs("Link to example.com"),
 			},
 			indexes: idx,
 			want:    wantedBmp("https://federated.local/objects/1"),

@@ -24,21 +24,19 @@ func ExtractType(li vocab.LinkOrIRI) []string {
 // ExtractName returns a single token composed of the "name" property of the [vocab.LinkOrIRI].
 // This works on both [vocab.Link] and [vocab.Item] objects.
 func ExtractName(li vocab.LinkOrIRI) []string {
+	var name vocab.NaturalLanguageValues
 	switch it := li.(type) {
 	case vocab.Link:
-		return tokenizeNatLangVal(it.Name)
+		name = it.Name
 	case *vocab.Link:
-		return tokenizeNatLangVal(it.Name)
+		name = it.Name
 	case vocab.Item:
-		result := make([]string, 0)
 		_ = vocab.OnObject(it, func(ob *vocab.Object) error {
-			result = tokenizeNatLangVal(ob.Name)
+			name = ob.Name
 			return nil
 		})
-		return result
 	}
-
-	return nil
+	return ExtractNatLangVal(name)
 }
 
 // ExtractPreferredUsername returns a single token composed of the "preferredUsername" property of the [vocab.Actor]
@@ -110,12 +108,37 @@ func tokenizeNatLangVal(nlv vocab.NaturalLanguageValues) []string {
 		return nil
 	}
 
+	tt := t{}
 	result := make([]string, 0)
 	for _, cc := range nlv {
-		tokenizer := tokenize.NewWordBoundaryTokenizer()
-		result = append(result, tokenizer.Tokenize(cc.Value.String())...)
+		txt := cc.Value.String()
+		for _, tok := range tokenize.TextToWords(txt) {
+			if tt.IsTagOrPunctuation(tok) {
+				continue
+			}
+			result = append(result, tok)
+		}
 	}
 	return result
+}
+
+type t struct {
+	st  bool
+	end bool
+}
+
+func (tt *t) IsTagOrPunctuation(s string) bool {
+	if tt.st {
+		if s == ">" {
+			tt.end = true
+			tt.st = false
+		}
+		return true
+	}
+	if len(s) <= 3 {
+		return true
+	}
+	return false
 }
 
 // ExtractRecipients returns the [vocab.IRI] tokens corresponding to the various addressing properties of
