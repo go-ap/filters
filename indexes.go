@@ -56,9 +56,9 @@ func extractBitmaps(checks Checks, indexes map[index.Type]index.Indexable) []*ro
 				result = append(result, all)
 			}
 		case idEquals:
-			result = append(result, index.GetBitmaps[uint64](indexes[ByID], hFn(vocab.IRI(fil)))...)
+			result = append(result, roaring64.BitmapOf(hFn(vocab.IRI(fil))))
 		case iriEquals:
-			result = append(result, index.GetBitmaps[uint64](indexes[ByID], hFn(vocab.IRI(fil)))...)
+			result = append(result, roaring64.BitmapOf(hFn(vocab.IRI(fil))))
 		case checkAny:
 			anys := extractBitmaps(Checks(fil), indexes)
 			result = append(result, roaring64.FastOr(anys...))
