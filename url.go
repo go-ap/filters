@@ -405,6 +405,10 @@ func urlValue(f Check) url.Values {
 		q[keyIRI] = []string{string(check)}
 	case idEquals:
 		q[keyID] = []string{string(check)}
+	case withTypes:
+		for _, vv := range check {
+			q.Add(keyType, string(vv))
+		}
 	case objectChecks:
 		p := keyObject
 		for kk, vv := range ToValues(check...) {
