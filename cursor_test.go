@@ -7,7 +7,7 @@ import (
 	vocab "github.com/go-ap/activitypub"
 )
 
-func TestCursorFns(t *testing.T) {
+func TestPaginationChecks(t *testing.T) {
 	tests := []struct {
 		name string
 		fns  []Check
@@ -100,7 +100,7 @@ func TestCursorFns(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotChecks := CursorChecks(tt.fns...)
+			gotChecks := PaginationChecks(tt.fns...)
 			if got := gotChecks.Run(tt.item); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("CursorChecks() = %v, want %v", got, tt.want)
 			}

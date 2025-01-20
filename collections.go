@@ -1,8 +1,6 @@
 package filters
 
-import (
-	vocab "github.com/go-ap/activitypub"
-)
+import vocab "github.com/go-ap/activitypub"
 
 type counter struct {
 	max int

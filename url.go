@@ -3,6 +3,7 @@
 package filters
 
 import (
+	"fmt"
 	"net/url"
 	"strconv"
 	"strings"
@@ -431,26 +432,42 @@ func urlValue(f Check) url.Values {
 		}
 	case *beforeCrit:
 		if len(check.fns) >= 1 {
-			if sameId, ok := check.fns[0].(iriEquals); ok {
-				q.Set(keyBefore, string(sameId))
-			}
-			if sameId, ok := check.fns[0].(idEquals); ok {
-				q.Set(keyBefore, string(sameId))
+			for _, cc := range check.fns {
+				q.Add(keyBefore, extractURLVal(cc))
 			}
 		}
 	case *afterCrit:
 		if len(check.fns) >= 1 {
-			if sameId, ok := check.fns[0].(iriEquals); ok {
-				q.Set(keyAfter, string(sameId))
-			}
-			if sameId, ok := check.fns[0].(idEquals); ok {
-				q.Set(keyAfter, string(sameId))
+			for _, cc := range check.fns {
+				q.Add(keyAfter, extractURLVal(cc))
 			}
 		}
 	case *counter:
 		q.Set(keyMaxItems, strconv.FormatInt(int64(check.max), 10))
 	}
 	return q
+}
+
+func extractURLVal(cc Check) string {
+	switch val := cc.(type) {
+	case fmt.Stringer:
+		return val.String()
+	case iriEquals:
+		return string(val)
+	case idEquals:
+		return string(val)
+	case iriLike:
+		return "~" + string(val)
+	case idLike:
+		return "~" + string(val)
+	case iriNil:
+		return ""
+	case idNil:
+		return ""
+	case notCrit:
+		return extractURLVal(val)
+	}
+	return fmt.Sprintf("%s", cc)
 }
 
 func urlValues(ff ...Check) url.Values {

@@ -128,7 +128,7 @@ func CursorFromItem(it vocab.Item, filters ...Check) (vocab.Item, vocab.Item, vo
 	var prevIRI vocab.IRI
 	var nextIRI vocab.IRI
 
-	shouldBePage := len(CursorChecks(filters...)) > 0
+	shouldBePage := len(PaginationChecks(filters...)) > 0
 
 	maxCount := MaxCount(filters...)
 	switch typ {
@@ -350,6 +350,11 @@ func sortItemsByPublishedUpdated(col vocab.ItemCollection) vocab.ItemCollection 
 	return col
 }
 
+func isCounterFn(fn Check) bool {
+	_, ok := fn.(*counter)
+	return ok
+}
+
 func isCursorFn(fn Check) bool {
 	ok := false
 	switch fn.(type) {
@@ -357,12 +362,10 @@ func isCursorFn(fn Check) bool {
 		ok = true
 	case *beforeCrit:
 		ok = true
-	case *counter:
-		ok = true
 	}
 	return ok
 }
 
 func isFilterFn(fn Check) bool {
-	return !isCursorFn(fn)
+	return !(isCursorFn(fn) || isCounterFn(fn))
 }

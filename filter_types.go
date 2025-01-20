@@ -39,11 +39,47 @@ func ItemChecks(fns ...Check) Checks {
 	return c
 }
 
+func PaginationChecks(fns ...Check) Checks {
+	fn := func(c Check) bool {
+		return isCursorFn(c) || isCounterFn(c)
+	}
+	return filterCheckFns(fn, fns...)
+}
+
 func CursorChecks(fns ...Check) Checks {
+	return filterCheckFns(isCursorFn, fns...)
+}
+
+func filterCheckFns(checkFn func(Check) bool, fns ...Check) Checks {
 	c := make([]Check, 0)
+
+	aggCheck := func(c []Check, fil []Check) {
+		for _, ff := range fil {
+			if !checkFn(ff) {
+				continue
+			}
+			c = append(c, ff)
+		}
+	}
+
 	for _, fn := range fns {
-		if isCursorFn(fn) {
+		if checkFn(fn) {
 			c = append(c, fn)
+		} else {
+			switch fil := fn.(type) {
+			case checkAny:
+				leftover := make([]Check, 0, len(fil))
+				aggCheck(leftover, fil)
+				if len(leftover) > 0 {
+					c = append(c, checkAny(leftover))
+				}
+			case checkAll:
+				leftover := make([]Check, 0, len(fil))
+				aggCheck(leftover, fil)
+				if len(leftover) > 0 {
+					c = append(c, checkAll(leftover))
+				}
+			}
 		}
 	}
 	return c
@@ -51,8 +87,8 @@ func CursorChecks(fns ...Check) Checks {
 
 func MaxCountCheck(fns ...Check) Check {
 	for _, fn := range fns {
-		if f, ok := fn.(*counter); ok {
-			return f
+		if isCounterFn(fn) {
+			return fn
 		}
 	}
 	return nil
