@@ -4,8 +4,8 @@ go 1.23
 
 require (
 	github.com/RoaringBitmap/roaring v1.9.4
-	github.com/go-ap/activitypub v0.0.0-20250112165501-7b898763a1e9
-	github.com/go-ap/errors v0.0.0-20241212155021-5a598b6bf467
+	github.com/go-ap/activitypub v0.0.0-20250124194921-d52b4c694e14
+	github.com/go-ap/errors v0.0.0-20250124135319-3da8adefd4a9
 	github.com/jdkato/prose v1.2.1
 	github.com/mariusor/qstring v0.0.0-20200204164351-5a99d46de39d
 	github.com/spaolacci/murmur3 v1.1.0
