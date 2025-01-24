@@ -116,7 +116,7 @@ func Test_tokenizeNatLangVal(t *testing.T) {
 		{
 			name: "multi word",
 			args: nlv(kv(vocab.NilLangRef, vocab.Content("lorem ipsum dolor sic amet"))),
-			want: []string{"lorem", "ipsum", "dolor", "sic", "amet"},
+			want: []string{"lorem", "ipsum", "dolor", "amet"},
 		},
 		{
 			name: "en-fr",
@@ -132,7 +132,7 @@ func Test_tokenizeNatLangVal(t *testing.T) {
 				kv("en", vocab.Content("lorem ipsum")),
 				kv("fr", vocab.Content("teste de teste")),
 			),
-			want: []string{"lorem", "ipsum", "teste", "de", "teste"},
+			want: []string{"lorem", "ipsum", "teste", "teste"},
 		},
 	}
 	for _, tt := range tests {
@@ -195,22 +195,22 @@ func Test_ExtractName(t *testing.T) {
 		{
 			name: "*Object name",
 			arg:  &vocab.Object{Name: nlv(kv(vocab.NilLangRef, vocab.Content("John Doe")))},
-			want: []string{"John", "Doe"},
+			want: []string{"John Doe"},
 		},
 		{
 			name: "Object name",
 			arg:  vocab.Object{Name: nlv(kv(vocab.NilLangRef, vocab.Content("John Doe")))},
-			want: []string{"John", "Doe"},
+			want: []string{"John Doe"},
 		},
 		{
 			name: "*Link name",
 			arg:  &vocab.Link{Name: nlv(kv(vocab.NilLangRef, vocab.Content("The empty page")))},
-			want: []string{"The", "empty", "page"},
+			want: []string{"The empty page"},
 		},
 		{
 			name: "Link name",
 			arg:  vocab.Link{Name: nlv(kv(vocab.NilLangRef, vocab.Content("The empty page")))},
-			want: []string{"The", "empty", "page"},
+			want: []string{"The empty page"},
 		},
 	}
 	for _, tt := range tests {
@@ -262,14 +262,14 @@ func Test_ExtractSummary(t *testing.T) {
 			name: "empty",
 		},
 		{
-			name: "*Object name",
+			name: "*Object summary",
 			arg:  &vocab.Object{Summary: nlv(kv(vocab.NilLangRef, vocab.Content("Lorem ipsum dolor sic amet")))},
-			want: []string{"Lorem", "ipsum", "dolor", "sic", "amet"},
+			want: []string{"Lorem", "ipsum", "dolor", "amet"},
 		},
 		{
-			name: "Object name",
+			name: "Object summary",
 			arg:  vocab.Object{Summary: nlv(kv(vocab.NilLangRef, vocab.Content("Lorem ipsum dolor sic amet")))},
-			want: []string{"Lorem", "ipsum", "dolor", "sic", "amet"},
+			want: []string{"Lorem", "ipsum", "dolor", "amet"},
 		},
 	}
 	for _, tt := range tests {
@@ -290,14 +290,14 @@ func Test_ExtractContent(t *testing.T) {
 			name: "empty",
 		},
 		{
-			name: "*Object name",
+			name: "*Object content",
 			arg:  &vocab.Object{Content: nlv(kv(vocab.NilLangRef, vocab.Content("Lorem ipsum dolor sic amet")))},
-			want: []string{"Lorem", "ipsum", "dolor", "sic", "amet"},
+			want: []string{"Lorem", "ipsum", "dolor", "amet"},
 		},
 		{
-			name: "Object name",
+			name: "Object content",
 			arg:  vocab.Object{Content: nlv(kv(vocab.NilLangRef, vocab.Content("Lorem ipsum dolor sic amet")))},
-			want: []string{"Lorem", "ipsum", "dolor", "sic", "amet"},
+			want: []string{"Lorem", "ipsum", "dolor", "amet"},
 		},
 	}
 	for _, tt := range tests {
