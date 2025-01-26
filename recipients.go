@@ -23,3 +23,13 @@ func accumRecipients(it vocab.Item) vocab.ItemCollection {
 	}
 	return nil
 }
+
+// RecipientsChecks returns all the Recipients checks in the fns slice.
+// It recurses if there are Any or All checks, which is not always what you'd want, so take care.
+func RecipientsChecks(fns ...Check) Checks {
+	validCheck := func(c Check) bool {
+		_, ok := c.(recipients)
+		return ok
+	}
+	return filterCheckFns(validCheck, fns...)
+}

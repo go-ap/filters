@@ -21,3 +21,13 @@ func (a authorized) Match(it vocab.Item) bool {
 func Authorized(iri vocab.IRI) Check {
 	return authorized(iri)
 }
+
+// AuthorizedChecks returns all the Authorized checks in the fns slice.
+// It recurses if there are Any or All checks, which is not always what you'd want, so take care.
+func AuthorizedChecks(fns ...Check) Checks {
+	validCheck := func(c Check) bool {
+		_, ok := c.(authorized)
+		return ok
+	}
+	return filterCheckFns(validCheck, fns...)
+}

@@ -51,6 +51,10 @@ func CursorChecks(fns ...Check) Checks {
 }
 
 func filterCheckFns(checkFn func(Check) bool, fns ...Check) Checks {
+	if len(fns) == 0 {
+		return nil
+	}
+
 	c := make([]Check, 0)
 
 	aggCheck := func(c []Check, fil []Check) {
@@ -215,28 +219,6 @@ func TagChecks(fns ...Check) Checks {
 	for _, fn := range fns {
 		switch t := fn.(type) {
 		case tagChecks:
-			c = append(c, t)
-		}
-	}
-	return c
-}
-
-func AuthorizedChecks(fns ...Check) Checks {
-	c := make([]Check, 0)
-	for _, fn := range fns {
-		switch t := fn.(type) {
-		case authorized:
-			c = append(c, t)
-		}
-	}
-	return c
-}
-
-func RecipientsChecks(fns ...Check) Checks {
-	c := make([]Check, 0)
-	for _, fn := range fns {
-		switch t := fn.(type) {
-		case recipients:
 			c = append(c, t)
 		}
 	}
