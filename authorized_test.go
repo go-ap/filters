@@ -40,6 +40,21 @@ func Test_Authorized_Match(t *testing.T) {
 			it:   &vocab.Object{Type: vocab.TombstoneType},
 			want: false,
 		},
+		{
+			name: "attributedTo should be checked for objects",
+			a:    "https://example.com/~jdoe",
+			it:   &vocab.Object{Type: vocab.TombstoneType, AttributedTo: vocab.IRI("https://example.com/~jdoe")},
+			want: true,
+		},
+		{
+			name: "attributedTo with multiple values should be checked for objects",
+			a:    "https://example.com/~jdoe",
+			it: &vocab.Object{
+				Type:         vocab.TombstoneType,
+				AttributedTo: vocab.ItemCollection{vocab.IRI("https://example.com/~jdoe")},
+			},
+			want: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

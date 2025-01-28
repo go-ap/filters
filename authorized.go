@@ -10,7 +10,7 @@ func (a authorized) Match(it vocab.Item) bool {
 	}
 	i := vocab.IRI(a)
 	return Any(
-		Actor(SameID(i)),
+		Any(Actor(SameID(i)), SameAttributedTo(i)),
 		Any(Recipients(vocab.PublicNS), Recipients(i)),
 	).Match(it)
 }
@@ -18,6 +18,9 @@ func (a authorized) Match(it vocab.Item) bool {
 // Authorized creates a filter that checks the [vocab.IRI] against the recipients list of the item it gets applied on.
 // The ActivityStreams Public Namespace IRI gets special treatment, because servers use it to signify that the audience of
 // an object is public.
+// The rules for matching this filter are like follows:
+//   - for Objects we check their attributedTo property, and their recipients (to, bto, cc, bcc and audience)
+//   - for Activities and Intransitive Activities we also check the actor property.
 func Authorized(iri vocab.IRI) Check {
 	return authorized(iri)
 }
