@@ -2,10 +2,11 @@ package filters
 
 import (
 	"fmt"
+
 	vocab "github.com/go-ap/activitypub"
 )
 
-func ExampleFilter() {
+func ExampleFilters() {
 	collection := vocab.ItemCollection{
 		// doesn't match due to Actor ID
 		vocab.Create{
