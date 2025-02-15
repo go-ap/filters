@@ -53,13 +53,11 @@ func PaginateCollection(it vocab.Item, filters ...Check) vocab.Item {
 	switch col.GetType() {
 	case vocab.OrderedCollectionType:
 		_ = vocab.OnOrderedCollection(col, func(c *vocab.OrderedCollection) error {
-			c.TotalItems = total
 			c.First = firstIRI
 			return nil
 		})
 	case vocab.OrderedCollectionPageType:
 		_ = vocab.OnOrderedCollectionPage(col, func(c *vocab.OrderedCollectionPage) error {
-			c.TotalItems = total
 			c.PartOf = partOfIRI
 			c.First = firstIRI
 			if !nextIRI.GetLink().Equals(firstIRI, true) {
