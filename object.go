@@ -63,7 +63,21 @@ func (types withTypes) Match(it vocab.Item) bool {
 	if vocab.IsNil(it) {
 		return len(types) == 0
 	}
-	return vocab.ActivityVocabularyTypes(types).Contains(it.GetType())
+	if !vocab.IsItemCollection(it) {
+		return vocab.ActivityVocabularyTypes(types).Contains(it.GetType())
+	}
+
+	itemsHaveType := false
+	_ = vocab.OnItemCollection(it, func(col *vocab.ItemCollection) error {
+		for _, ob := range col.Collection() {
+			if itemsHaveType = vocab.ActivityVocabularyTypes(types).Contains(ob.GetType()); itemsHaveType {
+				break
+			}
+		}
+		return nil
+	})
+
+	return itemsHaveType
 }
 
 func accumURLs(item vocab.Item) vocab.IRIs {
