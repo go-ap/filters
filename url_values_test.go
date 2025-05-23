@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/url"
 	"reflect"
+	"strings"
 	"testing"
 
 	vocab "github.com/go-ap/activitypub"
@@ -93,9 +94,7 @@ func TestFromURL(t *testing.T) {
 		},
 		{
 			name: "some query values",
-			u: withValues(mockURL, url.Values{
-				"type": []string{"Create", "Follow"},
-			}),
+			u:    withValues(mockURL, vals(kv("type", "Create", "Follow"))),
 			item: vocab.ItemCollection{
 				vocab.Activity{Type: "Create"},
 				vocab.Activity{Type: "Follow"},
@@ -127,13 +126,11 @@ func TestFromValues(t *testing.T) {
 		{name: "empty"},
 		{
 			name: "no auth, no query values",
-			v:    url.Values{},
+			v:    vals(),
 		},
 		{
 			name: "type=Create,Follow",
-			v: url.Values{
-				"type": []string{"Create", "Follow"},
-			},
+			v:    vals(kv("type", "Create", "Follow")),
 			item: vocab.ItemCollection{
 				vocab.Activity{Type: "Create"},
 				vocab.Activity{Type: "Follow"},
@@ -146,9 +143,7 @@ func TestFromValues(t *testing.T) {
 		},
 		{
 			name: "ID=https://example.com",
-			v: url.Values{
-				"id": []string{"https://example.com"},
-			},
+			v:    vals(kv("id", "https://example.com")),
 			item: vocab.ItemCollection{
 				vocab.Actor{ID: "https://example.com"},
 				vocab.Activity{ID: "https://example.com/activity"},
@@ -159,9 +154,7 @@ func TestFromValues(t *testing.T) {
 		},
 		{
 			name: "ID=(null)",
-			v: url.Values{
-				"id": []string{""},
-			},
+			v:    vals(kv("id", "")),
 			item: vocab.ItemCollection{
 				vocab.Actor{ID: "https://example.com"},
 				vocab.Activity{ID: "https://example.com/activity"},
@@ -173,9 +166,7 @@ func TestFromValues(t *testing.T) {
 		},
 		{
 			name: "ID=(not null)",
-			v: url.Values{
-				"id": []string{"!"},
-			},
+			v:    vals(kv("id", "!")),
 			item: vocab.ItemCollection{
 				vocab.Actor{ID: "https://example.com"},
 				vocab.Activity{ID: "https://example.com/activity"},
@@ -188,9 +179,7 @@ func TestFromValues(t *testing.T) {
 		},
 		{
 			name: "ID=(not nil IRI)",
-			v: url.Values{
-				"id": []string{"!-"},
-			},
+			v:    vals(kv("id", "!-")),
 			item: vocab.ItemCollection{
 				vocab.Actor{ID: "https://example.com"},
 				vocab.Activity{ID: "https://example.com/activity"},
@@ -203,9 +192,7 @@ func TestFromValues(t *testing.T) {
 		},
 		{
 			name: "ID=~example.com",
-			v: url.Values{
-				"id": []string{"~example.com"},
-			},
+			v:    vals(kv("id", "~example.com")),
 			item: vocab.ItemCollection{
 				vocab.Object{ID: "https://activitypub.rocks", Type: "Page"},
 				vocab.Actor{ID: "https://example.com"},
@@ -448,196 +435,137 @@ func Test_fromValues(t *testing.T) {
 		// ID
 		{
 			name: "Empty ID",
-			arg: url.Values{
-				"id": []string{""},
-			},
-			want: Checks{
-				NilID,
-			},
+			arg:  vals(kv("id", "")),
+			want: Checks{NilID},
 		},
 		{
 			name: "Not empty ID",
-			arg: url.Values{
-				"id": []string{"!"},
-			},
-			want: Checks{
-				NotNilID,
-			},
+			arg:  vals(kv("id", "!")),
+			want: Checks{NotNilID},
 		},
 		{
 			name: "ID like",
-			arg: url.Values{
-				"id": []string{"~test"},
-			},
-			want: Checks{
-				IDLike("test"),
-			},
+			arg:  vals(kv("id", "~test")),
+			want: Checks{IDLike("test")},
 		},
 		{
 			name: "ID equals",
-			arg: url.Values{
-				"id": []string{"https://example.com"},
-			},
-			want: Checks{
-				SameID("https://example.com"),
-			},
+			arg:  vals(kv("id", "https://example.com")),
+			want: Checks{SameID("https://example.com")},
 		},
 		// AttributedTo
 		{
 			name: "Empty attributedTo",
-			arg: url.Values{
-				"attributedTo": []string{""},
-			},
-			want: Checks{
-				NilAttributedTo,
-			},
+			arg:  vals(kv("attributedTo", "")),
+			want: Checks{NilAttributedTo},
 		},
 		{
 			name: "Not empty attributedTo",
-			arg: url.Values{
-				"attributedTo": []string{"!"},
-			},
-			want: Checks{
-				Not(NilAttributedTo),
-			},
+			arg:  vals(kv("attributedTo", "!")),
+			want: Checks{Not(NilAttributedTo)},
 		},
 		{
 			name: "attributedTo like",
-			arg: url.Values{
-				"attributedTo": []string{"~test"},
-			},
-			want: Checks{
-				AttributedToLike("test"),
-			},
+			arg:  vals(kv("attributedTo", "~test")),
+			want: Checks{AttributedToLike("test")},
 		},
 		{
 			name: "attributedTo equals",
-			arg: url.Values{
-				"attributedTo": []string{"https://example.com"},
-			},
-			want: Checks{
-				SameAttributedTo("https://example.com"),
-			},
+			arg:  vals(kv("attributedTo", "https://example.com")),
+			want: Checks{SameAttributedTo("https://example.com")},
 		},
 		// context
 		{
 			name: "Empty context",
-			arg: url.Values{
-				"context": []string{""},
-			},
-			want: Checks{
-				NilContext,
-			},
+			arg:  vals(kv("context", "")),
+			want: Checks{NilContext},
 		},
 		{
 			name: "Not empty context",
-			arg: url.Values{
-				"context": []string{"!"},
-			},
-			want: Checks{
-				Not(NilContext),
-			},
+			arg:  vals(kv("context", "!")),
+			want: Checks{Not(NilContext)},
 		},
 		{
 			name: "context like",
-			arg: url.Values{
-				"context": []string{"~test"},
-			},
-			want: Checks{
-				ContextLike("test"),
-			},
+			arg:  vals(kv("context", "~test")),
+			want: Checks{ContextLike("test")},
 		},
 		{
 			name: "context equals",
-			arg: url.Values{
-				"context": []string{"https://example.com"},
-			},
-			want: Checks{
-				SameContext("https://example.com"),
-			},
+			arg:  vals(kv("context", "https://example.com")),
+			want: Checks{SameContext("https://example.com")},
 		},
 		// URL
 		{
 			name: "Empty URL",
-			arg: url.Values{
-				"url": []string{""},
-			},
-			want: Checks{
-				NilIRI,
-			},
+			arg:  vals(kv("url", "")),
+			want: Checks{NilIRI},
 		},
 		{
 			name: "Not empty URL",
-			arg: url.Values{
-				"url": []string{"!"},
-			},
-			want: Checks{
-				Not(NilIRI),
-			},
+			arg:  vals(kv("url", "!")),
+			want: Checks{Not(NilIRI)},
 		},
 		{
 			name: "URL like",
-			arg: url.Values{
-				"url": []string{"~test"},
-			},
-			want: Checks{
-				URLLike("test"),
-			},
+			arg:  vals(kv("url", "~test")),
+			want: Checks{URLLike("test")},
 		},
 		{
 			name: "URL equals",
-			arg: url.Values{
-				"url": []string{"https://example.com"},
-			},
-			want: Checks{
-				SameURL("https://example.com"),
-			},
+			arg:  vals(kv("url", "https://example.com")),
+			want: Checks{SameURL("https://example.com")},
 		},
 		// Name
-		//{
-		//	name: "Empty Name",
-		//	arg: url.Values{
-		//		"name": []string{""},
-		//	},
-		//	want: Checks{
-		//		NameEmpty,
-		//	},
-		//},
-		//{
-		//	name: "Not empty Name",
-		//	arg: url.Values{
-		//		"name": []string{"!"},
-		//	},
-		//	want: Checks{
-		//		Not(NameEmpty),
-		//	},
-		//},
-		//{
-		//	name: "Name like",
-		//	arg: url.Values{
-		//		"name": []string{"~test"},
-		//	},
-		//	want: Checks{
-		//		NameLike("test"),
-		//	},
-		//},
-		//{
-		//	name: "Name equals",
-		//	arg: url.Values{
-		//		"name": []string{"john doe"},
-		//	},
-		//	want: Checks{
-		//		NameIs("john doe"),
-		//	},
-		//},
+		{
+			name: "Empty Name",
+			arg:  vals(kv("name", "")),
+			want: Checks{NameEmpty},
+		},
+		{
+			name: "Not empty Name",
+			arg:  vals(kv("name", "!")),
+			want: Checks{Not(NameEmpty)},
+		},
+		{
+			name: "Name like",
+			arg:  vals(kv("name", "~test")),
+			want: Checks{NameLike("test")},
+		},
+		{
+			name: "Name equals",
+			arg:  vals(kv("name", "john doe")),
+			want: Checks{NameIs("john doe")},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			if strings.Contains(tt.name, "Name") {
+				t.Skipf("Skipping because the reflect.DeepEquals doesn't work for NaturalLanguageValChecks as they contain function pointers")
+			}
 			if got := fromValues(tt.arg); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("fromValues() = %v, want %v", got, tt.want)
 			}
 		})
 	}
+}
+
+func kv(key string, values ...string) url.Values {
+	return url.Values{
+		key: values,
+	}
+}
+
+func vals(v ...url.Values) url.Values {
+	res := url.Values{}
+	for _, vv := range v {
+		for k, vvv := range vv {
+			for _, s := range vvv {
+				res.Add(k, s)
+			}
+		}
+	}
+	return res
 }
 
 func Test_urlValue(t *testing.T) {
@@ -654,36 +582,81 @@ func Test_urlValue(t *testing.T) {
 		{
 			name: "id",
 			arg:  idEquals("https://example.com"),
-			want: url.Values{
-				keyID: []string{"https://example.com"},
-			},
+			want: vals(kv(keyID, "https://example.com")),
 		},
 		{
 			name: "iri",
 			arg:  iriEquals("https://example.com"),
-			want: url.Values{
-				keyIRI: []string{"https://example.com"},
-			},
+			want: vals(kv(keyIRI, "https://example.com")),
+		},
+		{
+			name: "nil iri",
+			arg:  iriNil{},
+			want: vals(kv(keyIRI, "")),
+		},
+		{
+			name: "iri like",
+			arg:  iriLike("https://example.com"),
+			want: vals(kv(keyIRI, opLike+"https://example.com")),
 		},
 		{
 			name: "maxItems",
 			arg:  WithMaxCount(666),
-			want: url.Values{
-				keyMaxItems: []string{"666"},
-			},
+			want: vals(kv(keyMaxItems, "666")),
 		},
 		{
 			name: "after",
 			arg:  After(SameID("https://example.com")),
-			want: url.Values{
-				keyAfter: []string{"https://example.com"},
-			},
+			want: vals(kv(keyAfter, "https://example.com")),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := urlValue(tt.arg); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("urlValue() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_extractURLVal(t *testing.T) {
+	type args struct {
+	}
+	tests := []struct {
+		name string
+		arg  Check
+		want string
+	}{
+		{
+			name: "empty",
+			arg:  nil,
+			want: "",
+		},
+		{
+			name: "nil id",
+			arg:  idNil{},
+			want: "",
+		},
+		{
+			name: "nil iri",
+			arg:  iriNil{},
+			want: "",
+		},
+		{
+			name: "iri",
+			arg:  idEquals("http://example.com"),
+			want: "http://example.com",
+		},
+		{
+			name: "iri like",
+			arg:  idLike("http://example.com"),
+			want: "~http://example.com",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := extractURLVal(tt.arg); got != tt.want {
+				t.Errorf("extractURLVal() = %q, want %q", got, tt.want)
 			}
 		})
 	}
