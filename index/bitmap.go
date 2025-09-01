@@ -3,6 +3,7 @@ package index
 import (
 	"bytes"
 	"encoding/gob"
+	"sync"
 
 	"github.com/RoaringBitmap/roaring/roaring64"
 	vocab "github.com/go-ap/activitypub"
@@ -41,6 +42,7 @@ func murmurHash(it vocab.LinkOrIRI) uint64 {
 var HashFn HashFnType = murmurHash
 
 type tokenMap[T Tokenizable] struct {
+	w               sync.RWMutex
 	m               map[T]*roaring64.Bitmap
 	refsExtractFn   ExtractFnType[uint64]
 	tokensExtractFn ExtractFnType[T]
@@ -76,6 +78,8 @@ func (i *tokenMap[T]) Add(li vocab.LinkOrIRI) uint64 {
 		return refs[0]
 	}
 
+	i.w.Lock()
+	defer i.w.Unlock()
 	for _, tok := range tokens {
 		if _, ok := i.m[tok]; !ok {
 			i.m[tok] = roaring64.New()
@@ -87,6 +91,8 @@ func (i *tokenMap[T]) Add(li vocab.LinkOrIRI) uint64 {
 
 // get returns the bitmap values corresponding to the key.
 func (i *tokenMap[T]) get(key T) *roaring64.Bitmap {
+	i.w.RLock()
+	defer i.w.RUnlock()
 	b, ok := i.m[key]
 	if !ok {
 		return roaring64.New()
@@ -98,6 +104,8 @@ func (i *tokenMap[T]) get(key T) *roaring64.Bitmap {
 // to the key.
 func (i *tokenMap[T]) not(key T) *roaring64.Bitmap {
 	b := roaring64.New()
+	i.w.RLock()
+	defer i.w.RUnlock()
 	for k, v := range i.m {
 		if k == key {
 			continue
