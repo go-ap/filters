@@ -282,6 +282,14 @@ func filterCollection(col vocab.ItemCollection, fns ...Check) (vocab.ItemCollect
 	pp := url.Values{}
 	np := url.Values{}
 
+	var lastPage vocab.ItemCollection
+	var result vocab.ItemCollection
+
+	filteredNotPaginated := FilterChecks(fns...).runOnItems(col)
+	if len(filteredNotPaginated) == 0 {
+		return filteredNotPaginated, pp, np
+	}
+
 	maxItems := MaxCount(fns...)
 	if maxItems < 0 {
 		maxItems = MaxItems
@@ -295,19 +303,15 @@ func filterCollection(col vocab.ItemCollection, fns ...Check) (vocab.ItemCollect
 	resetAfter(fns...)
 	resetBefore(fns...)
 
-	var lastPage vocab.ItemCollection
-	var result vocab.ItemCollection
-
-	result = Checks(fns).runOnItems(col)
+	result = PaginationChecks(fns...).runOnItems(filteredNotPaginated)
 	if len(result) == 0 {
 		return result, pp, np
 	}
-
-	onLastPage := len(AfterChecks(fns...)) > 0 && len(result) < maxItems
-	onFirstPage := len(AfterChecks(fns...)) == 0 && result.First().GetLink().Equals(col.First().GetLink(), true)
+	onLastPage := len(AfterChecks(fns...)) > 0 && len(filteredNotPaginated) < maxItems
+	onFirstPage := len(AfterChecks(fns...)) == 0 && filteredNotPaginated.First().GetLink().Equals(result.First().GetLink(), true)
 
 	var firstPage vocab.ItemCollection
-	first := result.First()
+	first := filteredNotPaginated.First()
 	if len(col) <= maxItems {
 		return result, pp, np
 	}
