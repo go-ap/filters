@@ -6,11 +6,12 @@ import (
 	vocab "github.com/go-ap/activitypub"
 )
 
-func dnl(v string) vocab.LangRefValue {
-	return nl("-", v)
-}
-func nl(ref string, v string) vocab.LangRefValue {
-	return vocab.LangRefValue{Ref: vocab.MakeRef([]byte(ref)), Value: vocab.Content(v)}
+func dnl(v ...string) vocab.NaturalLanguageValues {
+	nlv := make(vocab.NaturalLanguageValues)
+	for _, vv := range v {
+		nlv[vocab.NilLangRef] = vocab.Content(vv)
+	}
+	return nlv
 }
 
 func TestNameIs(t *testing.T) {
@@ -48,7 +49,7 @@ func TestNameIs(t *testing.T) {
 			name: "matching name",
 			args: args{
 				checkName:    "name",
-				toCheckNames: vocab.NaturalLanguageValues{dnl("name")},
+				toCheckNames: dnl("name"),
 			},
 			want: true,
 		},
@@ -56,7 +57,7 @@ func TestNameIs(t *testing.T) {
 			name: "matching unicode name",
 			args: args{
 				checkName:    "日本語",
-				toCheckNames: vocab.NaturalLanguageValues{dnl("日本語")},
+				toCheckNames: dnl("日本語"),
 			},
 			want: true,
 		},
@@ -64,7 +65,7 @@ func TestNameIs(t *testing.T) {
 			name: "not matching",
 			args: args{
 				checkName:    "example",
-				toCheckNames: vocab.NaturalLanguageValues{dnl("not example")},
+				toCheckNames: dnl("not example"),
 			},
 			want: false,
 		},
@@ -118,7 +119,7 @@ func TestNameLike(t *testing.T) {
 			name: "matching name",
 			args: args{
 				checkName:    "name",
-				toCheckNames: vocab.NaturalLanguageValues{dnl("name")},
+				toCheckNames: dnl("name"),
 			},
 			want: true,
 		},
@@ -126,7 +127,7 @@ func TestNameLike(t *testing.T) {
 			name: "matching unicode name",
 			args: args{
 				checkName:    "日本語",
-				toCheckNames: vocab.NaturalLanguageValues{dnl("日本語")},
+				toCheckNames: dnl("日本語"),
 			},
 			want: true,
 		},
@@ -134,7 +135,7 @@ func TestNameLike(t *testing.T) {
 			name: "matching substring unicode name",
 			args: args{
 				checkName:    "日本",
-				toCheckNames: vocab.NaturalLanguageValues{dnl("日本語")},
+				toCheckNames: dnl("日本語"),
 			},
 			want: true,
 		},
@@ -142,7 +143,7 @@ func TestNameLike(t *testing.T) {
 			name: "matching substring",
 			args: args{
 				checkName:    "example",
-				toCheckNames: vocab.NaturalLanguageValues{dnl("not example")},
+				toCheckNames: dnl("not example"),
 			},
 			want: true,
 		},
@@ -150,7 +151,7 @@ func TestNameLike(t *testing.T) {
 			name: "not matching",
 			args: args{
 				checkName:    "example",
-				toCheckNames: vocab.NaturalLanguageValues{dnl("not exampl")},
+				toCheckNames: dnl("not exampl"),
 			},
 			want: false,
 		},
@@ -187,12 +188,12 @@ func TestNameEmpty(t *testing.T) {
 		},
 		{
 			name:         "single value",
-			toCheckNames: vocab.NaturalLanguageValues{dnl("not empty")},
+			toCheckNames: dnl("not empty"),
 			want:         false,
 		},
 		{
 			name:         "multiple values",
-			toCheckNames: vocab.NaturalLanguageValues{dnl("not empty"), dnl("example")},
+			toCheckNames: dnl("not empty", "example"),
 			want:         false,
 		},
 	}
@@ -245,7 +246,7 @@ func TestContentIs(t *testing.T) {
 			name: "matching name",
 			args: args{
 				checkContent:    "name",
-				toCheckContents: vocab.NaturalLanguageValues{dnl("name")},
+				toCheckContents: dnl("name"),
 			},
 			want: true,
 		},
@@ -253,7 +254,7 @@ func TestContentIs(t *testing.T) {
 			name: "matching unicode name",
 			args: args{
 				checkContent:    "日本語",
-				toCheckContents: vocab.NaturalLanguageValues{dnl("日本語")},
+				toCheckContents: dnl("日本語"),
 			},
 			want: true,
 		},
@@ -261,7 +262,7 @@ func TestContentIs(t *testing.T) {
 			name: "not matching",
 			args: args{
 				checkContent:    "example",
-				toCheckContents: vocab.NaturalLanguageValues{dnl("not example")},
+				toCheckContents: dnl("not example"),
 			},
 			want: false,
 		},
@@ -311,7 +312,7 @@ func TestContentLike(t *testing.T) {
 			name: "matching name",
 			args: args{
 				checkContent:    "name",
-				toCheckContents: vocab.NaturalLanguageValues{dnl("name")},
+				toCheckContents: dnl("name"),
 			},
 			want: true,
 		},
@@ -319,7 +320,7 @@ func TestContentLike(t *testing.T) {
 			name: "matching unicode name",
 			args: args{
 				checkContent:    "日本語",
-				toCheckContents: vocab.NaturalLanguageValues{dnl("日本語")},
+				toCheckContents: dnl("日本語"),
 			},
 			want: true,
 		},
@@ -327,7 +328,7 @@ func TestContentLike(t *testing.T) {
 			name: "matching substring unicode name",
 			args: args{
 				checkContent:    "日本",
-				toCheckContents: vocab.NaturalLanguageValues{dnl("日本語")},
+				toCheckContents: dnl("日本語"),
 			},
 			want: true,
 		},
@@ -335,7 +336,7 @@ func TestContentLike(t *testing.T) {
 			name: "matching substring",
 			args: args{
 				checkContent:    "example",
-				toCheckContents: vocab.NaturalLanguageValues{dnl("not example")},
+				toCheckContents: dnl("not example"),
 			},
 			want: true,
 		},
@@ -343,7 +344,7 @@ func TestContentLike(t *testing.T) {
 			name: "not matching",
 			args: args{
 				checkContent:    "example",
-				toCheckContents: vocab.NaturalLanguageValues{dnl("not exampl")},
+				toCheckContents: dnl("not exampl"),
 			},
 			want: false,
 		},
@@ -376,12 +377,12 @@ func TestContentEmpty(t *testing.T) {
 		},
 		{
 			name:            "single value",
-			toCheckContents: vocab.NaturalLanguageValues{dnl("not empty")},
+			toCheckContents: dnl("not empty"),
 			want:            false,
 		},
 		{
 			name:            "multiple values",
-			toCheckContents: vocab.NaturalLanguageValues{dnl("not empty"), dnl("example")},
+			toCheckContents: dnl("not empty", "example"),
 			want:            false,
 		},
 	}
@@ -430,7 +431,7 @@ func TestSummaryIs(t *testing.T) {
 			name: "matching name",
 			args: args{
 				checkSummary:    "name",
-				toCheckSummarys: vocab.NaturalLanguageValues{dnl("name")},
+				toCheckSummarys: dnl("name"),
 			},
 			want: true,
 		},
@@ -438,7 +439,7 @@ func TestSummaryIs(t *testing.T) {
 			name: "matching unicode name",
 			args: args{
 				checkSummary:    "日本語",
-				toCheckSummarys: vocab.NaturalLanguageValues{dnl("日本語")},
+				toCheckSummarys: dnl("日本語"),
 			},
 			want: true,
 		},
@@ -446,7 +447,7 @@ func TestSummaryIs(t *testing.T) {
 			name: "not matching",
 			args: args{
 				checkSummary:    "example",
-				toCheckSummarys: vocab.NaturalLanguageValues{dnl("not example")},
+				toCheckSummarys: dnl("not example"),
 			},
 			want: false,
 		},
@@ -496,7 +497,7 @@ func TestSummaryLike(t *testing.T) {
 			name: "matching name",
 			args: args{
 				checkSummary:    "name",
-				toCheckSummarys: vocab.NaturalLanguageValues{dnl("name")},
+				toCheckSummarys: dnl("name"),
 			},
 			want: true,
 		},
@@ -504,7 +505,7 @@ func TestSummaryLike(t *testing.T) {
 			name: "matching unicode name",
 			args: args{
 				checkSummary:    "日本語",
-				toCheckSummarys: vocab.NaturalLanguageValues{dnl("日本語")},
+				toCheckSummarys: dnl("日本語"),
 			},
 			want: true,
 		},
@@ -512,7 +513,7 @@ func TestSummaryLike(t *testing.T) {
 			name: "matching substring unicode name",
 			args: args{
 				checkSummary:    "日本",
-				toCheckSummarys: vocab.NaturalLanguageValues{dnl("日本語")},
+				toCheckSummarys: dnl("日本語"),
 			},
 			want: true,
 		},
@@ -520,7 +521,7 @@ func TestSummaryLike(t *testing.T) {
 			name: "matching substring",
 			args: args{
 				checkSummary:    "example",
-				toCheckSummarys: vocab.NaturalLanguageValues{dnl("not example")},
+				toCheckSummarys: dnl("not example"),
 			},
 			want: true,
 		},
@@ -528,7 +529,7 @@ func TestSummaryLike(t *testing.T) {
 			name: "not matching",
 			args: args{
 				checkSummary:    "example",
-				toCheckSummarys: vocab.NaturalLanguageValues{dnl("not exampl")},
+				toCheckSummarys: dnl("not exampl"),
 			},
 			want: false,
 		},
@@ -561,12 +562,12 @@ func TestSummaryEmpty(t *testing.T) {
 		},
 		{
 			name:            "single value",
-			toCheckSummarys: vocab.NaturalLanguageValues{dnl("not empty")},
+			toCheckSummarys: dnl("not empty"),
 			want:            false,
 		},
 		{
 			name:            "multiple values",
-			toCheckSummarys: vocab.NaturalLanguageValues{dnl("not empty"), dnl("example")},
+			toCheckSummarys: dnl("not empty", "example"),
 			want:            false,
 		},
 	}

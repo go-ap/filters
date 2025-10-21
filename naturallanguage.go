@@ -20,7 +20,7 @@ const (
 type naturalLanguageValCheck struct {
 	checkValue string
 	checkFn    naturalLanguageValuesCheckFn
-	accumFn    func(vocab.Item) vocab.NaturalLanguageValues
+	accumFn    func(vocab.Item) []vocab.NaturalLanguageValues
 	typ        nlvType
 }
 
@@ -90,35 +90,43 @@ func SummaryLike(sum string) Check {
 // Please note that the logic of this check is different from SummaryIs and SummaryLike.
 var SummaryEmpty = summaryCheck("", naturalLanguageEmpty)
 
-func naturalLanguageValuesEquals(check vocab.NaturalLanguageValues, val string) bool {
+func naturalLanguageValuesEquals(check []vocab.NaturalLanguageValues, val string) bool {
 	nfc := norm.NFC.Bytes
 
 	val, _ = url.QueryUnescape(val)
-	for _, c := range check {
-		if c.Value != nil && bytes.EqualFold(nfc(c.Value), nfc([]byte(val))) {
-			return true
+	for _, nlv := range check {
+		for _, c := range nlv {
+			if c != nil && bytes.EqualFold(nfc(c), nfc([]byte(val))) {
+				return true
+			}
 		}
 	}
 	return false
 }
 
-func naturalLanguageEmpty(check vocab.NaturalLanguageValues, _ string) bool {
-	return len(check) == 0
+func naturalLanguageEmpty(check []vocab.NaturalLanguageValues, _ string) bool {
+	cnt := 0
+	for _, nlv := range check {
+		cnt += len(nlv)
+	}
+	return cnt == 0
 }
 
-func naturalLanguageValuesLike(check vocab.NaturalLanguageValues, val string) bool {
+func naturalLanguageValuesLike(check []vocab.NaturalLanguageValues, val string) bool {
 	nfc := norm.NFC.Bytes
 
 	val, _ = url.QueryUnescape(val)
-	for _, c := range check {
-		if c.Value != nil && bytes.Contains(nfc(c.Value), nfc([]byte(val))) {
-			return true
+	for _, nlv := range check {
+		for _, c := range nlv {
+			if c != nil && bytes.Contains(nfc(c), nfc([]byte(val))) {
+				return true
+			}
 		}
 	}
 	return false
 }
 
-type naturalLanguageValuesCheckFn func(vocab.NaturalLanguageValues, string) bool
+type naturalLanguageValuesCheckFn func([]vocab.NaturalLanguageValues, string) bool
 
 func nameCheck(name string, checkFn naturalLanguageValuesCheckFn) Check {
 	return naturalLanguageValCheck{
@@ -129,20 +137,20 @@ func nameCheck(name string, checkFn naturalLanguageValuesCheckFn) Check {
 	}
 }
 
-func loadName(it vocab.Item) vocab.NaturalLanguageValues {
+func loadName(it vocab.Item) []vocab.NaturalLanguageValues {
 	if vocab.IsNil(it) {
 		return nil
 	}
-	toCheck := make(vocab.NaturalLanguageValues, 0)
+	toCheck := make([]vocab.NaturalLanguageValues, 0)
 	_ = vocab.OnObject(it, func(ob *vocab.Object) error {
 		if len(ob.Name) > 0 {
-			toCheck = append(toCheck, ob.Name...)
+			toCheck = append(toCheck, ob.Name)
 		}
 		return nil
 	})
 	_ = vocab.OnActor(it, func(act *vocab.Actor) error {
 		if len(act.PreferredUsername) > 0 {
-			toCheck = append(toCheck, act.PreferredUsername...)
+			toCheck = append(toCheck, act.PreferredUsername)
 		}
 		return nil
 	})
@@ -158,13 +166,13 @@ func contentCheck(content string, checkFn naturalLanguageValuesCheckFn) Check {
 	}
 }
 
-func loadContent(it vocab.Item) vocab.NaturalLanguageValues {
+func loadContent(it vocab.Item) []vocab.NaturalLanguageValues {
 	if vocab.IsNil(it) {
 		return nil
 	}
-	toCheck := make(vocab.NaturalLanguageValues, 0)
+	toCheck := make([]vocab.NaturalLanguageValues, 0)
 	_ = vocab.OnObject(it, func(ob *vocab.Object) error {
-		toCheck = ob.Content
+		toCheck = append(toCheck, ob.Content)
 		return nil
 	})
 	return toCheck
@@ -179,13 +187,13 @@ func summaryCheck(summary string, checkFn naturalLanguageValuesCheckFn) Check {
 	}
 }
 
-func loadSummary(it vocab.Item) vocab.NaturalLanguageValues {
+func loadSummary(it vocab.Item) []vocab.NaturalLanguageValues {
 	if vocab.IsNil(it) {
 		return nil
 	}
-	toCheck := make(vocab.NaturalLanguageValues, 0)
+	toCheck := make([]vocab.NaturalLanguageValues, 0)
 	_ = vocab.OnObject(it, func(ob *vocab.Object) error {
-		toCheck = ob.Summary
+		toCheck = append(toCheck, ob.Summary)
 		return nil
 	})
 	return toCheck

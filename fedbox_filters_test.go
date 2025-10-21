@@ -742,10 +742,7 @@ func Test_filterNaturalLanguageValues(t *testing.T) {
 				},
 				valArr: []vocab.NaturalLanguageValues{
 					{
-						vocab.LangRefValue{
-							Ref:   vocab.NilLangRef,
-							Value: vocab.Content("ana"),
-						},
+						vocab.NilLangRef: vocab.Content("ana"),
 					},
 				},
 			},
@@ -762,12 +759,7 @@ func Test_filterNaturalLanguageValues(t *testing.T) {
 				},
 				valArr: []vocab.NaturalLanguageValues{
 					nil,
-					{
-						vocab.LangRefValue{
-							Ref:   vocab.NilLangRef,
-							Value: vocab.Content("ana"),
-						},
-					},
+					{vocab.NilLangRef: vocab.Content("ana")},
 				},
 			},
 			want: true,
@@ -782,12 +774,7 @@ func Test_filterNaturalLanguageValues(t *testing.T) {
 					},
 				},
 				valArr: []vocab.NaturalLanguageValues{
-					{
-						vocab.LangRefValue{
-							Ref:   vocab.NilLangRef,
-							Value: vocab.Content("ana"),
-						},
-					},
+					{vocab.NilLangRef: vocab.Content("ana")},
 				},
 			},
 			want: true,
@@ -803,10 +790,7 @@ func Test_filterNaturalLanguageValues(t *testing.T) {
 				},
 				valArr: []vocab.NaturalLanguageValues{
 					{
-						vocab.LangRefValue{
-							Ref:   vocab.NilLangRef,
-							Value: vocab.Content("anathema"),
-						},
+						vocab.NilLangRef: vocab.Content("anathema"),
 					},
 				},
 			},
@@ -823,10 +807,7 @@ func Test_filterNaturalLanguageValues(t *testing.T) {
 				},
 				valArr: []vocab.NaturalLanguageValues{
 					{
-						vocab.LangRefValue{
-							Ref:   vocab.NilLangRef,
-							Value: vocab.Content("bob"),
-						},
+						vocab.NilLangRef: vocab.Content("bob"),
 					},
 				},
 			},
@@ -845,10 +826,7 @@ func Test_filterNaturalLanguageValues(t *testing.T) {
 					nil,
 					{},
 					{
-						vocab.LangRefValue{
-							Ref:   vocab.NilLangRef,
-							Value: vocab.Content("bob"),
-						},
+						vocab.NilLangRef: vocab.Content("bob"),
 					},
 				},
 			},
@@ -865,10 +843,7 @@ func Test_filterNaturalLanguageValues(t *testing.T) {
 				},
 				valArr: []vocab.NaturalLanguageValues{
 					{
-						vocab.LangRefValue{
-							Ref:   vocab.NilLangRef,
-							Value: vocab.Content("bob"),
-						},
+						vocab.NilLangRef: vocab.Content("bob"),
 					},
 				},
 			},
@@ -886,10 +861,7 @@ func Test_filterNaturalLanguageValues(t *testing.T) {
 				valArr: []vocab.NaturalLanguageValues{
 					nil,
 					{
-						vocab.LangRefValue{
-							Ref:   vocab.NilLangRef,
-							Value: vocab.Content("bob"),
-						},
+						vocab.NilLangRef: vocab.Content("bob"),
 					},
 				},
 			},
@@ -906,10 +878,7 @@ func Test_filterNaturalLanguageValues(t *testing.T) {
 				},
 				valArr: []vocab.NaturalLanguageValues{
 					{
-						vocab.LangRefValue{
-							Ref:   vocab.NilLangRef,
-							Value: vocab.Content("bob"),
-						},
+						vocab.NilLangRef: vocab.Content("bob"),
 					},
 				},
 			},
@@ -926,10 +895,7 @@ func Test_filterNaturalLanguageValues(t *testing.T) {
 				},
 				valArr: []vocab.NaturalLanguageValues{
 					{
-						vocab.LangRefValue{
-							Ref:   vocab.NilLangRef,
-							Value: vocab.Content("bobsyouruncle"),
-						},
+						vocab.NilLangRef: vocab.Content("bobsyouruncle"),
 					},
 				},
 			},
@@ -946,10 +912,7 @@ func Test_filterNaturalLanguageValues(t *testing.T) {
 				},
 				valArr: []vocab.NaturalLanguageValues{
 					{
-						vocab.LangRefValue{
-							Ref:   vocab.NilLangRef,
-							Value: vocab.Content("ana"),
-						},
+						vocab.NilLangRef: vocab.Content("ana"),
 					},
 				},
 			},
@@ -977,10 +940,7 @@ func Test_filterNaturalLanguageValues(t *testing.T) {
 				CompStrs{StringEquals("ana")},
 				[]vocab.NaturalLanguageValues{
 					{
-						vocab.LangRefValue{
-							Ref:   vocab.NilLangRef,
-							Value: []byte("ana"),
-						},
+						vocab.NilLangRef: []byte("ana"),
 					},
 				},
 			},
@@ -992,10 +952,7 @@ func Test_filterNaturalLanguageValues(t *testing.T) {
 				CompStrs{StringEquals("ana")},
 				[]vocab.NaturalLanguageValues{
 					{
-						vocab.LangRefValue{
-							Ref:   vocab.NilLangRef,
-							Value: []byte("na"),
-						},
+						vocab.NilLangRef: []byte("na"),
 					},
 				},
 			},
@@ -1007,10 +964,7 @@ func Test_filterNaturalLanguageValues(t *testing.T) {
 				CompStrs{StringLike("ana")},
 				[]vocab.NaturalLanguageValues{
 					{
-						vocab.LangRefValue{
-							Ref:   vocab.NilLangRef,
-							Value: []byte("analema"),
-						},
+						vocab.NilLangRef: []byte("analema"),
 					},
 				},
 			},
@@ -1022,10 +976,7 @@ func Test_filterNaturalLanguageValues(t *testing.T) {
 				CompStrs{StringLike("ana")},
 				[]vocab.NaturalLanguageValues{
 					{
-						vocab.LangRefValue{
-							Ref:   vocab.NilLangRef,
-							Value: []byte("na"),
-						},
+						vocab.NilLangRef: []byte("na"),
 					},
 				},
 			},
@@ -1037,10 +988,7 @@ func Test_filterNaturalLanguageValues(t *testing.T) {
 				CompStrs{StringDifferent("ana")},
 				[]vocab.NaturalLanguageValues{
 					{
-						vocab.LangRefValue{
-							Ref:   vocab.NilLangRef,
-							Value: []byte("lema"),
-						},
+						vocab.NilLangRef: []byte("lema"),
 					},
 				},
 			},
@@ -1052,10 +1000,7 @@ func Test_filterNaturalLanguageValues(t *testing.T) {
 				CompStrs{StringDifferent("ana")},
 				[]vocab.NaturalLanguageValues{
 					{
-						vocab.LangRefValue{
-							Ref:   vocab.NilLangRef,
-							Value: []byte("ana"),
-						},
+						vocab.NilLangRef: []byte("ana"),
 					},
 				},
 			},
@@ -1068,14 +1013,8 @@ func Test_filterNaturalLanguageValues(t *testing.T) {
 				CompStrs{StringEquals("ana")},
 				[]vocab.NaturalLanguageValues{
 					{
-						vocab.LangRefValue{
-							Ref:   vocab.NilLangRef,
-							Value: []byte("not-matching"),
-						},
-						vocab.LangRefValue{
-							Ref:   vocab.NilLangRef,
-							Value: []byte("ana"),
-						},
+						vocab.NilLangRef: []byte("not-matching"),
+						vocab.NilLangRef: []byte("ana"),
 					},
 				},
 			},
@@ -1087,14 +1026,8 @@ func Test_filterNaturalLanguageValues(t *testing.T) {
 				CompStrs{StringEquals("ana")},
 				[]vocab.NaturalLanguageValues{
 					{
-						vocab.LangRefValue{
-							Ref:   vocab.NilLangRef,
-							Value: []byte("not-matching"),
-						},
-						vocab.LangRefValue{
-							Ref:   vocab.NilLangRef,
-							Value: []byte("na"),
-						},
+						vocab.NilLangRef: []byte("not-matching"),
+						vocab.NilLangRef: []byte("na"),
 					},
 				},
 			},
@@ -1106,14 +1039,8 @@ func Test_filterNaturalLanguageValues(t *testing.T) {
 				CompStrs{StringLike("ana")},
 				[]vocab.NaturalLanguageValues{
 					{
-						vocab.LangRefValue{
-							Ref:   vocab.NilLangRef,
-							Value: []byte("not-matching"),
-						},
-						vocab.LangRefValue{
-							Ref:   vocab.NilLangRef,
-							Value: []byte("analema"),
-						},
+						vocab.NilLangRef: []byte("not-matching"),
+						vocab.NilLangRef: []byte("analema"),
 					},
 				},
 			},
@@ -1125,14 +1052,8 @@ func Test_filterNaturalLanguageValues(t *testing.T) {
 				CompStrs{StringLike("ana")},
 				[]vocab.NaturalLanguageValues{
 					{
-						vocab.LangRefValue{
-							Ref:   vocab.NilLangRef,
-							Value: []byte("not-matching"),
-						},
-						vocab.LangRefValue{
-							Ref:   vocab.NilLangRef,
-							Value: []byte("na"),
-						},
+						vocab.NilLangRef: []byte("not-matching"),
+						vocab.NilLangRef: []byte("na"),
 					},
 				},
 			},
@@ -1144,14 +1065,8 @@ func Test_filterNaturalLanguageValues(t *testing.T) {
 				CompStrs{StringDifferent("ana")},
 				[]vocab.NaturalLanguageValues{
 					{
-						vocab.LangRefValue{
-							Ref:   vocab.NilLangRef,
-							Value: []byte("not-matching"),
-						},
-						vocab.LangRefValue{
-							Ref:   vocab.NilLangRef,
-							Value: []byte("lema"),
-						},
+						vocab.NilLangRef: []byte("not-matching"),
+						vocab.NilLangRef: []byte("lema"),
 					},
 				},
 			},
@@ -1163,14 +1078,8 @@ func Test_filterNaturalLanguageValues(t *testing.T) {
 				CompStrs{StringDifferent("ana")},
 				[]vocab.NaturalLanguageValues{
 					{
-						vocab.LangRefValue{
-							Ref:   vocab.NilLangRef,
-							Value: []byte("not-matching"),
-						},
-						vocab.LangRefValue{
-							Ref:   vocab.NilLangRef,
-							Value: []byte("ana"),
-						},
+						vocab.NilLangRef: []byte("not-matching"),
+						vocab.NilLangRef: []byte("ana"),
 					},
 				},
 			},

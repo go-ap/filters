@@ -30,7 +30,7 @@ func ExampleFilters() {
 			Type: "Create",
 			Actor: vocab.Person{
 				ID:   "https://example.com/jdoe1",
-				Name: vocab.DefaultNaturalLanguageValue("JohnDoe"),
+				Name: vocab.DefaultNaturalLanguage("JohnDoe"),
 			},
 			Object: vocab.IRI("https//example.com/test"),
 		},

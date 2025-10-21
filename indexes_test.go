@@ -21,7 +21,7 @@ func ExampleSearchIndex() {
 		&vocab.Object{
 			ID:   "https://federated.local/objects/1",
 			Type: vocab.PageType,
-			Name: vocab.NaturalLanguageValues{{Ref: vocab.DefaultLang, Value: vocab.Content("Link to example.com")}},
+			Name: vocab.NaturalLanguageValues{vocab.DefaultLang: vocab.Content("Link to example.com")},
 			URL:  vocab.IRI("https://example.com"),
 		},
 		&vocab.Activity{
@@ -90,23 +90,23 @@ var indexableActivities = []vocab.LinkOrIRI{
 		ID:                "https://federated.local/~jdoe",
 		Type:              vocab.PersonType,
 		AttributedTo:      vocab.IRI("https://federated.local/~jdoe"),
-		PreferredUsername: vocab.DefaultNaturalLanguageValue("jDoe"),
-		Summary:           vocab.DefaultNaturalLanguageValue("An anonymous dude"),
+		PreferredUsername: vocab.DefaultNaturalLanguage("jDoe"),
+		Summary:           vocab.DefaultNaturalLanguage("An anonymous dude"),
 	},
 	&vocab.Actor{
 		ID:                "https://federated.local/~alice",
 		Type:              vocab.PersonType,
 		AttributedTo:      vocab.IRI("https://federated.local"),
-		Name:              vocab.DefaultNaturalLanguageValue("Alice in Wonderland"),
-		PreferredUsername: vocab.DefaultNaturalLanguageValue("alice"),
+		Name:              vocab.DefaultNaturalLanguage("Alice in Wonderland"),
+		PreferredUsername: vocab.DefaultNaturalLanguage("alice"),
 	},
 	&vocab.Object{
 		ID:           "https://federated.local/objects/1",
 		Type:         vocab.PageType,
 		AttributedTo: vocab.IRI("https://federated.local/~alice"),
 		To:           vocab.ItemCollection{vocab.PublicNS},
-		Name:         vocab.DefaultNaturalLanguageValue("Link to example.com"),
-		Summary:      vocab.DefaultNaturalLanguageValue("An example for a link to example.com"),
+		Name:         vocab.DefaultNaturalLanguage("Link to example.com"),
+		Summary:      vocab.DefaultNaturalLanguage("An example for a link to example.com"),
 		URL:          vocab.IRI("https://example.com"),
 	},
 	&vocab.Activity{
@@ -141,7 +141,7 @@ var indexableActivities = []vocab.LinkOrIRI{
 	&vocab.Activity{
 		ID:      "https://federated.local/5",
 		Type:    vocab.FlagType,
-		Content: vocab.DefaultNaturalLanguageValue("flagged object"),
+		Content: vocab.DefaultNaturalLanguage("flagged object"),
 		To:      vocab.ItemCollection{vocab.IRI("https://federated.local/~alice")},
 		CC:      vocab.ItemCollection{vocab.PublicNS},
 		Actor:   vocab.IRI("https://federated.local/~alice"),

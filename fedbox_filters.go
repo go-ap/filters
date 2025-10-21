@@ -822,12 +822,12 @@ func matchStringFilters(filters CompStrs, s string) bool {
 func matchNaturalLanguageValues(filters CompStrs, s vocab.NaturalLanguageValues) bool {
 	var match bool
 	for _, f := range filters {
-		match = match || matchLangRefs(f, s...)
+		match = match || matchLangRefs(f, s)
 	}
 	return match
 }
 
-func matchLangRefs(filter CompStr, refs ...vocab.LangRefValue) bool {
+func matchLangRefs(filter CompStr, refs vocab.NaturalLanguageValues) bool {
 	var match bool
 	if filter.Operator == "!" {
 		match = !match
@@ -836,7 +836,7 @@ func matchLangRefs(filter CompStr, refs ...vocab.LangRefValue) bool {
 		}
 	}
 	for _, ref := range refs {
-		m := matchStringFilter(filter, ref.Value.String())
+		m := matchStringFilter(filter, ref.String())
 		if filter.Operator == "!" {
 			match = match && m
 		} else {

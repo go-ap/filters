@@ -51,7 +51,7 @@ func kv(k vocab.LangRef, v vocab.Content) func(values *vocab.NaturalLanguageValu
 	}
 }
 func nlv(fns ...func(values *vocab.NaturalLanguageValues)) vocab.NaturalLanguageValues {
-	n := make(vocab.NaturalLanguageValues, 0)
+	n := make(vocab.NaturalLanguageValues)
 	for _, fn := range fns {
 		fn(&n)
 	}
@@ -82,8 +82,8 @@ func Test_ExtractNatLangVal(t *testing.T) {
 		{
 			name: "en-fr",
 			args: nlv(
-				kv("en", vocab.Content("test")),
-				kv("fr", vocab.Content("teste")),
+				kv(vocab.English, vocab.Content("test")),
+				kv(vocab.French, vocab.Content("teste")),
 			),
 			want: []string{"test", "teste"},
 		},
@@ -121,16 +121,16 @@ func Test_tokenizeNatLangVal(t *testing.T) {
 		{
 			name: "en-fr",
 			args: nlv(
-				kv("en", vocab.Content("test")),
-				kv("fr", vocab.Content("teste")),
+				kv(vocab.English, vocab.Content("test")),
+				kv(vocab.French, vocab.Content("teste")),
 			),
 			want: []string{"test", "teste"},
 		},
 		{
 			name: "en-fr multi word",
 			args: nlv(
-				kv("en", vocab.Content("lorem ipsum")),
-				kv("fr", vocab.Content("teste de teste")),
+				kv(vocab.English, vocab.Content("lorem ipsum")),
+				kv(vocab.French, vocab.Content("teste de teste")),
 			),
 			want: []string{"lorem", "ipsum", "teste", "teste"},
 		},

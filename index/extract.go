@@ -93,7 +93,7 @@ func ExtractNatLangVal(nlv vocab.NaturalLanguageValues) []string {
 
 	result := make([]string, 0)
 	for _, cc := range nlv {
-		result = append(result, cc.Value.String())
+		result = append(result, cc.String())
 	}
 	return result
 }
@@ -111,7 +111,7 @@ func tokenizeNatLangVal(nlv vocab.NaturalLanguageValues) []string {
 	tt := t{}
 	result := make([]string, 0)
 	for _, cc := range nlv {
-		txt := cc.Value.String()
+		txt := cc.String()
 		for _, tok := range tokenize.TextToWords(txt) {
 			if tt.IsTagOrPunctuation(tok) {
 				continue
