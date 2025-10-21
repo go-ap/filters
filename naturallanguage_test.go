@@ -10,7 +10,7 @@ func dnl(v string) vocab.LangRefValue {
 	return nl("-", v)
 }
 func nl(ref string, v string) vocab.LangRefValue {
-	return vocab.LangRefValue{Ref: vocab.LangRef(ref), Value: vocab.Content(v)}
+	return vocab.LangRefValue{Ref: vocab.MakeRef([]byte(ref)), Value: vocab.Content(v)}
 }
 
 func TestNameIs(t *testing.T) {

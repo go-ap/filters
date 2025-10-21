@@ -21,7 +21,7 @@ func ExampleSearchIndex() {
 		&vocab.Object{
 			ID:   "https://federated.local/objects/1",
 			Type: vocab.PageType,
-			Name: vocab.NaturalLanguageValues{{Ref: "-", Value: vocab.Content("Link to example.com")}},
+			Name: vocab.NaturalLanguageValues{{Ref: vocab.DefaultLang, Value: vocab.Content("Link to example.com")}},
 			URL:  vocab.IRI("https://example.com"),
 		},
 		&vocab.Activity{

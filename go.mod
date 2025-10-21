@@ -1,15 +1,15 @@
 module github.com/go-ap/filters
 
-go 1.23.0
+go 1.24.0
 
 require (
 	github.com/RoaringBitmap/roaring v1.9.4
-	github.com/go-ap/activitypub v0.0.0-20251007131428-e3b22fbf6257
+	github.com/go-ap/activitypub v0.0.0-20251021115032-035023aa5f64
 	github.com/go-ap/errors v0.0.0-20250905102357-4480b47a00c4
 	github.com/jdkato/prose v1.2.1
 	github.com/mariusor/qstring v0.0.0-20200204164351-5a99d46de39d
 	github.com/spaolacci/murmur3 v1.1.0
-	golang.org/x/text v0.23.0
+	golang.org/x/text v0.30.0
 )
 
 require (

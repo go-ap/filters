@@ -1,8 +1,8 @@
 package filters
 
 import (
+	"bytes"
 	"net/url"
-	"strings"
 
 	vocab "github.com/go-ap/activitypub"
 	"golang.org/x/text/unicode/norm"
@@ -91,11 +91,11 @@ func SummaryLike(sum string) Check {
 var SummaryEmpty = summaryCheck("", naturalLanguageEmpty)
 
 func naturalLanguageValuesEquals(check vocab.NaturalLanguageValues, val string) bool {
-	nfc := norm.NFC.String
+	nfc := norm.NFC.Bytes
 
 	val, _ = url.QueryUnescape(val)
 	for _, c := range check {
-		if strings.EqualFold(nfc(c.String()), nfc(val)) {
+		if c.Value != nil && bytes.EqualFold(nfc(c.Value), nfc([]byte(val))) {
 			return true
 		}
 	}
@@ -107,11 +107,11 @@ func naturalLanguageEmpty(check vocab.NaturalLanguageValues, _ string) bool {
 }
 
 func naturalLanguageValuesLike(check vocab.NaturalLanguageValues, val string) bool {
-	nfc := norm.NFC.String
+	nfc := norm.NFC.Bytes
 
 	val, _ = url.QueryUnescape(val)
 	for _, c := range check {
-		if strings.Contains(nfc(c.String()), nfc(val)) {
+		if c.Value != nil && bytes.Contains(nfc(c.Value), nfc([]byte(val))) {
 			return true
 		}
 	}
