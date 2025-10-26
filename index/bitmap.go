@@ -100,7 +100,7 @@ func (i *tokenMap[T]) get(key T) *roaring64.Bitmap {
 	return b
 }
 
-// not returns the OR'ed bitmap values for all token maps not corresponding
+// not returns the OR-ed bitmap values for all token maps not corresponding
 // to the key.
 func (i *tokenMap[T]) not(key T) *roaring64.Bitmap {
 	b := roaring64.New()
@@ -115,7 +115,7 @@ func (i *tokenMap[T]) not(key T) *roaring64.Bitmap {
 	return b
 }
 
-// NewTokenIndex intializes a new tokenMap index where the function to extract the references that get
+// NewIndex intializes a new tokenMap index where the function to extract the references that get
 // indexed is passed directly.
 func NewIndex[T Tokenizable](refsExtractFn ExtractFnType[uint64], tokExtractFn ExtractFnType[T]) Indexable {
 	return &tokenMap[T]{

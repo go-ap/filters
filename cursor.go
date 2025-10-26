@@ -60,10 +60,10 @@ func PaginateCollection(it vocab.Item, filters ...Check) vocab.Item {
 		_ = vocab.OnOrderedCollectionPage(col, func(c *vocab.OrderedCollectionPage) error {
 			c.PartOf = partOfIRI
 			c.First = firstIRI
-			if !nextIRI.GetLink().Equals(firstIRI, true) {
+			if !nextIRI.GetLink().Equal(firstIRI, true) {
 				c.Next = nextIRI
 			}
-			if !prevIRI.GetLink().Equals(firstIRI, true) {
+			if !prevIRI.GetLink().Equal(firstIRI, true) {
 				c.Prev = prevIRI
 			}
 			return nil
@@ -79,10 +79,10 @@ func PaginateCollection(it vocab.Item, filters ...Check) vocab.Item {
 			c.TotalItems = total
 			c.PartOf = partOfIRI
 			c.First = firstIRI
-			if !nextIRI.GetLink().Equals(firstIRI, true) {
+			if !nextIRI.GetLink().Equal(firstIRI, true) {
 				c.Next = nextIRI
 			}
-			if !prevIRI.GetLink().Equals(firstIRI, true) {
+			if !prevIRI.GetLink().Equal(firstIRI, true) {
 				c.Prev = prevIRI
 			}
 			return nil
@@ -308,7 +308,7 @@ func filterCollection(col vocab.ItemCollection, fns ...Check) (vocab.ItemCollect
 		return result, pp, np
 	}
 	onLastPage := len(AfterChecks(fns...)) > 0 && len(filteredNotPaginated) < maxItems
-	onFirstPage := len(AfterChecks(fns...)) == 0 && filteredNotPaginated.First().GetLink().Equals(result.First().GetLink(), true)
+	onFirstPage := len(AfterChecks(fns...)) == 0 && filteredNotPaginated.First().GetLink().Equal(result.First().GetLink(), true)
 
 	var firstPage vocab.ItemCollection
 	first := filteredNotPaginated.First()
@@ -320,7 +320,7 @@ func filterCollection(col vocab.ItemCollection, fns ...Check) (vocab.ItemCollect
 	np.Add(keyMaxItems, strconv.Itoa(maxItems))
 
 	for _, top := range firstPage {
-		if onFirstPage = first.GetLink().Equals(top.GetLink(), true); onFirstPage {
+		if onFirstPage = first.GetLink().Equal(top.GetLink(), true); onFirstPage {
 			break
 		}
 	}
@@ -332,7 +332,7 @@ func filterCollection(col vocab.ItemCollection, fns ...Check) (vocab.ItemCollect
 	if len(result) >= 1 && len(col) > maxItems+1 {
 		last := result[len(result)-1]
 		for _, bottom := range lastPage {
-			if onLastPage = last.GetLink().Equals(bottom.GetLink(), true); onLastPage {
+			if onLastPage = last.GetLink().Equal(bottom.GetLink(), true); onLastPage {
 				break
 			}
 		}
