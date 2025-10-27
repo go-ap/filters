@@ -415,7 +415,7 @@ func testAccumFn(accumFn func(vocab.Item) vocab.IRIs) func(*testing.T) {
 				}
 				for i, it := range tt.want {
 					git := got[i]
-					if !git.Equal(it, true) {
+					if !git.Equal(it) {
 						t.Errorf("%s() at pos %d = %v, want %v", accumFnName, i, git.GetLink(), it)
 					}
 				}

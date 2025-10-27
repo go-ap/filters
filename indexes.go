@@ -101,7 +101,7 @@ func extractBitmaps(checks Checks, indexes map[index.Type]index.Indexable) []*ro
 		case inReplyToEquals:
 			result = append(result, index.GetBitmaps[uint64](indexes[ByInReplyTo], hFn(vocab.IRI(fil)))...)
 		case authorized:
-			if iri := vocab.IRI(fil); iri.Equal(vocab.PublicNS, true) {
+			if iri := vocab.IRI(fil); iri.Equal(vocab.PublicNS) {
 				result = append(result, index.GetBitmaps[uint64](indexes[ByRecipients], hFn(iri))...)
 			} else {
 				result = append(result,

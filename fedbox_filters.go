@@ -383,7 +383,7 @@ func (f *Filters) GetLink() vocab.IRI {
 	if v, err := qstring.Marshal(f); err == nil && len(v) > 0 {
 		iri = vocab.IRI(fmt.Sprintf("%s?%s", iri, v.Encode()))
 	}
-	if f.Authenticated != nil && !f.Authenticated.GetLink().Equal(vocab.PublicNS, false) {
+	if f.Authenticated != nil && !f.Authenticated.GetLink().Equals(vocab.PublicNS, false) {
 		if u, err := iri.URL(); err == nil {
 			u.User = url.User(f.Authenticated.ID.String())
 			iri = vocab.IRI(u.String())
@@ -448,7 +448,7 @@ func (f Filters) Audience() CompStrs {
 		iri.Str = IRIf(f, iri.Str)
 		col = append(col, iri)
 	}
-	if f.Authenticated != nil && !f.Authenticated.GetLink().Equal(vocab.PublicNS, false) {
+	if f.Authenticated != nil && !f.Authenticated.GetLink().Equals(vocab.PublicNS, false) {
 		if user := StringEquals(f.Authenticated.GetLink().String()); !col.Contains(user) {
 			col = append(col, user)
 		}
@@ -1038,12 +1038,12 @@ func filterURLs(filters CompStrs, it vocab.Item) bool {
 				break
 			}
 		} else if filter.Operator == "!" {
-			if !url.Equal(filterIRI, false) {
+			if !url.Equals(filterIRI, false) {
 				keep = true
 				break
 			}
 		} else {
-			if url.Equal(filterIRI, false) {
+			if url.Equals(filterIRI, false) {
 				keep = true
 				break
 			}
@@ -1209,7 +1209,7 @@ func FilterIt(it vocab.Item, f Filterable) (vocab.Item, error) {
 		}
 	}
 	if f1, ok := f.(Filterable); ok {
-		if f1.GetLink().Equal(it.GetLink(), false) {
+		if f1.GetLink().Equals(it.GetLink(), false) {
 			return it, nil
 		} else {
 			return nil, nil
@@ -1266,7 +1266,7 @@ func CacheKey(f *Filters) vocab.IRI {
 	}
 
 	u, _ := iri.URL()
-	if auth := f.Authenticated; auth != nil && !auth.ID.Equal(vocab.PublicNS, true) {
+	if auth := f.Authenticated; auth != nil && !auth.ID.Equal(vocab.PublicNS) {
 		u.User = url.User(path.Base(f.Authenticated.ID.String()))
 	}
 	return vocab.IRI(u.String())

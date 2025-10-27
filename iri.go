@@ -14,7 +14,7 @@ func (i iriEquals) Match(it vocab.Item) bool {
 	if vocab.IsNil(it) {
 		return len(i) == 0
 	}
-	return it.GetLink().Equal(vocab.IRI(i), true)
+	return it.GetLink().Equal(vocab.IRI(i))
 }
 
 // SameIRI checks an activitypub.Object's IRI
