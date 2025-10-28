@@ -11,4 +11,5 @@ tasks:
       make test
   - coverage: |
       set -a +x
-      cd client && make coverage
+      cd filters
+      make coverage
