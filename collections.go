@@ -1,6 +1,10 @@
 package filters
 
-import vocab "github.com/go-ap/activitypub"
+import (
+	"strconv"
+
+	vocab "github.com/go-ap/activitypub"
+)
 
 type counter struct {
 	max int
@@ -23,6 +27,10 @@ func (cnt *counter) Match(it vocab.Item) bool {
 	}
 	cnt.cnt = cnt.cnt + 1
 	return true
+}
+
+func (cnt *counter) String() string {
+	return "maxItems=" + strconv.Itoa(cnt.max)
 }
 
 // After checks the activitypub.Item against a specified "fn" filter function.

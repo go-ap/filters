@@ -80,6 +80,19 @@ func (types withTypes) Match(it vocab.Item) bool {
 	return itemsHaveType
 }
 
+func (types withTypes) String() string {
+	ss := strings.Builder{}
+	ss.WriteString("type=[")
+	for i, typ := range types {
+		ss.WriteString(string(typ))
+		if i < len(types)-1 {
+			ss.WriteRune(',')
+		}
+	}
+	ss.WriteRune(']')
+	return ss.String()
+}
+
 func accumURLs(item vocab.Item) vocab.IRIs {
 	var urls vocab.ItemCollection
 	switch it := item.(type) {
