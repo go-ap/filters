@@ -80,6 +80,8 @@ func getIRIWheres(f ...Check) (string, []any) {
 	return getStringFieldWheres(strs, "iri")
 }
 
+const MaxItems int = 100
+
 func getStringFieldInJSONWheres(strs CompStrs, props ...string) (string, []any) {
 	if len(strs) == 0 {
 		return "", nil
@@ -203,10 +205,6 @@ func getURLWheres(f ...Check) (string, []any) {
 	}
 	values = append(values, jValues...)
 	return clause, values
-}
-
-func isCollection(col string) bool {
-	return col == string(ActorsType) || col == string(ActivitiesType) || col == string(ObjectsType)
 }
 
 func getNamesWheres(f ...Check) (string, []any) {

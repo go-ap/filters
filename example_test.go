@@ -6,7 +6,7 @@ import (
 	vocab "github.com/go-ap/activitypub"
 )
 
-func ExampleFilters() {
+func Example_checkAll_Match() {
 	collection := vocab.ItemCollection{
 		// doesn't match due to Actor ID
 		vocab.Create{
