@@ -63,11 +63,17 @@ func getIRIWheres(f ...Check) (string, []any) {
 	strs := make(CompStrs, 0)
 	for _, check := range f {
 		switch i := check.(type) {
+		case idEquals:
+			strs = append(strs, CompStr{Str: string(i)})
 		case iriEquals:
 			strs = append(strs, CompStr{Str: string(i)})
 		case iriLike:
 			strs = append(strs, CompStr{Operator: "~", Str: string(i)})
+		case idLike:
+			strs = append(strs, CompStr{Operator: "~", Str: string(i)})
 		case iriNil:
+			strs = append(strs, CompStr{Str: string(vocab.NilIRI)})
+		case idNil:
 			strs = append(strs, CompStr{Str: string(vocab.NilIRI)})
 		}
 	}
