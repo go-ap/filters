@@ -20,6 +20,24 @@ func FilterChecks(fns ...Check) Checks {
 	return c
 }
 
+func IDChecks(fns ...Check) Checks {
+	c := make([]Check, 0)
+	for _, fn := range fns {
+		switch check := fn.(type) {
+		case idEquals:
+		case idLike:
+		case idNil:
+			c = append(c, check)
+		case checkAny:
+			c = append(c, Any(IDChecks(check...)...))
+		case checkAll:
+			c = append(c, All(IDChecks(check...)...))
+		default:
+		}
+	}
+	return c
+}
+
 func ItemChecks(fns ...Check) Checks {
 	c := make([]Check, 0)
 	for _, fn := range fns {
