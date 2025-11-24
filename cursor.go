@@ -60,10 +60,10 @@ func PaginateCollection(it vocab.Item, filters ...Check) vocab.Item {
 		_ = vocab.OnOrderedCollectionPage(col, func(c *vocab.OrderedCollectionPage) error {
 			c.PartOf = partOfIRI
 			c.First = firstIRI
-			if !nextIRI.GetLink().Equal(firstIRI) {
+			if nextIRI != vocab.EmptyIRI && !nextIRI.GetLink().Equal(firstIRI) {
 				c.Next = nextIRI
 			}
-			if !prevIRI.GetLink().Equal(firstIRI) {
+			if prevIRI != vocab.EmptyIRI && !prevIRI.GetLink().Equal(firstIRI) {
 				c.Prev = prevIRI
 			}
 			return nil
@@ -79,10 +79,10 @@ func PaginateCollection(it vocab.Item, filters ...Check) vocab.Item {
 			c.TotalItems = total
 			c.PartOf = partOfIRI
 			c.First = firstIRI
-			if !nextIRI.GetLink().Equal(firstIRI) {
+			if nextIRI != vocab.EmptyIRI && !nextIRI.GetLink().Equal(firstIRI) {
 				c.Next = nextIRI
 			}
-			if !prevIRI.GetLink().Equal(firstIRI) {
+			if prevIRI != vocab.EmptyIRI && !prevIRI.GetLink().Equal(firstIRI) {
 				c.Prev = prevIRI
 			}
 			return nil
