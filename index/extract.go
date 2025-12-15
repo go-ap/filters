@@ -98,6 +98,20 @@ func ExtractNatLangVal(nlv vocab.NaturalLanguageValues) []string {
 	return result
 }
 
+var (
+	sentTokenizer = tokenize.NewPunktSentenceTokenizer()
+	wordTokenizer = tokenize.NewTreebankWordTokenizer()
+)
+
+func textToWords(text string) []string {
+	words := make([]string, 0)
+	for _, s := range sentTokenizer.Tokenize(text) {
+		words = append(words, wordTokenizer.Tokenize(s)...)
+	}
+
+	return words
+}
+
 // tokenizeNatLangVal extracts multiple tokens from the value of the [vocab.NaturalLanguageValues] value.
 // This is meant for the properties that can contain long texts like "summary" or "content".
 // TODO(marius): these usually are HTML, so we should extract the plain text before.
@@ -112,7 +126,7 @@ func tokenizeNatLangVal(nlv vocab.NaturalLanguageValues) []string {
 	result := make([]string, 0)
 	for _, cc := range nlv {
 		txt := cc.String()
-		for _, tok := range tokenize.TextToWords(txt) {
+		for _, tok := range textToWords(txt) {
 			if tt.IsTagOrPunctuation(tok) {
 				continue
 			}
