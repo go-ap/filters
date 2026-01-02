@@ -4,7 +4,7 @@ go 1.25
 
 require (
 	github.com/RoaringBitmap/roaring v1.9.4
-	github.com/go-ap/activitypub v0.0.0-20251229135531-ed9c5f603bba
+	github.com/go-ap/activitypub v0.0.0-20260102112410-54375d828154
 	github.com/jdkato/prose v1.2.1
 	github.com/mariusor/qstring v0.0.0-20200204164351-5a99d46de39d
 	github.com/spaolacci/murmur3 v1.1.0
