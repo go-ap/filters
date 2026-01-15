@@ -4,11 +4,11 @@ go 1.25
 
 require (
 	github.com/RoaringBitmap/roaring v1.9.4
-	github.com/go-ap/activitypub v0.0.0-20260102112410-54375d828154
+	github.com/go-ap/activitypub v0.0.0-20260115125301-2f2cfaf37392
 	github.com/jdkato/prose v1.2.1
 	github.com/mariusor/qstring v0.0.0-20200204164351-5a99d46de39d
 	github.com/spaolacci/murmur3 v1.1.0
-	golang.org/x/text v0.32.0
+	golang.org/x/text v0.33.0
 )
 
 require (
