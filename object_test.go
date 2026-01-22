@@ -959,3 +959,55 @@ func Test_URLEquals_Match(t *testing.T) {
 		})
 	}
 }
+
+func Test_idLike_String(t *testing.T) {
+	tests := []struct {
+		name string
+		l    idLike
+		want string
+	}{
+		{
+			name: "empty",
+			l:    "",
+			want: "id=~",
+		},
+		{
+			name: "example.com",
+			l:    "example.com",
+			want: "id=~example.com",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.l.String(); got != tt.want {
+				t.Errorf("String() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_idEquals_String(t *testing.T) {
+	tests := []struct {
+		name string
+		i    idEquals
+		want string
+	}{
+		{
+			name: "empty",
+			i:    "",
+			want: "id=",
+		},
+		{
+			name: "example.com",
+			i:    "example.com",
+			want: "id=example.com",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.i.String(); got != tt.want {
+				t.Errorf("String() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

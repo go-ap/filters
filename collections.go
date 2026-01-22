@@ -1,7 +1,9 @@
 package filters
 
 import (
+	"fmt"
 	"strconv"
+	"strings"
 
 	vocab "github.com/go-ap/activitypub"
 )
@@ -40,6 +42,20 @@ func (cnt *counter) String() string {
 // Due to relying on the static check function return value the After is not reentrant.
 func After(fns ...Check) Check {
 	return &afterCrit{check: false, fns: fns}
+}
+
+func (a afterCrit) String() string {
+	ss := strings.Builder{}
+	ss.WriteString("after.")
+	for i, fn := range a.fns {
+		if sss, ok := fn.(fmt.Stringer); ok {
+			ss.WriteString(sss.String())
+		}
+		if i < len(a.fns)-1 {
+			ss.WriteRune(',')
+		}
+	}
+	return ss.String()
 }
 
 func (isAfter *afterCrit) Match(it vocab.Item) bool {

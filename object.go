@@ -35,6 +35,10 @@ func (i idEquals) Match(item vocab.Item) bool {
 	return item.GetID().Equals(vocab.IRI(i), false)
 }
 
+func (i idEquals) String() string {
+	return `id=` + string(i)
+}
+
 // IDLike
 func IDLike(frag string) Check {
 	return idLike(frag)
@@ -49,6 +53,10 @@ func (l idLike) Match(item vocab.Item) bool {
 	nfc := norm.NFC.String
 	fragStr, _ := url.QueryUnescape(string(l))
 	return strings.Contains(nfc(item.GetID().String()), nfc(fragStr))
+}
+
+func (l idLike) String() string {
+	return `id=~` + string(l)
 }
 
 // HasType checks an activitypub.Object's Type property against a series of values.

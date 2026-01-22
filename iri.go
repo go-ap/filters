@@ -17,6 +17,10 @@ func (i iriEquals) Match(it vocab.Item) bool {
 	return it.GetLink().Equal(vocab.IRI(i))
 }
 
+func (i iriEquals) String() string {
+	return `iri=` + string(i)
+}
+
 // SameIRI checks an activitypub.Object's IRI
 func SameIRI(iri vocab.IRI) Check {
 	return iriEquals(iri)
@@ -31,6 +35,10 @@ func (frag iriLike) Match(it vocab.Item) bool {
 	nfc := norm.NFC.String
 	fragStr, _ := url.QueryUnescape(string(frag))
 	return strings.Contains(nfc(it.GetLink().String()), nfc(fragStr))
+}
+
+func (frag iriLike) String() string {
+	return `iri=~` + string(frag)
 }
 
 // IRILike

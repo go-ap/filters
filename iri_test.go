@@ -254,3 +254,55 @@ func Test_iriNil_Match(t *testing.T) {
 		})
 	}
 }
+
+func Test_iriLike_String(t *testing.T) {
+	tests := []struct {
+		name string
+		l    iriLike
+		want string
+	}{
+		{
+			name: "empty",
+			l:    "",
+			want: "iri=~",
+		},
+		{
+			name: "example.com",
+			l:    "example.com",
+			want: "iri=~example.com",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.l.String(); got != tt.want {
+				t.Errorf("String() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_iriEquals_String(t *testing.T) {
+	tests := []struct {
+		name string
+		i    iriEquals
+		want string
+	}{
+		{
+			name: "empty",
+			i:    "",
+			want: "iri=",
+		},
+		{
+			name: "example.com",
+			i:    "example.com",
+			want: "iri=example.com",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.i.String(); got != tt.want {
+				t.Errorf("String() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

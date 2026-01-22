@@ -379,8 +379,6 @@ func extractURLVal(cc Check) string {
 		return ""
 	}
 	switch val := cc.(type) {
-	case fmt.Stringer:
-		return val.String()
 	case iriEquals:
 		return string(val)
 	case idEquals:
