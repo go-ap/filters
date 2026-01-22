@@ -113,6 +113,54 @@ func getURL(i vocab.IRI, f url.Values) vocab.IRI {
 	return i
 }
 
+func NextPageFromCollection(it vocab.CollectionInterface) vocab.IRI {
+	nextIRI := vocab.EmptyIRI
+	if vocab.IsNil(it) {
+		return nextIRI
+	}
+
+	// NOTE(marius): we don't need to mess with the item's type
+	// Additionally the OrderedCollection is compatible with the memory layout of the Collection
+	// so we can use a single branch here.
+	_ = vocab.OnCollection(it, func(c *vocab.Collection) error {
+		if !vocab.IsNil(c.First) {
+			nextIRI = c.First.GetLink()
+		}
+		return nil
+	})
+	_ = vocab.OnCollectionPage(it, func(c *vocab.CollectionPage) error {
+		if !vocab.IsNil(c.Next) {
+			nextIRI = c.Next.GetLink()
+		}
+		return nil
+	})
+	return nextIRI
+}
+
+func PrevPageFromCollection(it vocab.CollectionInterface) vocab.IRI {
+	prevIRI := vocab.EmptyIRI
+	if vocab.IsNil(it) {
+		return prevIRI
+	}
+
+	// NOTE(marius): we don't need to mess with the item's type
+	// Additionally the OrderedCollection is compatible with the memory layout of the Collection
+	// so we can use a single branch here.
+	_ = vocab.OnCollection(it, func(c *vocab.Collection) error {
+		if !vocab.IsNil(c.First) {
+			prevIRI = c.First.GetLink()
+		}
+		return nil
+	})
+	_ = vocab.OnCollectionPage(it, func(c *vocab.CollectionPage) error {
+		if !vocab.IsNil(c.Prev) {
+			prevIRI = c.Prev.GetLink()
+		}
+		return nil
+	})
+	return prevIRI
+}
+
 func CursorFromItem(it vocab.Item, filters ...Check) (vocab.Item, vocab.Item, vocab.Item) {
 	typ := it.GetType()
 

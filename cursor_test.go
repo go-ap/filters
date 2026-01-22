@@ -107,3 +107,189 @@ func TestPaginationChecks(t *testing.T) {
 		})
 	}
 }
+
+func TestNextPageFromCollection(t *testing.T) {
+	tests := []struct {
+		name string
+		arg  vocab.CollectionInterface
+		want vocab.IRI
+	}{
+		{
+			name: "empty",
+			arg:  nil,
+			want: vocab.EmptyIRI,
+		},
+		{
+			name: "Collection with empty First",
+			arg:  &vocab.Collection{Type: vocab.CollectionType},
+			want: vocab.EmptyIRI,
+		},
+		{
+			name: "Collection with First",
+			arg: &vocab.Collection{
+				Type:  vocab.CollectionType,
+				First: vocab.IRI("https://example.com?first"),
+			},
+			want: "https://example.com?first",
+		},
+		{
+			name: "OrderedCollection with empty First",
+			arg:  &vocab.OrderedCollection{Type: vocab.OrderedCollectionType},
+			want: vocab.EmptyIRI,
+		},
+		{
+			name: "OrderedCollection with First",
+			arg: &vocab.OrderedCollection{
+				Type:  vocab.OrderedCollectionType,
+				First: vocab.IRI("https://example.com?first"),
+			},
+			want: "https://example.com?first",
+		},
+		// CollectionPages
+
+		{
+			name: "CollectionPage with empty First",
+			arg:  &vocab.CollectionPage{Type: vocab.CollectionPageType},
+			want: vocab.EmptyIRI,
+		},
+		{
+			name: "CollectionPage with First",
+			arg: &vocab.CollectionPage{
+				Type:  vocab.CollectionPageType,
+				First: vocab.IRI("https://example.com?first"),
+			},
+			want: "https://example.com?first",
+		},
+		{
+			name: "CollectionPage with First and Next",
+			arg: &vocab.CollectionPage{
+				Type:  vocab.CollectionPageType,
+				First: vocab.IRI("https://example.com?first"),
+				Next:  vocab.IRI("https://example.com?next"),
+			},
+			want: "https://example.com?next",
+		},
+		{
+			name: "OrderedCollectionPage with empty First",
+			arg:  &vocab.OrderedCollectionPage{Type: vocab.OrderedCollectionPageType},
+			want: vocab.EmptyIRI,
+		},
+		{
+			name: "OrderedCollectionPage with First",
+			arg: &vocab.OrderedCollectionPage{
+				Type:  vocab.OrderedCollectionPageType,
+				First: vocab.IRI("https://example.com?first"),
+			},
+			want: "https://example.com?first",
+		},
+		{
+			name: "OrderedCollectionPage with First and Next",
+			arg: &vocab.OrderedCollectionPage{
+				Type:  vocab.OrderedCollectionPageType,
+				First: vocab.IRI("https://example.com?first"),
+				Next:  vocab.IRI("https://example.com?next"),
+			},
+			want: "https://example.com?next",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := NextPageFromCollection(tt.arg); got != tt.want {
+				t.Errorf("NextPageFromCollection() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestPrevPageFromCollection(t *testing.T) {
+	tests := []struct {
+		name string
+		arg  vocab.CollectionInterface
+		want vocab.IRI
+	}{
+		{
+			name: "empty",
+			arg:  nil,
+			want: vocab.EmptyIRI,
+		},
+		{
+			name: "Collection with empty First",
+			arg:  &vocab.Collection{Type: vocab.CollectionType},
+			want: vocab.EmptyIRI,
+		},
+		{
+			name: "Collection with First",
+			arg: &vocab.Collection{
+				Type:  vocab.CollectionType,
+				First: vocab.IRI("https://example.com?first"),
+			},
+			want: "https://example.com?first",
+		},
+		{
+			name: "OrderedCollection with empty First",
+			arg:  &vocab.OrderedCollection{Type: vocab.OrderedCollectionType},
+			want: vocab.EmptyIRI,
+		},
+		{
+			name: "OrderedCollection with First",
+			arg: &vocab.OrderedCollection{
+				Type:  vocab.OrderedCollectionType,
+				First: vocab.IRI("https://example.com?first"),
+			},
+			want: "https://example.com?first",
+		},
+		// CollectionPages
+
+		{
+			name: "CollectionPage with empty First",
+			arg:  &vocab.CollectionPage{Type: vocab.CollectionPageType},
+			want: vocab.EmptyIRI,
+		},
+		{
+			name: "CollectionPage with First",
+			arg: &vocab.CollectionPage{
+				Type:  vocab.CollectionPageType,
+				First: vocab.IRI("https://example.com?first"),
+			},
+			want: "https://example.com?first",
+		},
+		{
+			name: "CollectionPage with First and Prev",
+			arg: &vocab.CollectionPage{
+				Type:  vocab.CollectionPageType,
+				First: vocab.IRI("https://example.com?first"),
+				Prev:  vocab.IRI("https://example.com?previous"),
+			},
+			want: "https://example.com?previous",
+		},
+		{
+			name: "OrderedCollectionPage with empty First",
+			arg:  &vocab.OrderedCollectionPage{Type: vocab.OrderedCollectionPageType},
+			want: vocab.EmptyIRI,
+		},
+		{
+			name: "OrderedCollectionPage with First",
+			arg: &vocab.OrderedCollectionPage{
+				Type:  vocab.OrderedCollectionPageType,
+				First: vocab.IRI("https://example.com?first"),
+			},
+			want: "https://example.com?first",
+		},
+		{
+			name: "OrderedCollectionPage with First and Prev",
+			arg: &vocab.OrderedCollectionPage{
+				Type:  vocab.OrderedCollectionPageType,
+				First: vocab.IRI("https://example.com?first"),
+				Prev:  vocab.IRI("https://example.com?previous"),
+			},
+			want: "https://example.com?previous",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := PrevPageFromCollection(tt.arg); got != tt.want {
+				t.Errorf("PrevPageFromCollection() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
