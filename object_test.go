@@ -71,83 +71,78 @@ func TestID(t *testing.T) {
 		toCheckIRI vocab.IRI
 	}
 	tests := []struct {
-		name string
-		args args
-		want bool
+		name    string
+		arg     vocab.IRI
+		matchTo vocab.Item
+		want    bool
 	}{
 		{
 			name: "empty",
-			args: args{},
 			want: true,
 		},
 		{
-			name: "empty check iri",
-			args: args{
-				toCheckIRI: "http://example.com",
-			},
-			want: false,
+			name:    "empty check iri",
+			matchTo: &vocab.Object{ID: "http://example.com"},
+			want:    false,
 		},
 		{
 			name: "empty iri",
-			args: args{
-				checkIRI: "http://example.com",
-			},
+			arg:  "http://example.com",
 			want: false,
 		},
 		{
-			name: "matching iris",
-			args: args{
-				checkIRI:   "http://example.com",
-				toCheckIRI: "http://example.com",
-			},
-			want: true,
+			name:    "matching iris",
+			arg:     "http://example.com",
+			matchTo: &vocab.Object{ID: "http://example.com"},
+			want:    true,
 		},
 		{
-			name: "non matching iris - different scheme",
-			args: args{
-				checkIRI:   "https://example.com",
-				toCheckIRI: "http://example.com",
-			},
-			want: true,
+			name:    "non matching iris - different scheme",
+			arg:     "https://example.com",
+			matchTo: &vocab.Object{ID: "http://example.com"},
+			want:    true,
 		},
 		{
-			name: "non matching iris - different domain",
-			args: args{
-				checkIRI:   "http://example.com",
-				toCheckIRI: "http://example.org",
-			},
-			want: false,
+			name:    "non matching iris - different domain",
+			arg:     "http://example.com",
+			matchTo: &vocab.Object{ID: "http://example.org"},
+			want:    false,
 		},
 		{
-			name: "non matching iris - different path",
-			args: args{
-				checkIRI:   "http://example.com/index",
-				toCheckIRI: "http://example.com",
-			},
-			want: false,
+			name:    "non matching iris - different path",
+			arg:     "http://example.com/index",
+			matchTo: &vocab.Object{ID: "http://example.com"},
+			want:    false,
 		},
 		{
-			name: "matching iris - path is root vs no root",
-			args: args{
-				checkIRI:   "http://example.com/",
-				toCheckIRI: "http://example.com",
-			},
-			want: true,
+			name:    "matching iris - path is root vs no root",
+			arg:     "http://example.com/",
+			matchTo: &vocab.Object{ID: "http://example.com"},
+			want:    true,
 		},
 		{
-			name: "non matching iris - different query params",
-			args: args{
-				checkIRI:   "http://example.com",
-				toCheckIRI: "http://example.com/?ana=are",
-			},
-			want: false,
+			name:    "non matching iris - different query params",
+			arg:     "http://example.com",
+			matchTo: &vocab.Object{ID: "http://example.com/?ana=are"},
+			want:    false,
+		},
+		{
+			name:    "iri in list matches",
+			arg:     "http://example.com",
+			matchTo: vocab.ItemCollection{&vocab.Object{ID: "http://example.com"}},
+			want:    true,
+		},
+		{
+			name:    "iri in list doesn't match",
+			arg:     "http://example.com",
+			matchTo: vocab.ItemCollection{&vocab.Object{ID: "http://example.com/ana"}, vocab.IRI("http://no.example.com")},
+			want:    false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ob := vocab.Object{ID: tt.args.toCheckIRI}
-			if got := SameID(tt.args.checkIRI).Match(ob); got != tt.want {
-				t.Errorf("SameID(%s).Match(Object.ID=%s) = %v, want %v", tt.args.checkIRI, tt.args.toCheckIRI, got, tt.want)
+			if got := SameID(tt.arg).Match(tt.matchTo); got != tt.want {
+				t.Errorf("SameID(%s).Match(Object.ID=%s) = %v, want %v", tt.arg, tt.matchTo, got, tt.want)
 			}
 		})
 	}

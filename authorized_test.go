@@ -55,6 +55,42 @@ func Test_Authorized_Match(t *testing.T) {
 			},
 			want: true,
 		},
+		{
+			name: "actor with single values should be checked",
+			a:    "https://example.com/~jdoe",
+			it: &vocab.Activity{
+				Type:  vocab.UpdateType,
+				Actor: vocab.IRI("https://example.com/~jdoe"),
+			},
+			want: true,
+		},
+		{
+			name: "actor with multiple values should be checked",
+			a:    "https://example.com/~jdoe",
+			it: &vocab.Activity{
+				Type:  vocab.UndoType,
+				Actor: vocab.ItemCollection{vocab.IRI("https://example.com/~jdoe")},
+			},
+			want: true,
+		},
+		{
+			name: "object with single values should be checked",
+			a:    "https://example.com/~jdoe",
+			it: &vocab.Activity{
+				Type:   vocab.FollowType,
+				Object: vocab.IRI("https://example.com/~jdoe"),
+			},
+			want: true,
+		},
+		{
+			name: "object with multiple values should be checked",
+			a:    "https://example.com/~jdoe",
+			it: &vocab.Activity{
+				Type:   vocab.FollowType,
+				Object: vocab.ItemCollection{vocab.IRI("https://example.com/~jdoe")},
+			},
+			want: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -10,7 +10,7 @@ func (a authorized) Match(it vocab.Item) bool {
 	}
 	i := vocab.IRI(a)
 	return Any(
-		Any(Actor(SameID(i)), SameAttributedTo(i)),
+		Any(Actor(SameID(i)), Object(SameID(i)), SameAttributedTo(i)),
 		Any(Recipients(vocab.PublicNS), Recipients(i)),
 	).Match(it)
 }

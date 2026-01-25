@@ -32,6 +32,14 @@ func (i idEquals) Match(item vocab.Item) bool {
 	if vocab.IsNil(item) {
 		return len(i) == 0
 	}
+	if vocab.IsItemCollection(item) {
+		status := false
+		_ = vocab.OnCollectionIntf(item, func(col vocab.CollectionInterface) error {
+			status = col.Collection().IRIs().Contains(vocab.IRI(i))
+			return nil
+		})
+		return status
+	}
 	return item.GetID().Equals(vocab.IRI(i), false)
 }
 
