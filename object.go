@@ -76,17 +76,25 @@ func HasType(ty ...vocab.ActivityVocabularyType) Check {
 type withTypes vocab.ActivityVocabularyTypes
 
 func (types withTypes) Match(it vocab.Item) bool {
-	if vocab.IsNil(it) {
+	if vocab.IsNil(it) || it.GetType() == nil {
 		return len(types) == 0
 	}
+	matchFn := func(ob vocab.Item) bool {
+		withType := vocab.ActivityVocabularyTypes{}
+		if typ := ob.GetType(); typ != nil {
+			withType = typ.AsTypes()
+		}
+		return vocab.AnyTypes(types...).Match(withType...)
+	}
+
 	if !vocab.IsItemCollection(it) {
-		return vocab.ActivityVocabularyTypes(types).Contains(it.GetType())
+		return matchFn(it)
 	}
 
 	itemsHaveType := false
 	_ = vocab.OnItemCollection(it, func(col *vocab.ItemCollection) error {
 		for _, ob := range col.Collection() {
-			if itemsHaveType = vocab.ActivityVocabularyTypes(types).Contains(ob.GetType()); itemsHaveType {
+			if itemsHaveType = matchFn(ob); itemsHaveType {
 				break
 			}
 		}

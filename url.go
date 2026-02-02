@@ -2,7 +2,11 @@
 // at load time.
 package filters
 
-import vocab "github.com/go-ap/activitypub"
+import (
+	"slices"
+
+	vocab "github.com/go-ap/activitypub"
+)
 
 // Check represents an interface for a filter that can be applied on a [vocab.Item]
 // and it returns true if it matches and false if it does not.
@@ -83,7 +87,7 @@ func VocabularyTypesFilter(types ...string) vocab.ActivityVocabularyTypes {
 	r := make(vocab.ActivityVocabularyTypes, 0, len(types))
 	for _, t := range types {
 		typ := vocab.ActivityVocabularyType(t)
-		if vocab.Types.Contains(typ) {
+		if slices.Contains(vocab.Types, typ) {
 			r = append(r, typ)
 		}
 	}

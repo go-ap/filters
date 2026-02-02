@@ -43,27 +43,27 @@ func TestFromIRI(t *testing.T) {
 			name: "some query values",
 			iri:  "https://example.com?type=Create&type=Follow",
 			item: vocab.ItemCollection{
-				vocab.Activity{Type: "Create"},
-				vocab.Activity{Type: "Follow"},
-				vocab.Activity{Type: "Like"},
+				vocab.Activity{Type: ty("Create")},
+				vocab.Activity{Type: ty("Follow")},
+				vocab.Activity{Type: ty("Like")},
 			},
 			want: vocab.ItemCollection{
-				vocab.Activity{Type: "Create"},
-				vocab.Activity{Type: "Follow"},
+				vocab.Activity{Type: ty("Create")},
+				vocab.Activity{Type: ty("Follow")},
 			},
 		},
 		{
 			name: "invalid IRI",
 			iri:  ":/example-com",
 			item: vocab.ItemCollection{
-				vocab.Activity{Type: "Create"},
-				vocab.Activity{Type: "Follow"},
-				vocab.Activity{Type: "Like"},
+				vocab.Activity{Type: ty("Create")},
+				vocab.Activity{Type: ty("Follow")},
+				vocab.Activity{Type: ty("Like")},
 			},
 			want: vocab.ItemCollection{
-				vocab.Activity{Type: "Create"},
-				vocab.Activity{Type: "Follow"},
-				vocab.Activity{Type: "Like"},
+				vocab.Activity{Type: ty("Create")},
+				vocab.Activity{Type: ty("Follow")},
+				vocab.Activity{Type: ty("Like")},
 			},
 			wantErr: &url.Error{"parse", ":/example-com", errors.New("missing protocol scheme")},
 		},
@@ -96,13 +96,13 @@ func TestFromURL(t *testing.T) {
 			name: "some query values",
 			u:    withValues(mockURL, vals(kv("type", "Create", "Follow"))),
 			item: vocab.ItemCollection{
-				vocab.Activity{Type: "Create"},
-				vocab.Activity{Type: "Follow"},
-				vocab.Activity{Type: "Like"},
+				vocab.Activity{Type: ty("Create")},
+				vocab.Activity{Type: ty("Follow")},
+				vocab.Activity{Type: ty("Like")},
 			},
 			want: vocab.ItemCollection{
-				vocab.Activity{Type: "Create"},
-				vocab.Activity{Type: "Follow"},
+				vocab.Activity{Type: ty("Create")},
+				vocab.Activity{Type: ty("Follow")},
 			},
 		},
 	}
@@ -132,13 +132,13 @@ func TestFromValues(t *testing.T) {
 			name: "type=Create,Follow",
 			v:    vals(kv("type", "Create", "Follow")),
 			item: vocab.ItemCollection{
-				vocab.Activity{Type: "Create"},
-				vocab.Activity{Type: "Follow"},
-				vocab.Activity{Type: "Like"},
+				vocab.Activity{Type: ty("Create")},
+				vocab.Activity{Type: ty("Follow")},
+				vocab.Activity{Type: ty("Like")},
 			},
 			want: vocab.ItemCollection{
-				vocab.Activity{Type: "Create"},
-				vocab.Activity{Type: "Follow"},
+				vocab.Activity{Type: ty("Create")},
+				vocab.Activity{Type: ty("Follow")},
 			},
 		},
 		{
@@ -158,10 +158,10 @@ func TestFromValues(t *testing.T) {
 			item: vocab.ItemCollection{
 				vocab.Actor{ID: "https://example.com"},
 				vocab.Activity{ID: "https://example.com/activity"},
-				vocab.Follow{Type: "Follow"},
+				vocab.Follow{Type: ty("Follow")},
 			},
 			want: vocab.ItemCollection{
-				vocab.Follow{Type: "Follow"},
+				vocab.Follow{Type: ty("Follow")},
 			},
 		},
 		{
@@ -170,7 +170,7 @@ func TestFromValues(t *testing.T) {
 			item: vocab.ItemCollection{
 				vocab.Actor{ID: "https://example.com"},
 				vocab.Activity{ID: "https://example.com/activity"},
-				vocab.Follow{Type: "Follow"},
+				vocab.Follow{Type: ty("Follow")},
 			},
 			want: vocab.ItemCollection{
 				vocab.Actor{ID: "https://example.com"},
@@ -183,7 +183,7 @@ func TestFromValues(t *testing.T) {
 			item: vocab.ItemCollection{
 				vocab.Actor{ID: "https://example.com"},
 				vocab.Activity{ID: "https://example.com/activity"},
-				vocab.Follow{Type: "Follow"},
+				vocab.Follow{Type: ty("Follow")},
 			},
 			want: vocab.ItemCollection{
 				vocab.Actor{ID: "https://example.com"},
@@ -194,10 +194,10 @@ func TestFromValues(t *testing.T) {
 			name: "ID=~example.com",
 			v:    vals(kv("id", "~example.com")),
 			item: vocab.ItemCollection{
-				vocab.Object{ID: "https://activitypub.rocks", Type: "Page"},
+				vocab.Object{ID: "https://activitypub.rocks", Type: ty("Page")},
 				vocab.Actor{ID: "https://example.com"},
 				vocab.Activity{ID: "https://example.com/activity"},
-				vocab.Follow{Type: "Follow"},
+				vocab.Follow{Type: ty("Follow")},
 			},
 			want: vocab.ItemCollection{
 				vocab.Actor{ID: "https://example.com"},
@@ -620,8 +620,6 @@ func Test_urlValue(t *testing.T) {
 }
 
 func Test_extractURLVal(t *testing.T) {
-	type args struct {
-	}
 	tests := []struct {
 		name string
 		arg  Check

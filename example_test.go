@@ -6,28 +6,30 @@ import (
 	vocab "github.com/go-ap/activitypub"
 )
 
+type ty = vocab.ActivityVocabularyType
+
 func Example_checkAll_Match() {
 	collection := vocab.ItemCollection{
 		// doesn't match due to Actor ID
 		vocab.Create{
-			Type:   "Create",
+			Type:   ty("Create"),
 			Actor:  vocab.IRI("https://example.com/bob"),
 			Object: vocab.IRI("https//example.com/test"),
 		},
 		// doesn't match due to nil Object
 		vocab.Create{
-			Type:  "Create",
+			Type:  ty("Create"),
 			Actor: vocab.IRI("https://example.com/jdoe"),
 		},
 		// match
 		vocab.Create{
-			Type:   "Create",
+			Type:   ty("Create"),
 			Actor:  vocab.IRI("https://example.com/jdoe"),
 			Object: vocab.IRI("https//example.com/test"),
 		},
 		// match
 		vocab.Create{
-			Type: "Create",
+			Type: ty("Create"),
 			Actor: vocab.Person{
 				ID:   "https://example.com/jdoe1",
 				Name: vocab.DefaultNaturalLanguage("JohnDoe"),
@@ -35,11 +37,11 @@ func Example_checkAll_Match() {
 			Object: vocab.IRI("https//example.com/test"),
 		},
 		// doesn't match due to the activity Type
-		vocab.Follow{Type: "Follow"},
+		vocab.Follow{Type: ty("Follow")},
 		// doesn't match due to Arrive being an intransitive activity
-		vocab.Arrive{Type: "Arrive"},
+		vocab.Arrive{Type: ty("Arrive")},
 		// doesn't match due to Question being an intransitive activity
-		vocab.Question{Type: "Question"},
+		vocab.Question{Type: ty("Question")},
 	}
 	// This filters all activities that are not:
 	// Create activities,

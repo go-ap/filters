@@ -50,13 +50,14 @@ func PaginateCollection(it vocab.Item, filters ...Check) vocab.Item {
 		firstIRI = vocab.IRI(u.String())
 	}
 
-	switch col.GetType() {
-	case vocab.OrderedCollectionType:
+	typ := col.GetType()
+	switch {
+	case vocab.OrderedCollectionType.Match(typ):
 		_ = vocab.OnOrderedCollection(col, func(c *vocab.OrderedCollection) error {
 			c.First = firstIRI
 			return nil
 		})
-	case vocab.OrderedCollectionPageType:
+	case vocab.OrderedCollectionPageType.Match(typ):
 		_ = vocab.OnOrderedCollectionPage(col, func(c *vocab.OrderedCollectionPage) error {
 			c.PartOf = partOfIRI
 			c.First = firstIRI
@@ -68,13 +69,13 @@ func PaginateCollection(it vocab.Item, filters ...Check) vocab.Item {
 			}
 			return nil
 		})
-	case vocab.CollectionType:
+	case vocab.CollectionType.Match(typ):
 		_ = vocab.OnCollection(col, func(c *vocab.Collection) error {
 			c.TotalItems = total
 			c.First = firstIRI
 			return nil
 		})
-	case vocab.CollectionPageType:
+	case vocab.CollectionPageType.Match(typ):
 		_ = vocab.OnCollectionPage(col, func(c *vocab.CollectionPage) error {
 			c.TotalItems = total
 			c.PartOf = partOfIRI
@@ -164,7 +165,7 @@ func PrevPageFromCollection(it vocab.CollectionInterface) vocab.IRI {
 func CursorFromItem(it vocab.Item, filters ...Check) (vocab.Item, vocab.Item, vocab.Item) {
 	typ := it.GetType()
 
-	if !vocab.CollectionTypes.Contains(typ) {
+	if !vocab.CollectionTypes.Match(typ) {
 		return it, nil, nil
 	}
 
@@ -177,8 +178,8 @@ func CursorFromItem(it vocab.Item, filters ...Check) (vocab.Item, vocab.Item, vo
 	shouldBePage := len(PaginationChecks(filters...)) > 0
 
 	maxCount := MaxCount(filters...)
-	switch typ {
-	case vocab.OrderedCollectionPageType:
+	switch {
+	case vocab.OrderedCollectionPageType.Match(typ):
 		_ = vocab.OnOrderedCollectionPage(it, func(new *vocab.OrderedCollectionPage) error {
 			items := new.OrderedItems
 			if maxCount < 0 && len(items) > MaxItems {
@@ -193,7 +194,7 @@ func CursorFromItem(it vocab.Item, filters ...Check) (vocab.Item, vocab.Item, vo
 			}
 			return nil
 		})
-	case vocab.CollectionPageType:
+	case vocab.CollectionPageType.Match(typ):
 		_ = vocab.OnCollectionPage(it, func(new *vocab.CollectionPage) error {
 			items := new.Items
 			if maxCount < 0 && len(items) > MaxItems {
@@ -208,7 +209,7 @@ func CursorFromItem(it vocab.Item, filters ...Check) (vocab.Item, vocab.Item, vo
 			}
 			return nil
 		})
-	case vocab.OrderedCollectionType:
+	case vocab.OrderedCollectionType.Match(typ):
 		if shouldBePage {
 			result := new(vocab.OrderedCollectionPage)
 			old, _ := it.(*vocab.OrderedCollection)
@@ -244,7 +245,7 @@ func CursorFromItem(it vocab.Item, filters ...Check) (vocab.Item, vocab.Item, vo
 				return nil
 			})
 		}
-	case vocab.CollectionType:
+	case vocab.CollectionType.Match(typ):
 		if shouldBePage {
 			result := new(vocab.CollectionPage)
 			old, _ := it.(*vocab.Collection)
@@ -280,7 +281,7 @@ func CursorFromItem(it vocab.Item, filters ...Check) (vocab.Item, vocab.Item, vo
 				return nil
 			})
 		}
-	case vocab.CollectionOfItems:
+	case vocab.CollectionOfItems.Match(typ):
 		_ = vocab.OnItemCollection(it, func(col *vocab.ItemCollection) error {
 			items := *col
 			if maxCount < 0 && len(items) > MaxItems {

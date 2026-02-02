@@ -10,15 +10,20 @@ import (
 // ExtractType returns the "type" of the [vocab.LinkOrIRI].
 // This works on both [vocab.Link] and [vocab.Item] objects.
 func ExtractType(li vocab.LinkOrIRI) []string {
-	switch it := li.(type) {
-	case vocab.Link:
-		return []string{string(it.GetType())}
-	case *vocab.Link:
-		return []string{string(it.GetType())}
-	case vocab.Item:
-		return []string{string(it.GetType())}
+	it, ok := li.(vocab.ActivityObject)
+	if !ok {
+		return nil
 	}
-	return nil
+	types := make([]string, 0)
+	if typ := it.GetType(); typ != nil {
+		for _, tt := range typ.AsTypes() {
+			types = append(types, string(tt))
+		}
+	}
+	if len(types) == 0 {
+		return nil
+	}
+	return types
 }
 
 // ExtractName returns a single token composed of the "name" property of the [vocab.LinkOrIRI].

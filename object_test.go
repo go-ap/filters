@@ -22,7 +22,7 @@ func TestType(t *testing.T) {
 		{
 			name: "empty",
 			args: args{},
-			want: false,
+			want: true,
 		},
 		{
 			name: "empty object",
@@ -66,10 +66,6 @@ func TestType(t *testing.T) {
 }
 
 func TestID(t *testing.T) {
-	type args struct {
-		checkIRI   vocab.IRI
-		toCheckIRI vocab.IRI
-	}
 	tests := []struct {
 		name    string
 		arg     vocab.IRI
