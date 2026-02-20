@@ -396,6 +396,9 @@ func extractURLVal(cc Check) string {
 }
 
 func urlValues(ff ...Check) url.Values {
+	if len(ff) == 0 {
+		return nil
+	}
 	q := url.Values{}
 	for _, f := range ff {
 		if qq := urlValue(f); len(qq) > 0 {
@@ -407,6 +410,7 @@ func urlValues(ff ...Check) url.Values {
 	return q
 }
 
+// ToValues encodes the "ff" list of Check entries into a url.Values map
 func ToValues(ff ...Check) url.Values {
 	return urlValues(ff...)
 }

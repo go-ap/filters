@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	vocab "github.com/go-ap/activitypub"
+	"github.com/google/go-cmp/cmp"
 )
 
 var mockURL = url.URL{
@@ -655,6 +656,47 @@ func Test_extractURLVal(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := extractURLVal(tt.arg); got != tt.want {
 				t.Errorf("extractURLVal() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestToValues(t *testing.T) {
+	tests := []struct {
+		name string
+		ff   []Check
+		want url.Values
+	}{
+		{
+			name: "nil",
+			ff:   nil,
+			want: nil,
+		},
+		{
+			name: "empty",
+			ff:   Checks{},
+			want: nil,
+		},
+		{
+			name: "SameID",
+			ff:   Checks{SameID("http://example.com")},
+			want: url.Values{"id": []string{"http://example.com"}},
+		},
+		{
+			name: "Type",
+			ff:   Checks{HasType(vocab.NoteType)},
+			want: url.Values{"type": []string{"Note"}},
+		},
+		{
+			name: "IRI and Types",
+			ff:   Checks{SameIRI("http://example.com"), HasType(vocab.NoteType, vocab.ArticleType)},
+			want: url.Values{"type": []string{"Note", "Article"}, "iri": []string{"http://example.com"}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ToValues(tt.ff...); !cmp.Equal(got, tt.want) {
+				t.Errorf("ToValues() = %s", cmp.Diff(tt.want, got))
 			}
 		})
 	}
