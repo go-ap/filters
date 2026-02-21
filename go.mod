@@ -5,10 +5,12 @@ go 1.25
 require (
 	github.com/RoaringBitmap/roaring v1.9.4
 	github.com/go-ap/activitypub v0.0.0-20260217161652-7bec47e1f870
+	github.com/google/go-cmp v0.7.0
 	github.com/jdkato/prose v1.2.1
 	github.com/mariusor/qstring v0.0.0-20200204164351-5a99d46de39d
 	github.com/spaolacci/murmur3 v1.1.0
 	golang.org/x/text v0.34.0
+	quamina.net/go/quamina v1.5.2-0.20260219224429-4b74c3864009
 )
 
 require (
