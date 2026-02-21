@@ -7,6 +7,8 @@ import (
 	vocab "github.com/go-ap/activitypub"
 )
 
+const MaxItems int = 100
+
 var firstPagePaginator = pagValues(url.Values{
 	keyMaxItems: []string{strconv.Itoa(MaxItems)},
 })

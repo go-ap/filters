@@ -80,8 +80,6 @@ func getIRIWheres(f ...Check) (string, []any) {
 	return getStringFieldWheres(strs, "iri")
 }
 
-const MaxItems int = 100
-
 func getStringFieldInJSONWheres(strs CompStrs, props ...string) (string, []any) {
 	if len(strs) == 0 {
 		return "", nil
