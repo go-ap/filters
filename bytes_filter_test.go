@@ -95,6 +95,75 @@ func Test_quaminaPattern(t *testing.T) {
 			want:    []byte(`{"object":{"type":["Note"],"id":[{"exists":false}]}}`),
 			wantErr: nil,
 		},
+		{
+			name:    "name eq",
+			checks:  Checks{NameIs("jdoe")},
+			want:    []byte(`{"name":["jdoe"]}`),
+			wantErr: nil,
+		},
+		{
+			name:    "name empty",
+			checks:  Checks{NameEmpty},
+			want:    []byte(`{"name":[{"exists":false}]}`),
+			wantErr: nil,
+		},
+		{
+			name:    "name like",
+			checks:  Checks{NameLike("test")},
+			want:    []byte(`{"name":[{"prefix":"test"}]}`),
+			wantErr: nil,
+		},
+
+		{
+			name:    "summary eq",
+			checks:  Checks{SummaryIs("jdoe")},
+			want:    []byte(`{"summary":["jdoe"]}`),
+			wantErr: nil,
+		},
+		{
+			name:    "summary empty",
+			checks:  Checks{SummaryEmpty},
+			want:    []byte(`{"summary":[{"exists":false}]}`),
+			wantErr: nil,
+		},
+		{
+			name:    "summary like",
+			checks:  Checks{SummaryLike("test")},
+			want:    []byte(`{"summary":[{"prefix":"test"}]}`),
+			wantErr: nil,
+		},
+
+		{
+			name:    "content eq",
+			checks:  Checks{ContentIs("jdoe")},
+			want:    []byte(`{"content":["jdoe"]}`),
+			wantErr: nil,
+		},
+		{
+			name:    "content empty",
+			checks:  Checks{ContentEmpty},
+			want:    []byte(`{"content":[{"exists":false}]}`),
+			wantErr: nil,
+		},
+		{
+			name:    "content like",
+			checks:  Checks{ContentLike("test")},
+			want:    []byte(`{"content":[{"prefix":"test"}]}`),
+			wantErr: nil,
+		},
+
+		{
+			name:    "tag equal",
+			checks:  Checks{Tag(NameIs("example"))},
+			want:    []byte(`{"tag":{"name":["example"]}}`),
+			wantErr: nil,
+		},
+		{
+			name:    "tag like",
+			checks:  Checks{Tag(NameLike("example"))},
+			want:    []byte(`{"tag":{"name":[{"prefix":"example"}]}}`),
+			wantErr: nil,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -118,7 +187,7 @@ func TestMatchRaw(t *testing.T) {
 		{
 			name: "empty",
 			args: args{},
-			want: false,
+			want: true,
 		},
 		{
 			name: "nil IRI",

@@ -2,7 +2,7 @@ package filters
 
 import (
 	"bytes"
-	"fmt"
+	"reflect"
 	"strconv"
 
 	"quamina.net/go/quamina"
@@ -103,7 +103,11 @@ func quaminaPattern(c Checks) []byte {
 	s := bytes.Buffer{}
 	s.WriteRune('{')
 	for i, ff := range c {
-		appendS(&s, checkName(ff))
+		k := checkName(ff)
+		if k == "" {
+			continue
+		}
+		appendS(&s, k)
 		s.WriteRune(':')
 		appendV(&s, checkValue(ff))
 		if i < len(c)-1 {
@@ -113,6 +117,12 @@ func quaminaPattern(c Checks) []byte {
 	s.WriteRune('}')
 	return s.Bytes()
 }
+
+var (
+	nlvEqCheck    = reflect.ValueOf(naturalLanguageValuesEquals)
+	nlvLikeCheck  = reflect.ValueOf(naturalLanguageValuesLike)
+	nlvEmptyCheck = reflect.ValueOf(naturalLanguageEmpty)
+)
 
 func checkValue(ff Check) any {
 	switch c := ff.(type) {
@@ -151,6 +161,18 @@ func checkValue(ff Check) any {
 			r = append(r, string(v))
 		}
 		return r
+	case naturalLanguageValCheck:
+		rCheckFn := reflect.ValueOf(c.checkFn)
+		switch rCheckFn.Pointer() {
+		case nlvEqCheck.Pointer():
+			return []any{c.checkValue}
+		case nlvEmptyCheck.Pointer():
+			return []any{qExists(false)}
+		case nlvLikeCheck.Pointer():
+			fallthrough
+		default:
+			return []any{qPrefix(c.checkValue)}
+		}
 	case objectChecks:
 		return qPattern(quaminaPattern(Checks(c)))
 	case actorChecks:
@@ -158,25 +180,7 @@ func checkValue(ff Check) any {
 	case targetChecks:
 		return qPattern(quaminaPattern(Checks(c)))
 	case tagChecks:
-		vv := make([]any, 0, len(c))
-		for _, v := range c {
-			vv = append(vv, checkValue(v))
-		}
-		return vv
-	case *beforeCrit:
-		vv := make([]any, 0, len(c.fns))
-		for _, v := range c.fns {
-			vv = append(vv, checkValue(v))
-		}
-		return vv
-	case *afterCrit:
-		vv := make([]any, 0, len(c.fns))
-		for _, v := range c.fns {
-			vv = append(vv, checkValue(v))
-		}
-		return vv
-	case *counter:
-		return []any{c.max}
+		return qPattern(quaminaPattern(Checks(c)))
 	}
 	return nil
 }
@@ -220,33 +224,35 @@ func checkName(ff Check) string {
 		return keyTarget
 	case tagChecks:
 		return keyTag
-	case *beforeCrit:
-		return keyBefore
-	case *afterCrit:
-		return keyAfter
-	case *counter:
-		return keyMaxItems
+	case naturalLanguageValCheck:
+		switch c.typ {
+		case byName:
+			return keyName
+		case bySummary:
+			return keySummary
+		case byContent:
+			return keyContent
+		}
 	}
 	return ""
 }
 
-func rawFilter(filters Checks) (*quamina.Quamina, error) {
-	q, err := quamina.New()
-	if err != nil {
-		return nil, err
+func MatchRaw(filters Checks, raw []byte) bool {
+	if len(filters) == 0 {
+		return true
 	}
 	pattern := quaminaPattern(filters)
-	if len(pattern) == 0 {
-		return nil, fmt.Errorf("unable to create quamina pattern")
+	if len(pattern) == 2 {
+		// NOTE(marius): the filters resulted in an empty pattern
+		return true
+	}
+	q, err := quamina.New()
+	if err != nil {
+		return false
 	}
 	if err = q.AddPattern("filter", string(pattern)); err != nil {
-		return nil, err
+		return false
 	}
-	return q, nil
-}
-
-func MatchRaw(filters Checks, raw []byte) bool {
-	q, err := rawFilter(filters)
 	if err != nil {
 		return false
 	}
