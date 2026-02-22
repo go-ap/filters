@@ -113,7 +113,6 @@ func Test_quaminaPattern(t *testing.T) {
 			want:    []byte(`{"name":[{"prefix":"test"}]}`),
 			wantErr: nil,
 		},
-
 		{
 			name:    "summary eq",
 			checks:  Checks{SummaryIs("jdoe")},
@@ -132,7 +131,6 @@ func Test_quaminaPattern(t *testing.T) {
 			want:    []byte(`{"summary":[{"prefix":"test"}]}`),
 			wantErr: nil,
 		},
-
 		{
 			name:    "content eq",
 			checks:  Checks{ContentIs("jdoe")},
@@ -151,7 +149,24 @@ func Test_quaminaPattern(t *testing.T) {
 			want:    []byte(`{"content":[{"prefix":"test"}]}`),
 			wantErr: nil,
 		},
-
+		{
+			name:    "preferredUsername eq",
+			checks:  Checks{PreferredUsernameIs("jdoe")},
+			want:    []byte(`{"preferredUsername":["jdoe"]}`),
+			wantErr: nil,
+		},
+		{
+			name:    "preferredUsername empty",
+			checks:  Checks{PreferredUsernameEmpty},
+			want:    []byte(`{"preferredUsername":[{"exists":false}]}`),
+			wantErr: nil,
+		},
+		{
+			name:    "preferredUsername like",
+			checks:  Checks{PreferredUsernameLike("test")},
+			want:    []byte(`{"preferredUsername":[{"prefix":"test"}]}`),
+			wantErr: nil,
+		},
 		{
 			name:    "tag equal",
 			checks:  Checks{Tag(NameIs("example"))},

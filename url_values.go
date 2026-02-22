@@ -14,9 +14,10 @@ const (
 	keyIRI  = "iri"
 	keyType = "type"
 
-	keyName    = "name"
-	keySummary = "summary"
-	keyContent = "content"
+	keyName              = "name"
+	keySummary           = "summary"
+	keyContent           = "content"
+	keyPreferredUsername = "preferredUsername"
 
 	keyURL          = "url"
 	keyAttributedTo = "attributedTo"

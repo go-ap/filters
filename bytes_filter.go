@@ -228,6 +228,8 @@ func checkName(ff Check) string {
 		switch c.typ {
 		case byName:
 			return keyName
+		case byPreferredUsername:
+			return keyPreferredUsername
 		case bySummary:
 			return keySummary
 		case byContent:

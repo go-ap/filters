@@ -157,6 +157,48 @@ func loadName(it vocab.Item) []vocab.NaturalLanguageValues {
 	return toCheck
 }
 
+// PreferredUsernameIs checks an [vocab.Actor]'s PreferredUsername against the "name" value.
+// If any of the Language Ref map values match the value, the function returns true.
+func PreferredUsernameIs(name string) Check {
+	return preferredUsername(name, naturalLanguageValuesEquals)
+}
+
+// PreferredUsernameLike checks an [vocab.Actor]'s PreferredUsername against the "name" value.
+// If any of the Language Ref map values contains the value as a substring,
+// the function returns true.
+func PreferredUsernameLike(name string) Check {
+	return preferredUsername(name, naturalLanguageValuesLike)
+}
+
+// PreferredUsernameEmpty checks an [vocab.Actors]'s PreferredUsername to be empty.
+// If *all* of the values are empty, the function returns true.
+//
+// Please note that the logic of this check is different from PreferredUsernameIs and PreferredUsernameLike.
+var PreferredUsernameEmpty = preferredUsername("", naturalLanguageEmpty)
+
+func preferredUsername(name string, checkFn naturalLanguageValuesCheckFn) Check {
+	return naturalLanguageValCheck{
+		checkValue: name,
+		checkFn:    checkFn,
+		accumFn:    loadPreferredUsername,
+		typ:        byPreferredUsername,
+	}
+}
+
+func loadPreferredUsername(it vocab.Item) []vocab.NaturalLanguageValues {
+	if vocab.IsNil(it) {
+		return nil
+	}
+	toCheck := make([]vocab.NaturalLanguageValues, 0)
+	_ = vocab.OnActor(it, func(act *vocab.Actor) error {
+		if len(act.PreferredUsername) > 0 {
+			toCheck = append(toCheck, act.PreferredUsername)
+		}
+		return nil
+	})
+	return toCheck
+}
+
 func contentCheck(content string, checkFn naturalLanguageValuesCheckFn) Check {
 	return naturalLanguageValCheck{
 		checkValue: content,
