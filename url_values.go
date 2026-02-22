@@ -62,26 +62,22 @@ func paginationFromValues(q url.Values) Checks {
 	}
 
 	f := make(Checks, 0)
-	if q.Has(keyBefore) {
-		vv := q[keyBefore]
-		if len(vv) > 0 {
+
+	addKeySetFilterIfExists := func(k string, fn func(...Check) Check) {
+		if !q.Has(k) {
+			return
+		}
+		if vv := q[k]; len(vv) > 0 {
 			if _, err := url.ParseRequestURI(vv[0]); err == nil {
-				f = append(f, Before(SameID(vocab.IRI(vv[0]))))
+				f = append(f, fn(SameID(vocab.IRI(vv[0]))))
 			} else {
-				f = append(f, Before(IDLike(vv[0])))
+				f = append(f, fn(IDLike(vv[0])))
 			}
 		}
 	}
-	if q.Has(keyAfter) {
-		vv := q[keyAfter]
-		if len(vv) > 0 {
-			if _, err := url.ParseRequestURI(vv[0]); err == nil {
-				f = append(f, After(SameID(vocab.IRI(vv[0]))))
-			} else {
-				f = append(f, After(IDLike(vv[0])))
-			}
-		}
-	}
+
+	addKeySetFilterIfExists(keyBefore, Before)
+	addKeySetFilterIfExists(keyAfter, After)
 	if q.Has(keyMaxItems) {
 		vv := q[keyMaxItems]
 		if len(vv) > 0 {
@@ -248,6 +244,8 @@ func fromValues(q url.Values) Checks {
 		case keySummary:
 			f = append(f, summaryFilters.build(vv...))
 		case keyContent:
+			f = append(f, contentFilters.build(vv...))
+		case keyPreferredUsername:
 			f = append(f, contentFilters.build(vv...))
 		case keyActor:
 			if len(remainder) == 0 {
