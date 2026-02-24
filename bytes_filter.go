@@ -104,15 +104,16 @@ func quaminaPattern(c Checks) []byte {
 	s.WriteRune('{')
 	for i, ff := range c {
 		k := checkName(ff)
-		if k == "" {
+		vv := checkValue(ff)
+		if k == "" || vv == "" {
 			continue
+		}
+		if i != 0 {
+			s.WriteRune(',')
 		}
 		appendS(&s, k)
 		s.WriteRune(':')
-		appendV(&s, checkValue(ff))
-		if i < len(c)-1 {
-			s.WriteRune(',')
-		}
+		appendV(&s, vv)
 	}
 	s.WriteRune('}')
 	return s.Bytes()

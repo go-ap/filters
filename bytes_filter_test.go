@@ -179,6 +179,12 @@ func Test_quaminaPattern(t *testing.T) {
 			want:    []byte(`{"tag":{"name":[{"prefix":"example"}]}}`),
 			wantErr: nil,
 		},
+		{
+			name:    "filters including ignored",
+			checks:  Checks{NameIs("example"), WithMaxCount(10)},
+			want:    []byte(`{"name":["example"]}`),
+			wantErr: nil,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
