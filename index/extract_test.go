@@ -6,6 +6,8 @@ import (
 	"time"
 
 	vocab "github.com/go-ap/activitypub"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 func Test_derefObject(t *testing.T) {
@@ -90,13 +92,30 @@ func Test_ExtractNatLangVal(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := ExtractNatLangVal(tt.args); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ExtractNatLangVal() = %v, want %v", got, tt.want)
+			got := ExtractNatLangVal(tt.args)
+			if !cmp.Equal(got, tt.want, nlvComparer) {
+				t.Errorf("ExtractNatLangVal() = %s", cmp.Diff(tt.want, got, nlvComparer))
 			}
 		})
 	}
 }
 
+var nlvComparer = cmpopts.SortMaps(NaturalLanguageValueCompare)
+
+func NaturalLanguageValueCompare(n, with vocab.NaturalLanguageValues) bool {
+	if n.Count() > with.Count() {
+		return false
+	}
+
+	for l, wv := range with {
+		nv, ok := n[l]
+		if ok && nv.Equal(wv) {
+			continue
+		}
+		return false
+	}
+	return true
+}
 func Test_tokenizeNatLangVal(t *testing.T) {
 	tests := []struct {
 		name string
@@ -137,8 +156,8 @@ func Test_tokenizeNatLangVal(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tokenizeNatLangVal(tt.args); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("tokenizeNatLangVal() = %#v, want %#v", got, tt.want)
+			if got := tokenizeNatLangVal(tt.args); !cmp.Equal(got, tt.want, nlvComparer) {
+				t.Errorf("tokenizeNatLangVal() = %s", cmp.Diff(tt.want, got, nlvComparer))
 			}
 		})
 	}
