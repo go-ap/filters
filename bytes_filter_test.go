@@ -180,9 +180,27 @@ func Test_quaminaPattern(t *testing.T) {
 			wantErr: nil,
 		},
 		{
-			name:    "filters including ignored",
+			name:    "filters with ignored after",
 			checks:  Checks{NameIs("example"), WithMaxCount(10)},
 			want:    []byte(`{"name":["example"]}`),
+			wantErr: nil,
+		},
+		{
+			name:    "filters with ignored before",
+			checks:  Checks{Authorized("http://example.com"), NameIs("example")},
+			want:    []byte(`{"name":["example"]}`),
+			wantErr: nil,
+		},
+		{
+			name:    "filters with just ignored",
+			checks:  Checks{Authorized("http://example.com"), WithMaxCount(1)},
+			want:    []byte(`{}`),
+			wantErr: nil,
+		},
+		{
+			name:    "filters with ignored interspersed",
+			checks:  Checks{Authorized("http://example.com"), HasType("t"), WithMaxCount(1), NilID},
+			want:    []byte(`{"type":["t"],"id":[{"exists":false}]}`),
 			wantErr: nil,
 		},
 	}
