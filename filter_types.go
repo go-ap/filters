@@ -242,3 +242,25 @@ func TagChecks(fns ...Check) Checks {
 	}
 	return c
 }
+
+// TopLevelChecks returns only the checks that don't need a fully loaded and dereferenced Item
+// This is helpful for raw filtering, where an Activity raw document does not have a full representation
+// for its object, actor, target, etc.
+func TopLevelChecks(fns ...Check) Checks {
+	c := make([]Check, 0)
+	for _, fn := range fns {
+		// TODO(marius): use Not(Nil) when targetChecks, objectChecks, actorChecks are not empty (at least for raw filtering)
+		switch cc := fn.(type) {
+		case targetChecks:
+			c = append(c, Target(Not(NilID)))
+		case objectChecks:
+			c = append(c, Object(Not(NilID)))
+		case actorChecks:
+			c = append(c, Actor(Not(NilID)))
+		case tagChecks:
+		default:
+			c = append(c, cc)
+		}
+	}
+	return c
+}
