@@ -92,7 +92,7 @@ func Test_quaminaPattern(t *testing.T) {
 		{
 			name:    "object with multiple filters",
 			checks:  Checks{Object(HasType("Note"), NilID)},
-			want:    []byte(`{"object":{"type":["Note"],"id":[{"exists":false}]}}`),
+			want:    []byte(`{"object":{"id":[{"exists":false}],"type":["Note"]}}`),
 			wantErr: nil,
 		},
 		{
@@ -194,20 +194,42 @@ func Test_quaminaPattern(t *testing.T) {
 		{
 			name:    "filters with just ignored",
 			checks:  Checks{Authorized("http://example.com"), WithMaxCount(1)},
-			want:    []byte(`{}`),
+			want:    []byte(``),
 			wantErr: nil,
 		},
 		{
 			name:    "filters with ignored interspersed",
 			checks:  Checks{Authorized("http://example.com"), HasType("t"), WithMaxCount(1), NilID},
-			want:    []byte(`{"type":["t"],"id":[{"exists":false}]}`),
+			want:    []byte(`{"id":[{"exists":false}],"type":["t"]}`),
 			wantErr: nil,
+		},
+		{
+			name: "actor nil",
+			checks: Checks{
+				Actor(NotNilItem),
+			},
+			want: []byte(`{"actor":[{"exists":true}]}`),
+		},
+		{
+			name: "real usage",
+			checks: Checks{
+				HasType("Create", "Update"),
+				Object(NotNilItem),
+				Actor(NotNilItem),
+				WithMaxCount(20),
+			},
+			want: []byte(`{"actor":[{"exists":true}],"object":[{"exists":true}],"type":["Create","Update"]}`),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := quaminaPattern(tt.checks); !bytes.Equal(got, tt.want) {
-				t.Errorf("MarshalJSON() got = %s wanted %s", got, tt.want)
+			got := buildFullPattern(tt.checks)
+			raw, err := got.MarshalJSON()
+			if err != nil {
+				t.Fatalf("failed JSON encoding of quamina pattern: %s", err)
+			}
+			if !bytes.Equal(raw, tt.want) {
+				t.Errorf("MarshalJSON() got = %s wanted %s", raw, tt.want)
 			}
 		})
 	}
@@ -307,6 +329,28 @@ func TestMatchRaw(t *testing.T) {
 				raw:     []byte(`{"object":{"type":"Note","id":"http://example.com"}}`),
 			},
 			want: false,
+		},
+
+		{
+			name: "object filter with type and nil id",
+			args: args{
+				filters: Checks{Object(HasType("Note"), NilID)},
+				raw:     []byte(`{"object":{"type":"Note"}}`),
+			},
+			want: true,
+		},
+		{
+			name: "real usage",
+			args: args{
+				filters: Checks{
+					HasType("Create", "Update"),
+					Object(NotNilItem),
+					Actor(NotNilItem),
+					WithMaxCount(20),
+				},
+				raw: []byte(`{"id":"https://marius.oni.local/outbox/1","type":"Create","actor":"https://marius.oni.local","object":"https://marius.oni.local/outbox/1/object"}`),
+			},
+			want: true,
 		},
 	}
 	for _, tt := range tests {
