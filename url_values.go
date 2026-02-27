@@ -343,17 +343,26 @@ func urlValue(f Check) url.Values {
 	case actorChecks:
 		p := keyActor
 		for kk, vv := range ToValues(check...) {
-			q[p+"."+kk] = vv
+			if kk != "" {
+				p = p + "." + kk
+			}
+			q[p] = vv
 		}
 	case targetChecks:
 		p := keyTarget
 		for kk, vv := range ToValues(check...) {
-			q[p+"."+kk] = vv
+			if kk != "" {
+				p = p + "." + kk
+			}
+			q[p] = vv
 		}
 	case tagChecks:
 		p := keyTag
 		for kk, vv := range ToValues(check...) {
-			q[p+"."+kk] = vv
+			if kk != "" {
+				p = p + "." + kk
+			}
+			q[p] = vv
 		}
 	case *beforeCrit:
 		if len(check.fns) >= 1 {
@@ -389,6 +398,8 @@ func extractURLVal(cc Check) string {
 	case iriNil:
 		return ""
 	case idNil:
+		return ""
+	case itemNil:
 		return ""
 	}
 	return fmt.Sprintf("%s", cc)
