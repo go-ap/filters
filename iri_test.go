@@ -306,3 +306,60 @@ func Test_iriEquals_String(t *testing.T) {
 		})
 	}
 }
+
+func Test_itemNil_Match(t *testing.T) {
+	tests := []struct {
+		name string
+		it   vocab.Item
+		want bool
+	}{
+		{
+			name: "nil",
+			it:   nil,
+			want: true,
+		},
+		{
+			name: "nil item",
+			it:   vocab.Item(nil),
+			want: true,
+		},
+		{
+			name: "nil item collection",
+			it:   vocab.ItemCollection(nil),
+			want: true,
+		},
+		{
+			name: "empty item collection",
+			it:   vocab.ItemCollection{},
+			want: true,
+		},
+		{
+			name: "empty iris",
+			it:   vocab.IRIs{},
+			want: true,
+		},
+		{
+			name: "iri",
+			it:   vocab.IRI("http://example.com"),
+			want: false,
+		},
+		{
+			name: "object",
+			it:   &vocab.Object{},
+			want: false,
+		},
+		{
+			name: "link",
+			it:   &vocab.Link{},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			n := itemNil{}
+			if got := n.Match(tt.it); got != tt.want {
+				t.Errorf("Match() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

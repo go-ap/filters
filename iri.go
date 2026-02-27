@@ -70,3 +70,26 @@ func (n iriNil) Match(it vocab.Item) bool {
 // NotNilIRI checks if the activitypub.Object's URL property matches any of the two magic values
 // that denote an empty value: activitypub.NilID = "-", or activitypub.EmptyID = ""
 var NotNilIRI = Not(iriNil{})
+
+type itemNil struct{}
+
+func (n itemNil) Match(it vocab.Item) bool {
+	if vocab.IsNil(it) {
+		return true
+	}
+	if vocab.IsItemCollection(it) {
+		result := false
+		_ = vocab.OnItemCollection(it, func(col *vocab.ItemCollection) error {
+			result = len(*col) == 0
+			return nil
+		})
+		return result
+	}
+	return false
+}
+
+// NilItem checks if the activitypub.Item is nil
+var NilItem = itemNil{}
+
+// NotNilItem checks if the activitypub.Object is not nil
+var NotNilItem = Not(itemNil{})
