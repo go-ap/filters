@@ -192,29 +192,58 @@ func getLeafValue(ff Check) (string, json.Marshaler) {
 		return keyTarget, buildFullPattern(Checks(c))
 	case tagChecks:
 		return keyTag, buildFullPattern(Checks(c))
+	case checkAll:
+		return "-", buildFullPattern(Checks(c))
 	}
 	return "", nil
 }
 
-func MatchRaw(filters Checks, raw []byte) bool {
-	if len(filters) == 0 {
+func RawMatcher(filters Checks) func([]byte) bool {
+	alwaysT := func(_ []byte) bool {
 		return true
 	}
-	p := buildFullPattern(filters)
-	pattern, _ := p.MarshalJSON()
-	if len(pattern) <= 2 {
-		return true
+
+	if len(filters) == 0 {
+		return alwaysT
 	}
 	q, err := quamina.New()
 	if err != nil {
-		return false
+		// NOTE(marius): failed to initialize quamina, fallback to other filtering methods
+		return alwaysT
 	}
-	if err = q.AddPattern("filter", string(pattern)); err != nil {
-		return false
+
+	// NOTE(marius): we build two patters, and if none is valid we skip matching.
+	noValidPattern := true
+
+	// NOTE(marius): The first pattern considers the full set of filters and assumes the raw JSON document
+	// is in a denormalized/not-flattened form.
+	pattern1, _ := buildFullPattern(filters).MarshalJSON()
+	if len(pattern1) > 2 {
+		if err = q.AddPattern("full", string(pattern1)); err == nil {
+			noValidPattern = false
+		}
 	}
-	matchAny, err := q.MatchesForEvent(raw)
-	if err != nil {
-		return false
+	// NOTE(marius): the second pattern assumes the JSON is normalized,
+	// therefore we convert all filters beyond depth 1 to just an "exist" check.
+	// This transforms the checks for Activities containing Object, Actor, or Target filters,
+	// and the ones for Objects with Tag.
+	pattern2, _ := buildFullPattern(TopLevelChecks(filters...)).MarshalJSON()
+	if len(pattern2) > 2 && !bytes.Equal(pattern1, pattern2) {
+		if err = q.AddPattern("top-level", string(pattern2)); err == nil {
+			noValidPattern = false
+		}
 	}
-	return len(matchAny) > 0
+
+	if noValidPattern {
+		return alwaysT
+	}
+
+	return func(raw []byte) bool {
+		matchAny, err := q.MatchesForEvent(raw)
+		return err == nil && len(matchAny) > 0
+	}
+}
+
+func MatchRaw(filters Checks, raw []byte) bool {
+	return RawMatcher(filters)(raw)
 }

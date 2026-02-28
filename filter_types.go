@@ -249,14 +249,13 @@ func TagChecks(fns ...Check) Checks {
 func TopLevelChecks(fns ...Check) Checks {
 	c := make([]Check, 0)
 	for _, fn := range fns {
-		// TODO(marius): use Not(Nil) when targetChecks, objectChecks, actorChecks are not empty (at least for raw filtering)
 		switch cc := fn.(type) {
 		case targetChecks:
-			c = append(c, Target(Not(NilID)))
+			c = append(c, Target(NotNilItem))
 		case objectChecks:
-			c = append(c, Object(Not(NilID)))
+			c = append(c, Object(NotNilItem))
 		case actorChecks:
-			c = append(c, Actor(Not(NilID)))
+			c = append(c, Actor(NotNilItem))
 		case tagChecks:
 		default:
 			c = append(c, cc)
