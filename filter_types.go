@@ -250,6 +250,10 @@ func TopLevelChecks(fns ...Check) Checks {
 	c := make([]Check, 0)
 	for _, fn := range fns {
 		switch cc := fn.(type) {
+		case checkAll:
+			c = append(c, TopLevelChecks(cc...)...)
+		case checkAny:
+			c = append(c, TopLevelChecks(cc...)...)
 		case targetChecks:
 			c = append(c, Target(NotNilItem))
 		case objectChecks:
