@@ -14,12 +14,6 @@ func PaginateCollection(it vocab.Item, filters ...Check) vocab.Item {
 		return it
 	}
 
-	total := uint(0)
-	_ = vocab.OnCollectionIntf(it, func(col vocab.CollectionInterface) error {
-		total = col.Count()
-		return nil
-	})
-
 	col, prevIRI, nextIRI := CursorFromItem(it, filters...)
 	if vocab.IsNil(col) {
 		return it
@@ -71,13 +65,11 @@ func PaginateCollection(it vocab.Item, filters ...Check) vocab.Item {
 		})
 	case vocab.CollectionType.Match(typ):
 		_ = vocab.OnCollection(col, func(c *vocab.Collection) error {
-			c.TotalItems = total
 			c.First = firstIRI
 			return nil
 		})
 	case vocab.CollectionPageType.Match(typ):
 		_ = vocab.OnCollectionPage(col, func(c *vocab.CollectionPage) error {
-			c.TotalItems = total
 			c.PartOf = partOfIRI
 			c.First = firstIRI
 			if nextIRI != vocab.EmptyIRI && !nextIRI.GetLink().Equal(firstIRI) {
@@ -114,52 +106,54 @@ func getURL(i vocab.IRI, f url.Values) vocab.IRI {
 	return i
 }
 
-func NextPageFromCollection(it vocab.CollectionInterface) vocab.IRI {
-	nextIRI := vocab.EmptyIRI
+func getCollectionProperty(it vocab.CollectionInterface, colFn func(*vocab.IRI, *vocab.Collection) error, pageFn func(*vocab.IRI, *vocab.CollectionPage) error) vocab.IRI {
+	iri := vocab.EmptyIRI
 	if vocab.IsNil(it) {
-		return nextIRI
+		return iri
 	}
 
 	// NOTE(marius): we don't need to mess with the item's type
 	// Additionally the OrderedCollection is compatible with the memory layout of the Collection
 	// so we can use a single branch here.
 	_ = vocab.OnCollection(it, func(c *vocab.Collection) error {
+		return colFn(&iri, c)
+	})
+	_ = vocab.OnCollectionPage(it, func(p *vocab.CollectionPage) error {
+		return pageFn(&iri, p)
+	})
+	return iri
+}
+
+func NextPageFromCollection(it vocab.CollectionInterface) vocab.IRI {
+	nextColFn := func(iri *vocab.IRI, c *vocab.Collection) error {
 		if !vocab.IsNil(c.First) {
-			nextIRI = c.First.GetLink()
+			*iri = c.First.GetLink()
 		}
 		return nil
-	})
-	_ = vocab.OnCollectionPage(it, func(c *vocab.CollectionPage) error {
+	}
+	nextPageFn := func(iri *vocab.IRI, c *vocab.CollectionPage) error {
 		if !vocab.IsNil(c.Next) {
-			nextIRI = c.Next.GetLink()
+			*iri = c.Next.GetLink()
 		}
 		return nil
-	})
-	return nextIRI
+	}
+	return getCollectionProperty(it, nextColFn, nextPageFn)
 }
 
 func PrevPageFromCollection(it vocab.CollectionInterface) vocab.IRI {
-	prevIRI := vocab.EmptyIRI
-	if vocab.IsNil(it) {
-		return prevIRI
-	}
-
-	// NOTE(marius): we don't need to mess with the item's type
-	// Additionally the OrderedCollection is compatible with the memory layout of the Collection
-	// so we can use a single branch here.
-	_ = vocab.OnCollection(it, func(c *vocab.Collection) error {
+	prefColFn := func(iri *vocab.IRI, c *vocab.Collection) error {
 		if !vocab.IsNil(c.First) {
-			prevIRI = c.First.GetLink()
+			*iri = c.First.GetLink()
 		}
 		return nil
-	})
-	_ = vocab.OnCollectionPage(it, func(c *vocab.CollectionPage) error {
+	}
+	prevPageFn := func(iri *vocab.IRI, c *vocab.CollectionPage) error {
 		if !vocab.IsNil(c.Prev) {
-			prevIRI = c.Prev.GetLink()
+			*iri = c.Prev.GetLink()
 		}
 		return nil
-	})
-	return prevIRI
+	}
+	return getCollectionProperty(it, prefColFn, prevPageFn)
 }
 
 func CursorFromItem(it vocab.Item, filters ...Check) (vocab.Item, vocab.Item, vocab.Item) {
@@ -177,14 +171,10 @@ func CursorFromItem(it vocab.Item, filters ...Check) (vocab.Item, vocab.Item, vo
 
 	shouldBePage := len(PaginationChecks(filters...)) > 0
 
-	maxCount := MaxCount(filters...)
 	switch {
 	case vocab.OrderedCollectionPageType.Match(typ):
 		_ = vocab.OnOrderedCollectionPage(it, func(new *vocab.OrderedCollectionPage) error {
 			items := new.OrderedItems
-			if maxCount < 0 && len(items) > MaxItems {
-				filters = append(filters, WithMaxCount(MaxItems))
-			}
 			new.OrderedItems, prev, next = filterCollection(sortItemsByPublishedUpdated(items), filters...)
 			if len(prev) > 0 {
 				prevIRI = getURL(it.GetLink(), prev)
@@ -197,9 +187,6 @@ func CursorFromItem(it vocab.Item, filters ...Check) (vocab.Item, vocab.Item, vo
 	case vocab.CollectionPageType.Match(typ):
 		_ = vocab.OnCollectionPage(it, func(new *vocab.CollectionPage) error {
 			items := new.Items
-			if maxCount < 0 && len(items) > MaxItems {
-				filters = append(filters, WithMaxCount(MaxItems))
-			}
 			new.Items, prev, next = filterCollection(items, filters...)
 			if len(prev) > 0 {
 				prevIRI = getURL(it.GetLink(), prev)
@@ -217,9 +204,6 @@ func CursorFromItem(it vocab.Item, filters ...Check) (vocab.Item, vocab.Item, vo
 				_, err := vocab.CopyOrderedCollectionProperties(new, old)
 				new.Type = vocab.OrderedCollectionPageType
 				items := new.OrderedItems
-				if maxCount < 0 && len(items) > MaxItems {
-					filters = append(filters, WithMaxCount(MaxItems))
-				}
 				new.OrderedItems, prev, next = filterCollection(sortItemsByPublishedUpdated(items), filters...)
 				if len(prev) > 0 {
 					prevIRI = getURL(it.GetLink(), prev)
@@ -235,9 +219,6 @@ func CursorFromItem(it vocab.Item, filters ...Check) (vocab.Item, vocab.Item, vo
 		} else {
 			_ = vocab.OnOrderedCollection(it, func(new *vocab.OrderedCollection) error {
 				items := new.OrderedItems
-				if maxCount < 0 && len(items) > MaxItems {
-					filters = append(filters, WithMaxCount(MaxItems))
-				}
 				new.OrderedItems, prev, next = filterCollection(sortItemsByPublishedUpdated(items), filters...)
 				if len(next) > 0 {
 					new.First = getURL(it.GetLink(), next)
@@ -253,9 +234,6 @@ func CursorFromItem(it vocab.Item, filters ...Check) (vocab.Item, vocab.Item, vo
 				_, err := vocab.CopyCollectionProperties(new, old)
 				new.Type = vocab.CollectionPageType
 				items := new.Items
-				if maxCount < 0 && len(items) > MaxItems {
-					filters = append(filters, WithMaxCount(MaxItems))
-				}
 				new.Items, prev, next = filterCollection(items, filters...)
 				if len(prev) > 0 {
 					prevIRI = getURL(it.GetLink(), prev)
@@ -271,9 +249,6 @@ func CursorFromItem(it vocab.Item, filters ...Check) (vocab.Item, vocab.Item, vo
 		} else {
 			_ = vocab.OnCollection(it, func(new *vocab.Collection) error {
 				items := new.Items
-				if maxCount < 0 && len(items) > MaxItems {
-					filters = append(filters, WithMaxCount(MaxItems))
-				}
 				new.Items, prev, next = filterCollection(items, filters...)
 				if len(next) > 0 {
 					new.First = getURL(it.GetLink(), next)
@@ -284,9 +259,6 @@ func CursorFromItem(it vocab.Item, filters ...Check) (vocab.Item, vocab.Item, vo
 	case vocab.CollectionOfItems.Match(typ):
 		_ = vocab.OnItemCollection(it, func(col *vocab.ItemCollection) error {
 			items := *col
-			if maxCount < 0 && len(items) > MaxItems {
-				filters = append(filters, WithMaxCount(MaxItems))
-			}
 			it, prev, next = filterCollection(sortItemsByPublishedUpdated(items), filters...)
 			if len(prev) > 0 {
 				prevIRI = getURL(it.GetLink(), prev)
