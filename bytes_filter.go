@@ -8,7 +8,7 @@ import (
 	"slices"
 	"strconv"
 
-	"quamina.net/go/quamina"
+	"quamina.net/go/quamina/v2"
 )
 
 func appendS(s *bytes.Buffer, key string) {

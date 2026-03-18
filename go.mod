@@ -10,7 +10,7 @@ require (
 	github.com/mariusor/qstring v0.0.0-20200204164351-5a99d46de39d
 	github.com/spaolacci/murmur3 v1.1.0
 	golang.org/x/text v0.35.0
-	quamina.net/go/quamina v1.5.2-0.20260219224429-4b74c3864009
+	quamina.net/go/quamina/v2 v2.0.2
 )
 
 require (
