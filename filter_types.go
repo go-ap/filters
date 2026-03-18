@@ -20,12 +20,29 @@ func FilterChecks(fns ...Check) Checks {
 	return c
 }
 
+func SameIDChecks(fns ...Check) Checks {
+	c := make([]Check, 0)
+	for _, fn := range fns {
+		switch check := fn.(type) {
+		case idEquals:
+			return append(c, check)
+		case checkAny:
+			c = append(c, Any(SameIDChecks(check...)...))
+		case checkAll:
+			c = append(c, All(SameIDChecks(check...)...))
+		}
+	}
+	return c
+}
+
 func IDChecks(fns ...Check) Checks {
 	c := make([]Check, 0)
 	for _, fn := range fns {
 		switch check := fn.(type) {
 		case idEquals:
+			c = append(c, check)
 		case idLike:
+			c = append(c, check)
 		case idNil:
 			c = append(c, check)
 		case checkAny:
@@ -38,6 +55,9 @@ func IDChecks(fns ...Check) Checks {
 	return c
 }
 
+// ItemChecks
+// NOTE(marius): I'm not sure what this is supposed to return.
+// Perhaps all the checks that are not pagination.
 func ItemChecks(fns ...Check) Checks {
 	c := make([]Check, 0)
 	for _, fn := range fns {
@@ -69,10 +89,6 @@ func CursorChecks(fns ...Check) Checks {
 }
 
 func filterCheckFns(checkFn func(Check) bool, fns ...Check) Checks {
-	if len(fns) == 0 {
-		return nil
-	}
-
 	c := make([]Check, 0)
 
 	aggCheck := func(c []Check, fil []Check) {
