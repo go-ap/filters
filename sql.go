@@ -2,183 +2,96 @@ package filters
 
 import (
 	"fmt"
+	"reflect"
+	"runtime"
 	"strings"
 
 	vocab "github.com/go-ap/activitypub"
 	"github.com/leporo/sqlf"
 )
 
-func GetLimit(f ...Check) int {
+func SQLLimit(st *Stmt, f ...Check) {
+	lim := MaxItems
 	for _, check := range f {
 		switch c := check.(type) {
 		case *counter:
-			return c.max
+			lim = c.max
+			break
 		}
 	}
-	return -1
-}
-
-func GetWhereClauses(ff ...Check) ([]string, []any) {
-	s := sqlf.Select("")
-	getWhereClauses(s, ff...)
-	var pieces []string
-	if q := strings.TrimPrefix(s.String(), "SELECT"); len(q) > 0 {
-		pieces = strings.Split(strings.TrimPrefix(q, " WHERE"), "AND ")
-		for i := range pieces {
-			pieces[i] = strings.TrimSpace(pieces[i])
-		}
-	}
-
-	args := s.Args()
-	if len(args) == 0 && len(pieces) == 0 {
-		return nil, nil
-	}
-	return pieces, args
+	st.Limit(lim)
 }
 
 type Stmt = sqlf.Stmt
 
-func getLimit(s *Stmt, f ...Check) {
-	for _, check := range f {
-		switch c := check.(type) {
-		case *counter:
-			s.Limit(c.max)
-		}
-	}
-}
-
-func BuildSQL(s *Stmt, ff ...Check) error {
+func SQLBuild(s *Stmt, ff ...Check) error {
 	getWhereClauses(s, ff...)
-	//getLimit(s, ff...)
 	return nil
 }
 
 func getWhereClauses(s *Stmt, f ...Check) {
-	getTypeWheres(s, f...)
+	addTypeWheres(s, f...)
 	getIRIWheres(s, f...)
-	getNamesWheres(s, f...)
-	getInReplyToWheres(s, f...)
-	getAttributedToWheres(s, f...)
-	getURLWheres(s, f...)
-	getContextWheres(s, f...)
+	addNLVWheres(s, f...)
+	addInReplyToWheres(s, f...)
+	addAttributedToWheres(s, f...)
+	addURLWheres(s, f...)
+	addContextWheres(s, f...)
 }
 
 func getIRIWheres(s *Stmt, f ...Check) (string, []any) {
-	strs := make(CompStrs, 0)
+	inVal := make([]any, 0)
+
 	for _, check := range f {
 		switch i := check.(type) {
 		case idEquals:
-			strs = append(strs, CompStr{Str: string(i)})
+			inVal = append(inVal, i)
 		case iriEquals:
-			strs = append(strs, CompStr{Str: string(i)})
+			inVal = append(inVal, i)
 		case iriLike:
-			strs = append(strs, CompStr{Operator: "~", Str: string(i)})
+			s.Where("iri LIKE ?", "%"+i+"%")
 		case idLike:
-			strs = append(strs, CompStr{Operator: "~", Str: string(i)})
+			s.Where("iri LIKE ?", "%"+i+"%")
 		case iriNil:
-			strs = append(strs, CompStr{Str: string(vocab.NilIRI)})
+			s.Where("iri IS NULL")
 		case idNil:
-			strs = append(strs, CompStr{Str: string(vocab.NilIRI)})
+			s.Where("iri IS NULL")
 		}
 	}
-	return getStringFieldWheres(s, "iri", strs...)
-}
 
-func getStringFieldInJSONWheres(s *Stmt, prop string, strs ...CompStr) (string, []any) {
-	if len(strs) == 0 {
-		return "", nil
-	}
-	var values = make([]any, 0)
-	keyWhere := make([]string, 0)
-
-	isPg := stmtIsPostgres(s)
-	for _, n := range strs {
-		switch n.Operator {
-		case "!":
-			if len(n.Str) == 0 || n.Str == vocab.NilLangRef.String() {
-				if isPg {
-					s.Where(fmt.Sprintf(`json_extract("raw", '$.%s') IS NOT NULL`, prop), n.Str)
-				} else {
-					s.Where(fmt.Sprintf(`json_extract("raw", '$.%s') IS NOT NULL`, prop), n.Str)
-				}
-				keyWhere = append(keyWhere, fmt.Sprintf(`json_extract("raw", '$.%s') IS NOT NULL`, prop))
-			} else {
-				keyWhere = append(keyWhere, fmt.Sprintf(`json_extract("raw", '$.%s') NOT LIKE ?`, prop))
-				values = append(values, any("%"+n.Str+"%"))
-			}
-		case "~":
-			keyWhere = append(keyWhere, fmt.Sprintf(`json_extract("raw", '$.%s') LIKE ?`, prop))
-			values = append(values, any("%"+n.Str+"%"))
-		case "", "=":
-			fallthrough
-		default:
-			if len(n.Str) == 0 || n.Str == vocab.NilLangRef.String() {
-				keyWhere = append(keyWhere, fmt.Sprintf(`json_extract("raw", '$.%s') IS NULL`, prop))
-			} else {
-				keyWhere = append(keyWhere, fmt.Sprintf(`json_extract("raw", '$.%s') = ?`, prop))
-				values = append(values, any(n.Str))
-			}
-		}
-	}
-	return fmt.Sprintf("(%s)", strings.Join(keyWhere, " OR ")), values
-}
-
-func getTypeWheres(s *Stmt, f ...Check) (string, []any) {
-	types := make(CompStrs, 0)
-	for _, check := range f {
-		if c, ok := check.(withTypes); ok {
-			for _, t := range c {
-				types = append(types, CompStr{Str: string(t)})
-			}
-		}
-	}
-	return getStringFieldWheres(s, "type", types...)
-}
-
-func getStringFieldWheres(s *Stmt, field string, strs ...CompStr) (string, []any) {
-	if len(strs) == 0 {
-		return "", nil
-	}
-	var values = make([]any, 0)
-	keyWhere := make([]string, 0)
-
-	stmtIsPostgres(s)
-	inVal := make([]any, 0, len(strs))
-	for _, t := range strs {
-		switch t.Operator {
-		case "!":
-			if len(t.Str) == 0 || t.Str == vocab.NilLangRef.String() {
-				s.Where(fmt.Sprintf(`%s IS NOT NULL`, field))
-				keyWhere = append(keyWhere, fmt.Sprintf(`"%s" IS NOT NULL`, field))
-			} else {
-				s.Where(fmt.Sprintf(`%s NOT LIKE ?`, field), t.Str)
-				keyWhere = append(keyWhere, fmt.Sprintf(`"%s" NOT LIKE ?`, field))
-				values = append(values, any("%"+t.Str+"%"))
-			}
-		case "~":
-			s.Where(fmt.Sprintf(`"%s" LIKE ?`, field), t.Str)
-			keyWhere = append(keyWhere, fmt.Sprintf(`"%s" LIKE ?`, field))
-			values = append(values, any("%"+t.Str+"%"))
-		case "", "=":
-			if len(t.Str) == 0 || t.Str == vocab.NilLangRef.String() {
-				s.Where(fmt.Sprintf(`"%s" IS NULL`, field))
-				keyWhere = append(keyWhere, fmt.Sprintf(`"%s" IS NULL`, field))
-			} else {
-				inVal = append(inVal, t.Str)
-				keyWhere = append(keyWhere, fmt.Sprintf(`"%s" = ?`, field))
-				values = append(values, any(t.Str))
-			}
-		}
-	}
-	if lv := len(inVal); lv > 0 {
-		if lv == 1 {
-			s.Where(fmt.Sprintf(`"%s" = ?`, field), inVal[0])
+	if len(inVal) > 0 {
+		if len(inVal) == 1 {
+			s.Where("iri = ?", inVal[0])
 		} else {
-			s.Where(field).In(inVal...)
+			s.Where("iri").In(inVal...)
+		}
+	}
+	return "", nil
+}
+
+func addTypeWheres(s *Stmt, f ...Check) {
+	inVal := make([]any, 0)
+
+	for _, check := range f {
+		c, ok := check.(withTypes)
+		if !ok {
+			continue
+		}
+		for _, typ := range c {
+			// TODO(marius): add support for type being NULL
+			if typ != vocab.NilType {
+				inVal = append(inVal, typ)
+			}
 		}
 	}
 
-	return fmt.Sprintf("(%s)", strings.Join(keyWhere, " OR ")), values
+	if len(inVal) > 0 {
+		if len(inVal) == 1 {
+			s.Where("type = ?", inVal[0])
+		} else {
+			s.Where("type").In(inVal...)
+		}
+	}
 }
 
 func stmtIsPostgres(s *Stmt) bool {
@@ -188,79 +101,127 @@ func stmtIsPostgres(s *Stmt) bool {
 	return isPg
 }
 
-func getContextWheres(s *Stmt, f ...Check) (string, []any) {
-	strs := make(CompStrs, 0)
+func addContextWheres(s *Stmt, f ...Check) {
 	for _, check := range f {
 		switch c := check.(type) {
 		case contextEquals:
-			strs = append(strs, CompStr{Str: string(c)})
+			jsonEquals(s, "context", string(c))
 		case contextLike:
-			strs = append(strs, CompStr{Operator: "~", Str: string(c)})
+			jsonLike(s, "context", string(c))
 		case contextNil:
-			strs = append(strs, CompStr{Operator: "=", Str: vocab.NilIRI.String()})
+			jsonIsNull(s, "context")
 		}
 	}
-	return getStringFieldInJSONWheres(s, "context", strs...)
 }
 
-func getURLWheres(s *Stmt, f ...Check) (string, []any) {
-	strs := make(CompStrs, 0)
+func addURLWheres(s *Stmt, f ...Check) {
 	for _, check := range f {
 		switch c := check.(type) {
-		case iriEquals:
-			strs = append(strs, CompStr{Str: string(c)})
-		case iriLike:
-			strs = append(strs, CompStr{Operator: "~", Str: string(c)})
-		case idNil:
-			strs = append(strs, CompStr{Operator: "=", Str: vocab.NilIRI.String()})
+		case urlEquals:
+			s.Where("url = ?", c)
+		case urlLike:
+			s.Where("url LIKE ?", "%"+c+"%")
+		case urlNil:
+			s.Where("url IS NULL")
 		}
 	}
-	clause, values := getStringFieldWheres(s, "url", strs...)
-	jClause, jValues := getStringFieldInJSONWheres(s, "url", strs...)
-	if len(jClause) > 0 {
-		if len(clause) > 0 {
-			clause += " OR "
-		}
-		clause += jClause
-	}
-	values = append(values, jValues...)
-	return clause, values
 }
 
-func getNamesWheres(s *Stmt, f ...Check) (string, []any) {
-	strs := make(CompStrs, 0)
+func sameFns(f1, f2 any) bool {
+	p1 := reflect.ValueOf(f1).Pointer()
+	p2 := reflect.ValueOf(f2).Pointer()
+	if p1 == p2 {
+		return true
+	}
+	if p1 == 0 || p2 == 0 {
+		return false
+	}
+	s1, l1 := runtime.FuncForPC(p1).FileLine(p1)
+	s2, l2 := runtime.FuncForPC(p2).FileLine(p2)
+	return s1 == s2 && l1 == l2
+}
+
+func addNLVWheres(s *Stmt, f ...Check) {
 	for _, check := range f {
 		switch c := check.(type) {
 		case naturalLanguageValCheck:
-			strs = append(strs, CompStr{
-				Operator: "", // TODO(marius): we probably need to change the API of the naturalLanguageValCheck
-				Str:      c.checkValue,
-			})
+			var field string
+			switch c.typ {
+			case byName:
+				field = keyName
+			case byPreferredUsername:
+				field = "preferred_username"
+			case bySummary:
+				field = keySummary
+			case byContent:
+				field = keyContent
+			}
+			switch {
+			case sameFns(c.checkFn, naturalLanguageEmpty):
+				s.Where(field + " IS NULL")
+			case sameFns(c.checkFn, naturalLanguageValuesLike):
+				s.Where(field+" LIKE ?", "%"+c.checkValue+"%")
+			case sameFns(c.checkFn, naturalLanguageValuesEquals):
+				s.Where(field+" = ?", c.checkValue)
+			}
 		}
 	}
-	ns, np := getStringFieldInJSONWheres(s, "name", strs...)
-	pus, pup := getStringFieldInJSONWheres(s, "preferredUsername", strs...)
-	return strings.Join([]string{ns, pus}, " OR "), append(np, pup)
 }
 
-func getInReplyToWheres(s *Stmt, f ...Check) (string, []any) {
-	strs := make(CompStrs, 0)
-	for _, check := range f {
-		switch c := check.(type) {
-		case iriEquals:
-			strs = append(strs, CompStr{Str: string(c)})
-		}
+func jsonLike(s *Stmt, prop, val string) {
+	isPg := stmtIsPostgres(s)
+	if isPg {
+		s.Where(fmt.Sprintf(`raw->>'%s' LIKE ?`, prop), "%"+val+"%")
+	} else {
+		s.Where(fmt.Sprintf(`json_extract(raw, '$.%s') LIKE ?`, prop), "%"+val+"%")
 	}
-	return getStringFieldInJSONWheres(s, "inReplyTo", strs...)
 }
 
-func getAttributedToWheres(s *Stmt, f ...Check) (string, []any) {
-	strs := make(CompStrs, 0)
+func jsonIsNull(s *Stmt, prop string) {
+	isPg := stmtIsPostgres(s)
+	if isPg {
+		s.Where(fmt.Sprintf(`raw->>'%s' IS NULL`, prop))
+	} else {
+		s.Where(fmt.Sprintf(`json_extract(raw, '$.%s') IS NULL`, prop))
+	}
+}
+
+func jsonIsNotNull(s *Stmt, prop string) {
+	isPg := stmtIsPostgres(s)
+	if isPg {
+		s.Where(fmt.Sprintf(`raw->>'%s' IS NOT NULL`, prop))
+	} else {
+		s.Where(fmt.Sprintf(`json_extract(raw, '$.%s') IS NOT NULL`, prop))
+	}
+}
+
+func jsonEquals(s *Stmt, prop, val string) {
+	isPg := stmtIsPostgres(s)
+	if isPg {
+		s.Where(fmt.Sprintf(`raw->>'%s' = ?`, prop), val)
+	} else {
+		s.Where(fmt.Sprintf(`json_extract(raw, '$.%s') = ?`, prop), val)
+	}
+}
+
+func addInReplyToWheres(s *Stmt, f ...Check) {
 	for _, check := range f {
 		switch c := check.(type) {
+		case iriNil:
+			jsonIsNull(s, "inReplyTo")
 		case iriEquals:
-			strs = append(strs, CompStr{Str: string(c)})
+			jsonEquals(s, "inReplyTo", string(c))
 		}
 	}
-	return getStringFieldInJSONWheres(s, "attributedTo", strs...)
+}
+
+func addAttributedToWheres(s *Stmt, f ...Check) {
+	for _, check := range f {
+		switch c := check.(type) {
+		case iriNil:
+			jsonIsNull(s, "attributedTo")
+		case iriEquals:
+			jsonEquals(s, "attributedTo", string(c))
+		}
+	}
 }
