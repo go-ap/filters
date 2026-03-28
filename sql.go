@@ -31,7 +31,7 @@ func SQLBuild(s *Stmt, ff ...Check) error {
 
 func getWhereClauses(s *Stmt, f ...Check) {
 	addTypeWheres(s, f...)
-	getIRIWheres(s, f...)
+	addIRIWheres(s, f...)
 	addNLVWheres(s, f...)
 	addInReplyToWheres(s, f...)
 	addAttributedToWheres(s, f...)
@@ -39,23 +39,33 @@ func getWhereClauses(s *Stmt, f ...Check) {
 	addContextWheres(s, f...)
 }
 
-func getIRIWheres(s *Stmt, f ...Check) (string, []any) {
+func addIRIWheres(s *Stmt, f ...Check) {
+	if s == nil || len(f) == 0 {
+		return
+	}
+
 	inVal := make([]any, 0)
 
+	var os *Stmt
+	andNil := false
 	for _, check := range f {
 		switch i := check.(type) {
 		case idEquals:
-			inVal = append(inVal, i)
+			inVal = append(inVal, vocab.IRI(i))
 		case iriEquals:
-			inVal = append(inVal, i)
+			inVal = append(inVal, vocab.IRI(i))
 		case iriLike:
-			s.Where("iri LIKE ?", "%"+i+"%")
+			s.Where("iri LIKE ?", "%"+string(i)+"%")
 		case idLike:
-			s.Where("iri LIKE ?", "%"+i+"%")
+			s.Where("iri LIKE ?", "%"+string(i)+"%")
 		case iriNil:
-			s.Where("iri IS NULL")
+			andNil = true
+			os = s
+			s = sqlf.New("")
 		case idNil:
-			s.Where("iri IS NULL")
+			andNil = true
+			os = s
+			s = sqlf.New("")
 		}
 	}
 
@@ -66,22 +76,34 @@ func getIRIWheres(s *Stmt, f ...Check) (string, []any) {
 			s.Where("iri").In(inVal...)
 		}
 	}
-	return "", nil
+	if andNil {
+		tsql := strings.TrimPrefix(s.String(), " WHERE ")
+		os.Where("("+tsql+" OR iri IS NULL)", s.Args()...)
+	}
 }
 
 func addTypeWheres(s *Stmt, f ...Check) {
+	if s == nil || len(f) == 0 {
+		return
+	}
+
 	inVal := make([]any, 0)
 
+	var os *Stmt
+	andNil := false
 	for _, check := range f {
 		c, ok := check.(withTypes)
 		if !ok {
 			continue
 		}
 		for _, typ := range c {
-			// TODO(marius): add support for type being NULL
-			if typ != vocab.NilType {
-				inVal = append(inVal, typ)
+			if typ == vocab.NilType {
+				andNil = true
+				os = s
+				s = sqlf.New("")
+				continue
 			}
+			inVal = append(inVal, typ)
 		}
 	}
 
@@ -92,24 +114,21 @@ func addTypeWheres(s *Stmt, f ...Check) {
 			s.Where("type").In(inVal...)
 		}
 	}
-}
-
-func stmtIsPostgres(s *Stmt) bool {
-	sc := s.Clone()
-	sc.Where("t = ?", 1)
-	isPg := strings.Contains(sc.String(), "$1")
-	return isPg
+	if andNil {
+		tsql := strings.TrimPrefix(s.String(), " WHERE ")
+		os.Where("("+tsql+" OR type IS NULL)", s.Args()...)
+	}
 }
 
 func addContextWheres(s *Stmt, f ...Check) {
 	for _, check := range f {
 		switch c := check.(type) {
-		case contextEquals:
-			jsonEquals(s, "context", string(c))
-		case contextLike:
-			jsonLike(s, "context", string(c))
 		case contextNil:
 			jsonIsNull(s, "context")
+		case contextEquals:
+			jsonEquals(s, "context", vocab.IRI(c))
+		case contextLike:
+			jsonLike(s, "context", vocab.IRI(c))
 		}
 	}
 }
@@ -117,12 +136,12 @@ func addContextWheres(s *Stmt, f ...Check) {
 func addURLWheres(s *Stmt, f ...Check) {
 	for _, check := range f {
 		switch c := check.(type) {
-		case urlEquals:
-			s.Where("url = ?", c)
-		case urlLike:
-			s.Where("url LIKE ?", "%"+c+"%")
 		case urlNil:
 			s.Where("url IS NULL")
+		case urlEquals:
+			s.Where("url = ?", vocab.IRI(c))
+		case urlLike:
+			s.Where("url LIKE ?", "%"+vocab.IRI(c)+"%")
 		}
 	}
 }
@@ -168,12 +187,38 @@ func addNLVWheres(s *Stmt, f ...Check) {
 	}
 }
 
-func jsonLike(s *Stmt, prop, val string) {
+func addInReplyToWheres(s *Stmt, f ...Check) {
+	for _, check := range f {
+		switch c := check.(type) {
+		case inReplyToNil:
+			jsonIsNull(s, "inReplyTo")
+		case inReplyToEquals:
+			jsonEquals(s, "inReplyTo", vocab.IRI(c))
+		case inReplyToLike:
+			jsonLike(s, "inReplyTo", vocab.IRI(c))
+		}
+	}
+}
+
+func addAttributedToWheres(s *Stmt, f ...Check) {
+	for _, check := range f {
+		switch c := check.(type) {
+		case attributedToNil:
+			jsonIsNull(s, "attributedTo")
+		case attributedToEquals:
+			jsonEquals(s, "attributedTo", vocab.IRI(c))
+		case attributedToLike:
+			jsonLike(s, "attributedTo", vocab.IRI(c))
+		}
+	}
+}
+
+func jsonLike(s *Stmt, prop string, val fmt.Stringer) {
 	isPg := stmtIsPostgres(s)
 	if isPg {
-		s.Where(fmt.Sprintf(`raw->>'%s' LIKE ?`, prop), "%"+val+"%")
+		s.Where(fmt.Sprintf(`raw->>'%s' LIKE ?`, prop), "%"+val.String()+"%")
 	} else {
-		s.Where(fmt.Sprintf(`json_extract(raw, '$.%s') LIKE ?`, prop), "%"+val+"%")
+		s.Where(fmt.Sprintf(`json_extract(raw, '$.%s') LIKE ?`, prop), "%"+val.String()+"%")
 	}
 }
 
@@ -195,7 +240,7 @@ func jsonIsNotNull(s *Stmt, prop string) {
 	}
 }
 
-func jsonEquals(s *Stmt, prop, val string) {
+func jsonEquals(s *Stmt, prop string, val any) {
 	isPg := stmtIsPostgres(s)
 	if isPg {
 		s.Where(fmt.Sprintf(`raw->>'%s' = ?`, prop), val)
@@ -204,24 +249,9 @@ func jsonEquals(s *Stmt, prop, val string) {
 	}
 }
 
-func addInReplyToWheres(s *Stmt, f ...Check) {
-	for _, check := range f {
-		switch c := check.(type) {
-		case iriNil:
-			jsonIsNull(s, "inReplyTo")
-		case iriEquals:
-			jsonEquals(s, "inReplyTo", string(c))
-		}
-	}
-}
-
-func addAttributedToWheres(s *Stmt, f ...Check) {
-	for _, check := range f {
-		switch c := check.(type) {
-		case iriNil:
-			jsonIsNull(s, "attributedTo")
-		case iriEquals:
-			jsonEquals(s, "attributedTo", string(c))
-		}
-	}
+func stmtIsPostgres(s *Stmt) bool {
+	sc := s.Clone()
+	sc.Where("t = ?", 1)
+	isPg := strings.Contains(sc.String(), "$1")
+	return isPg
 }

@@ -14,15 +14,24 @@ PROJECT_NAME := $(shell basename $(PWD))
 
 .PHONY: test coverage clean download
 
-download:
+download: go.sum
+
+go.sum: go.mod
 	$(GO) mod tidy
 
-test: download
-	$(TEST) $(TEST_FLAGS) $(TEST_TARGET)
+test: go.sum clean
+	@
+	$(TEST) $(TEST_FLAGS) -cover $(TEST_TARGET) -json > tests.json || true
+	$(GO) tool tparse -file tests.json
 
-coverage: TEST_FLAGS += -covermode=count -coverprofile $(PROJECT_NAME).coverprofile
-coverage: test
+coverage: go.sum clean
+	@mkdir ./_coverage
+	$(TEST) $(TEST_FLAGS) -covermode=count -args -test.gocoverdir="$(PWD)/_coverage" $(TEST_TARGET) > /dev/null || true
+	$(GO) tool covdata percent -i=./_coverage/ -o $(PROJECT_NAME).coverprofile
+	@$(RM) -r ./_coverage
 
 clean:
-	$(RM) -v *.coverprofile
+	@$(RM) -r ./_coverage
+	@$(RM) -v *.coverprofile
+	@$(RM) -v tests.json
 

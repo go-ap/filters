@@ -129,9 +129,7 @@ func accumContexts(item vocab.Item) vocab.IRIs {
 
 type urlNil iriNil
 
-func URLNil() Check {
-	return iriNil{}
-}
+var NilURL = urlNil{}
 
 func (frag urlNil) Match(it vocab.Item) bool {
 	if vocab.IsNil(it) {
@@ -257,6 +255,7 @@ func (c inReplyToNil) Match(it vocab.Item) bool {
 	return len(accumInReplyTos(it)) == 0
 }
 
+// InReplyToLike filters objects having the inReplyTo pattern match the fragment
 func InReplyToLike(frag string) Check {
 	return inReplyToLike(frag)
 }
