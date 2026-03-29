@@ -59,6 +59,9 @@ func IDChecks(fns ...Check) Checks {
 // NOTE(marius): I'm not sure what this is supposed to return.
 // Perhaps all the checks that are not pagination.
 func ItemChecks(fns ...Check) Checks {
+	if len(fns) == 0 {
+		return fns
+	}
 	c := make([]Check, 0)
 	for _, fn := range fns {
 		switch check := fn.(type) {
@@ -149,6 +152,7 @@ func MaxCount(fns ...Check) int {
 	return m
 }
 
+// Counted returns the current number of items that the [WithMaxCount] filter has triggered.
 func Counted(fns ...Check) int {
 	for _, fn := range fns {
 		if f, ok := fn.(*counter); ok {
@@ -177,6 +181,9 @@ func BeforeChecks(fns ...Check) Checks {
 }
 
 func ObjectChecks(fns ...Check) Checks {
+	if len(fns) == 0 {
+		return fns
+	}
 	c := make([]Check, 0)
 	for _, fn := range fns {
 		switch fns := fn.(type) {
@@ -188,6 +195,9 @@ func ObjectChecks(fns ...Check) Checks {
 }
 
 func ActorChecks(fns ...Check) Checks {
+	if len(fns) == 0 {
+		return fns
+	}
 	c := make([]Check, 0)
 	for _, fn := range fns {
 		switch fns := fn.(type) {
@@ -199,6 +209,9 @@ func ActorChecks(fns ...Check) Checks {
 }
 
 func TargetChecks(fns ...Check) Checks {
+	if len(fns) == 0 {
+		return fns
+	}
 	c := make([]Check, 0)
 	for _, fn := range fns {
 		switch fns := fn.(type) {
@@ -210,6 +223,9 @@ func TargetChecks(fns ...Check) Checks {
 }
 
 func ActivityChecks(fns ...Check) Checks {
+	if len(fns) == 0 {
+		return fns
+	}
 	c := make([]Check, 0)
 	for _, fn := range fns {
 		switch fns := fn.(type) {
@@ -225,19 +241,25 @@ func ActivityChecks(fns ...Check) Checks {
 }
 
 func IntransitiveActivityChecks(fns ...Check) Checks {
-	c := make([]Check, 0)
+	if len(fns) == 0 {
+		return fns
+	}
+	c := make([]Check, 0, 2)
 	for _, fn := range fns {
-		switch fns := fn.(type) {
+		switch f := fn.(type) {
 		case targetChecks:
-			c = append(c, fns...)
+			c = append(c, f...)
 		case actorChecks:
-			c = append(c, fns...)
+			c = append(c, f...)
 		}
 	}
 	return c
 }
 
 func TypeChecks(fns ...Check) Checks {
+	if len(fns) == 0 {
+		return fns
+	}
 	c := make([]Check, 0)
 	for _, fn := range fns {
 		switch t := fn.(type) {
@@ -249,6 +271,9 @@ func TypeChecks(fns ...Check) Checks {
 }
 
 func TagChecks(fns ...Check) Checks {
+	if len(fns) == 0 {
+		return fns
+	}
 	c := make([]Check, 0)
 	for _, fn := range fns {
 		switch t := fn.(type) {

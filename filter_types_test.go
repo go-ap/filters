@@ -96,7 +96,7 @@ func TestFilterChecks(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := FilterChecks(tt.args...); !reflect.DeepEqual(got, tt.want) {
+			if got := FilterChecks(tt.args...); !cmp.Equal(got, tt.want) {
 				t.Errorf("FilterChecks() = %v, want %v", got, tt.want)
 			}
 		})
@@ -217,18 +217,62 @@ func TestIDChecks(t *testing.T) {
 
 func TestItemChecks(t *testing.T) {
 	tests := []struct {
-		name   string
-		checks Checks
-		want   Checks
+		name string
+		args Checks
+		want Checks
 	}{
 		{
+			name: "nil",
+		},
+		{
 			name: "empty",
+			args: Checks{},
 			want: Checks{},
+		},
+		{
+			name: "just activity checks",
+			args: Checks{Actor(SameID("http://example.com/~jdoe")), Object(SameID("http://example.com/1")), Target(SameID("http://example.com/tgt"))},
+			want: Checks{},
+		},
+		{
+			name: "just tags checks",
+			args: Checks{Tag(NameIs("Test"))},
+			want: Checks{},
+		},
+		{
+			name: "same id check",
+			args: Checks{SameID("http://example.com")},
+			want: Checks{SameID("http://example.com")},
+		},
+		{
+			name: "type check",
+			args: Checks{HasType("t1")},
+			want: Checks{HasType("t1")},
+		},
+		{
+			name: "any types has one check",
+			args: Checks{Any(HasType("t1"), Actor(NilItem))},
+			want: Checks{HasType("t1")},
+		},
+		{
+			name: "all types has one check",
+			args: Checks{All(HasType("t1"), Actor(NilItem))},
+			want: Checks{HasType("t1")},
+		},
+		{
+			name: "any types has multiple checks",
+			args: Checks{Any(HasType("t1"), Actor(NilItem), SameID("http://example.com"))},
+			want: Checks{Any(HasType("t1"), SameID("http://example.com"))},
+		},
+		{
+			name: "all types has multiple checks",
+			args: Checks{All(HasType("t1"), Actor(NilItem), SameID("http://example.com"))},
+			want: Checks{All(HasType("t1"), SameID("http://example.com"))},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := ItemChecks(tt.checks...); !cmp.Equal(got, tt.want) {
+			if got := ItemChecks(tt.args...); !cmp.Equal(got, tt.want) {
 				t.Errorf("ItemChecks() = %s", cmp.Diff(tt.want, got))
 			}
 		})
@@ -279,4 +323,331 @@ func checksEq(c1, c2 Check) bool {
 	u1 := urlValue(c1)
 	u2 := urlValue(c2)
 	return u1.Encode() == u2.Encode()
+}
+
+func TestCounted(t *testing.T) {
+	tests := []struct {
+		name string
+		args []Check
+		want int
+	}{
+		{
+			name: "nil",
+			want: -1,
+		},
+		{
+			name: "no hits",
+			args: Checks{&counter{max: 10, cnt: 0}},
+			want: 0,
+		},
+		{
+			name: "1 hit",
+			args: Checks{&counter{max: 10, cnt: 1}},
+			want: 1,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := Counted(tt.args...); got != tt.want {
+				t.Errorf("Counted() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestTypeChecks(t *testing.T) {
+	tests := []struct {
+		name string
+		args []Check
+		want Checks
+	}{
+		{
+			name: "nil",
+			args: nil,
+			want: nil,
+		},
+		{
+			name: "empty",
+			args: Checks{},
+			want: Checks{},
+		},
+		{
+			name: "no type checks",
+			args: Checks{SameID("http://example.com")},
+			want: Checks{},
+		},
+		{
+			name: "with type check",
+			args: Checks{SameID("http://example.com"), HasType("t1")},
+			want: Checks{HasType("t1")},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := TypeChecks(tt.args...); !cmp.Equal(got, tt.want) {
+				t.Errorf("TypeChecks() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestTagChecks(t *testing.T) {
+	tests := []struct {
+		name string
+		args []Check
+		want Checks
+	}{
+		{
+			name: "nil",
+			args: nil,
+			want: nil,
+		},
+		{
+			name: "empty",
+			args: Checks{},
+			want: Checks{},
+		},
+		{
+			name: "no tag checks",
+			args: Checks{SameID("http://example.com")},
+			want: Checks{},
+		},
+		{
+			name: "with tag check",
+			args: Checks{SameID("http://example.com"), Tag(NilItem)},
+			want: Checks{Tag(NilItem)},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := TagChecks(tt.args...); !cmp.Equal(got, tt.want) {
+				t.Errorf("TagChecks() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestIntransitiveActivityChecks(t *testing.T) {
+	tests := []struct {
+		name string
+		args []Check
+		want Checks
+	}{
+		{
+			name: "nil",
+			args: nil,
+			want: nil,
+		},
+		{
+			name: "empty",
+			args: Checks{},
+			want: Checks{},
+		},
+		{
+			name: "no intransitive checks",
+			args: Checks{SameID("http://example.com")},
+			want: Checks{},
+		},
+		{
+			name: "with actor check",
+			args: Checks{SameID("http://example.com"), Actor(NilItem)},
+			want: Checks{NilItem},
+		},
+		{
+			name: "with target check",
+			args: Checks{SameID("http://example.com"), Target(NameIs("test"))},
+			want: Checks{NameIs("test")},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IntransitiveActivityChecks(tt.args...); !cmp.Equal(got, tt.want, cmp.Comparer(NaturalLanguageValuesComparer)) {
+				t.Errorf("IntransitiveActivityChecks() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestActivityChecks(t *testing.T) {
+	tests := []struct {
+		name string
+		args []Check
+		want Checks
+	}{
+		{
+			name: "nil",
+			args: nil,
+			want: nil,
+		},
+		{
+			name: "empty",
+			args: Checks{},
+			want: Checks{},
+		},
+		{
+			name: "no  checks",
+			args: Checks{SameID("http://example.com")},
+			want: Checks{},
+		},
+		{
+			name: "with actor check",
+			args: Checks{SameID("http://example.com"), Actor(NilItem)},
+			want: Checks{NilItem},
+		},
+		{
+			name: "with multiple actor checks",
+			args: Checks{SameID("http://example.com"), Actor(NilItem, SameID("http://example.com/~jdoe"))},
+			want: Checks{NilItem, SameID("http://example.com/~jdoe")},
+		},
+		{
+			name: "with target check",
+			args: Checks{SameID("http://example.com"), Target(NameIs("test"))},
+			want: Checks{NameIs("test")},
+		},
+		{
+			name: "with multiple target check",
+			args: Checks{SameID("http://example.com"), Target(NameIs("test"), SummaryLike("lipsum"))},
+			want: Checks{NameIs("test"), SummaryLike("lipsum")},
+		},
+		{
+			name: "with object check",
+			args: Checks{SameID("http://example.com"), Object(NilItem)},
+			want: Checks{NilItem},
+		},
+		{
+			name: "with multiple object check",
+			args: Checks{SameID("http://example.com"), Object(HasType("t1"), SameInReplyTo("http://example.com/~jdoe"))},
+			want: Checks{HasType("t1"), SameInReplyTo("http://example.com/~jdoe")},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ActivityChecks(tt.args...); !cmp.Equal(got, tt.want, cmp.Comparer(NaturalLanguageValuesComparer)) {
+				t.Errorf("ActivityChecks() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestObjectChecks(t *testing.T) {
+	tests := []struct {
+		name string
+		args []Check
+		want Checks
+	}{
+		{
+			name: "nil",
+			args: nil,
+			want: nil,
+		},
+		{
+			name: "empty",
+			args: Checks{},
+			want: Checks{},
+		},
+		{
+			name: "no object checks",
+			args: Checks{SameID("http://example.com")},
+			want: Checks{},
+		},
+		{
+			name: "with object check",
+			args: Checks{SameID("http://example.com"), Object(NilItem)},
+			want: Checks{NilItem},
+		},
+		{
+			name: "with multiple object check",
+			args: Checks{SameID("http://example.com"), Object(HasType("t1"), SameInReplyTo("http://example.com/~jdoe"))},
+			want: Checks{HasType("t1"), SameInReplyTo("http://example.com/~jdoe")},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ObjectChecks(tt.args...); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ObjectChecks() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestActorChecks(t *testing.T) {
+	tests := []struct {
+		name string
+		args []Check
+		want Checks
+	}{
+		{
+			name: "nil",
+			args: nil,
+			want: nil,
+		},
+		{
+			name: "empty",
+			args: Checks{},
+			want: Checks{},
+		},
+		{
+			name: "no actor checks",
+			args: Checks{SameID("http://example.com")},
+			want: Checks{},
+		},
+		{
+			name: "with actor check",
+			args: Checks{SameID("http://example.com"), Actor(NilItem)},
+			want: Checks{NilItem},
+		},
+		{
+			name: "with multiple actor check",
+			args: Checks{SameID("http://example.com"), Actor(HasType("t1"), SameInReplyTo("http://example.com/~jdoe"))},
+			want: Checks{HasType("t1"), SameInReplyTo("http://example.com/~jdoe")},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ActorChecks(tt.args...); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ActorChecks() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestTargetChecks(t *testing.T) {
+	tests := []struct {
+		name string
+		args []Check
+		want Checks
+	}{
+		{
+			name: "nil",
+			args: nil,
+			want: nil,
+		},
+		{
+			name: "empty",
+			args: Checks{},
+			want: Checks{},
+		},
+		{
+			name: "no target checks",
+			args: Checks{SameID("http://example.com")},
+			want: Checks{},
+		},
+		{
+			name: "with target check",
+			args: Checks{SameID("http://example.com"), Target(NilItem)},
+			want: Checks{NilItem},
+		},
+		{
+			name: "with multiple target check",
+			args: Checks{SameID("http://example.com"), Target(HasType("t1"), SameInReplyTo("http://example.com/~jdoe"))},
+			want: Checks{HasType("t1"), SameInReplyTo("http://example.com/~jdoe")},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := TargetChecks(tt.args...); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("TargetChecks() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

@@ -163,7 +163,14 @@ func (c contextLike) Match(it vocab.Item) bool {
 		return len(c) == 0
 	}
 
-	return accumContexts(it).Contains(vocab.IRI(c))
+	nfc := norm.NFC.String
+	fragStr, _ := url.QueryUnescape(string(c))
+	for _, u := range accumContexts(it) {
+		if strings.Contains(nfc(u.String()), nfc(fragStr)) {
+			return true
+		}
+	}
+	return false
 }
 
 var NilContext = contextNil{}

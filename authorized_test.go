@@ -1,6 +1,7 @@
 package filters
 
 import (
+	"reflect"
 	"testing"
 
 	vocab "github.com/go-ap/activitypub"
@@ -96,6 +97,47 @@ func Test_Authorized_Match(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := Authorized(tt.a).Match(tt.it); got != tt.want {
 				t.Errorf("Match() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestAuthorizedChecks(t *testing.T) {
+	tests := []struct {
+		name string
+		args []Check
+		want Checks
+	}{
+		{
+			name: "nil",
+			args: nil,
+			want: nil,
+		},
+		{
+			name: "empty",
+			args: Checks{},
+			want: Checks{},
+		},
+		{
+			name: "no authorization checks",
+			args: Checks{SameID("http://example.com")},
+			want: Checks{},
+		},
+		{
+			name: "just authorization check",
+			args: Checks{Authorized("http://example.com/~jdoe")},
+			want: Checks{Authorized("http://example.com/~jdoe")},
+		},
+		{
+			name: "with authorization check",
+			args: Checks{SameID("http://example.com"), Authorized("http://example.com/~jdoe")},
+			want: Checks{Authorized("http://example.com/~jdoe")},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := AuthorizedChecks(tt.args...); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("AuthorizedChecks() = %v, want %v", got, tt.want)
 			}
 		})
 	}

@@ -28,6 +28,9 @@ func Authorized(iri vocab.IRI) Check {
 // AuthorizedChecks returns all the Authorized checks in the fns slice.
 // It recurses if there are Any or All checks, which is not always what you'd want, so take care.
 func AuthorizedChecks(fns ...Check) Checks {
+	if len(fns) == 0 {
+		return fns
+	}
 	validCheck := func(c Check) bool {
 		_, ok := c.(authorized)
 		return ok
