@@ -11,6 +11,9 @@ import (
 )
 
 func SQLLimit(st *Stmt, f ...Check) {
+	if st == nil || len(f) == 0 {
+		return
+	}
 	lim := MaxItems
 	for _, check := range f {
 		switch c := check.(type) {
@@ -24,7 +27,7 @@ func SQLLimit(st *Stmt, f ...Check) {
 
 type Stmt = sqlf.Stmt
 
-func SQLBuild(s *Stmt, ff ...Check) error {
+func SQLWhere(s *Stmt, ff ...Check) error {
 	getWhereClauses(s, ff...)
 	return nil
 }
@@ -45,6 +48,7 @@ func addIRIWheres(s *Stmt, f ...Check) {
 	}
 
 	inVal := make([]any, 0)
+	likeVal := make([]any, 0)
 
 	var os *Stmt
 	andNil := false
@@ -55,9 +59,9 @@ func addIRIWheres(s *Stmt, f ...Check) {
 		case iriEquals:
 			inVal = append(inVal, vocab.IRI(i))
 		case iriLike:
-			s.Where("iri LIKE ?", "%"+string(i)+"%")
+			likeVal = append(likeVal, "%"+string(i)+"%")
 		case idLike:
-			s.Where("iri LIKE ?", "%"+string(i)+"%")
+			likeVal = append(likeVal, "%"+string(i)+"%")
 		case iriNil:
 			andNil = true
 			os = s
@@ -74,6 +78,18 @@ func addIRIWheres(s *Stmt, f ...Check) {
 			s.Where("iri = ?", inVal[0])
 		} else {
 			s.Where("iri").In(inVal...)
+		}
+	}
+	if len(likeVal) > 0 {
+		if len(likeVal) == 1 {
+			s.Where("iri LIKE ?", likeVal[0])
+		} else {
+			lors := sqlf.New("")
+			for _, like := range likeVal {
+				lors.Where("iri LIKE ?", like)
+			}
+			orsq := strings.TrimPrefix(lors.String(), " WHERE ")
+			s.Where(strings.ReplaceAll(orsq, " AND ", " OR "), lors.Args()...)
 		}
 	}
 	if andNil {

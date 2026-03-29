@@ -8,7 +8,7 @@ import (
 	"github.com/leporo/sqlf"
 )
 
-func Test_addTypeWheres(t *testing.T) {
+func Test_SQLWhere(t *testing.T) {
 	type args struct {
 		s *Stmt
 		f []Check
@@ -59,43 +59,6 @@ func Test_addTypeWheres(t *testing.T) {
 			gotQuery: " WHERE (type IN (?,?) OR type IS NULL)",
 			gotArgs:  []any{vocab.ActivityVocabularyType("t1"), vocab.ActivityVocabularyType("t2")},
 		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			addTypeWheres(tt.args.s, tt.args.f...)
-
-			var gotQuery string
-			var gotArgs []any
-			if tt.args.s != nil {
-				gotQuery = tt.args.s.String()
-				gotArgs = tt.args.s.Args()
-			}
-			if gotQuery != tt.gotQuery {
-				t.Errorf("addTypesWhere() query %s does not match expected: %s", gotQuery, tt.gotQuery)
-			}
-
-			if !cmp.Equal(gotArgs, tt.gotArgs) {
-				t.Errorf("addTypesWhere() query args are different: %s", cmp.Diff(tt.gotArgs, gotArgs))
-			}
-		})
-	}
-}
-
-func Test_addIRIWheres(t *testing.T) {
-	type args struct {
-		s *Stmt
-		f []Check
-	}
-	tests := []struct {
-		name     string
-		args     args
-		gotQuery string
-		gotArgs  []any
-	}{
-		{
-			name: "empty",
-			args: args{},
-		},
 		{
 			name: "one ID",
 			args: args{
@@ -143,6 +106,15 @@ func Test_addIRIWheres(t *testing.T) {
 			gotArgs:  []any{vocab.IRI("http://example.com")},
 		},
 		{
+			name: "iri like",
+			args: args{
+				s: sqlf.New(""),
+				f: []Check{IRILike("http://example.com")},
+			},
+			gotQuery: " WHERE iri LIKE ?",
+			gotArgs:  []any{"%http://example.com%"},
+		},
+		{
 			name: "multiple iris",
 			args: args{
 				s: sqlf.New(""),
@@ -161,6 +133,24 @@ func Test_addIRIWheres(t *testing.T) {
 			gotArgs:  []any{vocab.IRI("http://example.com")},
 		},
 		{
+			name: "iri like with nil",
+			args: args{
+				s: sqlf.New(""),
+				f: []Check{IRILike("http://example.com"), NilIRI},
+			},
+			gotQuery: " WHERE (iri LIKE ? OR iri IS NULL)",
+			gotArgs:  []any{"%http://example.com%"},
+		},
+		{
+			name: "multiple iri likes with nil",
+			args: args{
+				s: sqlf.New(""),
+				f: []Check{IRILike("http://example.com"), IRILike("http://social.example.com"), NilIRI},
+			},
+			gotQuery: " WHERE (iri LIKE ? OR iri LIKE ? OR iri IS NULL)",
+			gotArgs:  []any{"%http://example.com%", "%http://social.example.com%"},
+		},
+		{
 			name: "multiple iris with nil",
 			args: args{
 				s: sqlf.New(""),
@@ -168,43 +158,6 @@ func Test_addIRIWheres(t *testing.T) {
 			},
 			gotQuery: " WHERE (iri IN (?,?) OR iri IS NULL)",
 			gotArgs:  []any{vocab.IRI("http://example.com"), vocab.IRI("http://social.example.com")},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			addIRIWheres(tt.args.s, tt.args.f...)
-
-			var gotQuery string
-			var gotArgs []any
-			if tt.args.s != nil {
-				gotQuery = tt.args.s.String()
-				gotArgs = tt.args.s.Args()
-			}
-			if gotQuery != tt.gotQuery {
-				t.Errorf("addIRIWhere() query %s does not match expected: %s", gotQuery, tt.gotQuery)
-			}
-
-			if !cmp.Equal(gotArgs, tt.gotArgs) {
-				t.Errorf("addIRIWhere() query args are different: %s", cmp.Diff(tt.gotArgs, gotArgs))
-			}
-		})
-	}
-}
-
-func Test_addNLVWheres(t *testing.T) {
-	type args struct {
-		s *Stmt
-		f []Check
-	}
-	tests := []struct {
-		name     string
-		args     args
-		gotQuery string
-		gotArgs  []any
-	}{
-		{
-			name: "empty",
-			args: args{},
 		},
 		{
 			name: "name empty",
@@ -322,43 +275,6 @@ func Test_addNLVWheres(t *testing.T) {
 			gotQuery: " WHERE content LIKE ? AND name IS NULL AND summary = ?",
 			gotArgs:  []any{"%test%", "test1"},
 		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			addNLVWheres(tt.args.s, tt.args.f...)
-
-			var gotQuery string
-			var gotArgs []any
-			if tt.args.s != nil {
-				gotQuery = tt.args.s.String()
-				gotArgs = tt.args.s.Args()
-			}
-			if gotQuery != tt.gotQuery {
-				t.Errorf("addNLVWheres() query %s does not match expected: %s", gotQuery, tt.gotQuery)
-			}
-
-			if !cmp.Equal(gotArgs, tt.gotArgs) {
-				t.Errorf("addNLVWheres() query args are different: %s", cmp.Diff(tt.gotArgs, gotArgs))
-			}
-		})
-	}
-}
-
-func Test_addInReplyToWheres(t *testing.T) {
-	type args struct {
-		s *Stmt
-		f []Check
-	}
-	tests := []struct {
-		name     string
-		args     args
-		gotQuery string
-		gotArgs  []any
-	}{
-		{
-			name: "empty",
-			args: args{},
-		},
 		{
 			name: "inReplyTo nil for sqlite",
 			args: args{
@@ -410,43 +326,6 @@ func Test_addInReplyToWheres(t *testing.T) {
 			},
 			gotQuery: " WHERE raw->>'inReplyTo' LIKE $1",
 			gotArgs:  []any{"%http://example.com%"},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			addInReplyToWheres(tt.args.s, tt.args.f...)
-
-			var gotQuery string
-			var gotArgs []any
-			if tt.args.s != nil {
-				gotQuery = tt.args.s.String()
-				gotArgs = tt.args.s.Args()
-			}
-			if gotQuery != tt.gotQuery {
-				t.Errorf("addNLVWheres() query %s does not match expected: %s", gotQuery, tt.gotQuery)
-			}
-
-			if !cmp.Equal(gotArgs, tt.gotArgs) {
-				t.Errorf("addNLVWheres() query args are different: %s", cmp.Diff(tt.gotArgs, gotArgs))
-			}
-		})
-	}
-}
-
-func Test_addAttributedToWheres(t *testing.T) {
-	type args struct {
-		s *Stmt
-		f []Check
-	}
-	tests := []struct {
-		name     string
-		args     args
-		gotQuery string
-		gotArgs  []any
-	}{
-		{
-			name: "empty",
-			args: args{},
 		},
 		{
 			name: "attributedTo nil for sqlite",
@@ -500,43 +379,6 @@ func Test_addAttributedToWheres(t *testing.T) {
 			gotQuery: " WHERE raw->>'attributedTo' LIKE $1",
 			gotArgs:  []any{"%http://example.com%"},
 		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			addAttributedToWheres(tt.args.s, tt.args.f...)
-
-			var gotQuery string
-			var gotArgs []any
-			if tt.args.s != nil {
-				gotQuery = tt.args.s.String()
-				gotArgs = tt.args.s.Args()
-			}
-			if gotQuery != tt.gotQuery {
-				t.Errorf("addNLVWheres() query %s does not match expected: %s", gotQuery, tt.gotQuery)
-			}
-
-			if !cmp.Equal(gotArgs, tt.gotArgs) {
-				t.Errorf("addNLVWheres() query args are different: %s", cmp.Diff(tt.gotArgs, gotArgs))
-			}
-		})
-	}
-}
-
-func Test_addContextWheres(t *testing.T) {
-	type args struct {
-		s *Stmt
-		f []Check
-	}
-	tests := []struct {
-		name     string
-		args     args
-		gotQuery string
-		gotArgs  []any
-	}{
-		{
-			name: "empty",
-			args: args{},
-		},
 		{
 			name: "context nil for sqlite",
 			args: args{
@@ -588,43 +430,6 @@ func Test_addContextWheres(t *testing.T) {
 			},
 			gotQuery: " WHERE raw->>'context' LIKE $1",
 			gotArgs:  []any{"%http://example.com%"},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			addContextWheres(tt.args.s, tt.args.f...)
-
-			var gotQuery string
-			var gotArgs []any
-			if tt.args.s != nil {
-				gotQuery = tt.args.s.String()
-				gotArgs = tt.args.s.Args()
-			}
-			if gotQuery != tt.gotQuery {
-				t.Errorf("addNLVWheres() query %s does not match expected: %s", gotQuery, tt.gotQuery)
-			}
-
-			if !cmp.Equal(gotArgs, tt.gotArgs) {
-				t.Errorf("addNLVWheres() query args are different: %s", cmp.Diff(tt.gotArgs, gotArgs))
-			}
-		})
-	}
-}
-
-func Test_addURLWheres(t *testing.T) {
-	type args struct {
-		s *Stmt
-		f []Check
-	}
-	tests := []struct {
-		name     string
-		args     args
-		gotQuery string
-		gotArgs  []any
-	}{
-		{
-			name: "empty",
-			args: args{},
 		},
 		{
 			name: "URL nil for sqlite",
@@ -681,7 +486,7 @@ func Test_addURLWheres(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			addURLWheres(tt.args.s, tt.args.f...)
+			_ = SQLWhere(tt.args.s, tt.args.f...)
 
 			var gotQuery string
 			var gotArgs []any
@@ -690,12 +495,53 @@ func Test_addURLWheres(t *testing.T) {
 				gotArgs = tt.args.s.Args()
 			}
 			if gotQuery != tt.gotQuery {
-				t.Errorf("addNLVWheres() query %s does not match expected: %s", gotQuery, tt.gotQuery)
+				t.Errorf("SQLWhere() query %s does not match expected: %s", gotQuery, tt.gotQuery)
 			}
 
 			if !cmp.Equal(gotArgs, tt.gotArgs) {
-				t.Errorf("addNLVWheres() query args are different: %s", cmp.Diff(tt.gotArgs, gotArgs))
+				t.Errorf("SQLWhere() query args are different: %s", cmp.Diff(tt.gotArgs, gotArgs))
 			}
+		})
+	}
+}
+
+func TestSQLLimit(t *testing.T) {
+	type args struct {
+		st *Stmt
+		f  []Check
+	}
+	tests := []struct {
+		name     string
+		args     args
+		gotQuery string
+		gotArgs  []any
+	}{
+		{
+			name: "empty",
+			args: args{},
+		},
+		{
+			name: "no limit",
+			args: args{
+				st: sqlf.New(""),
+				f:  []Check{HasType("t1"), SameInReplyTo("http://example.com")},
+			},
+			gotQuery: "",
+			gotArgs:  []any{},
+		},
+		{
+			name: "limit 1",
+			args: args{
+				st: sqlf.New(""),
+				f:  []Check{WithMaxCount(1)},
+			},
+			gotQuery: "LIMIT ?",
+			gotArgs:  []any{1},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			SQLLimit(tt.args.st, tt.args.f...)
 		})
 	}
 }
