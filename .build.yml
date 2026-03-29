@@ -14,5 +14,6 @@ tasks:
   - coverage: |
       set -a +x
       cd filters
+      git switch -C master origin/master
       make coverage
       go tool goveralls -flagname unit-tests -service=${CI_NAME} -coverprofile filters.coverprofile -repotokenfile ~/.coveralls.tok

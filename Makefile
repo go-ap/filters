@@ -26,7 +26,10 @@ test: go.sum clean
 
 coverage: go.sum clean
 	@mkdir ./_coverage
-	$(TEST) $(TEST_FLAGS) -covermode=count -args -test.gocoverdir="$(PWD)/_coverage" $(TEST_TARGET) > /dev/null || true
+	$(TEST) $(TEST_FLAGS) -covermode=count -coverpkg github.com/go-ap/filters,github.com/go-ap/filters/index -args -test.gocoverdir="$(PWD)/_coverage" . #> /dev/null || true
+	pushd index
+	$(TEST) $(TEST_FLAGS) -covermode=count -coverpkg github.com/go-ap/filters,github.com/go-ap/filters/index -args -test.gocoverdir="$(PWD)/_coverage" . #> /dev/null || true
+	popd
 	$(GO) tool covdata percent -i=./_coverage/ -o $(PROJECT_NAME).coverprofile
 	@$(RM) -r ./_coverage
 
