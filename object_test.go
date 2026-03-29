@@ -951,7 +951,7 @@ func Test_URLEquals_Match(t *testing.T) {
 	}
 }
 
-func Test_idLike_String(t *testing.T) {
+func Test_idLike_GoString(t *testing.T) {
 	tests := []struct {
 		name string
 		l    idLike
@@ -970,14 +970,14 @@ func Test_idLike_String(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.l.String(); got != tt.want {
+			if got := tt.l.GoString(); got != tt.want {
 				t.Errorf("String() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func Test_idEquals_String(t *testing.T) {
+func Test_idEquals_GoString(t *testing.T) {
 	tests := []struct {
 		name string
 		i    idEquals
@@ -996,7 +996,7 @@ func Test_idEquals_String(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.i.String(); got != tt.want {
+			if got := tt.i.GoString(); got != tt.want {
 				t.Errorf("String() = %v, want %v", got, tt.want)
 			}
 		})

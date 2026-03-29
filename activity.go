@@ -24,21 +24,28 @@ func (a actorChecks) Match(it vocab.Item) bool {
 	return All(a...).Match(act.Actor)
 }
 
-func (a actorChecks) String() string {
+func (a actorChecks) GoString() string {
+	if len(a) == 0 {
+		return ""
+	}
 	ss := strings.Builder{}
-	ss.WriteString("actor.")
+	ss.WriteString("actor={")
 	for i, fn := range a {
-		if sss, ok := fn.(fmt.Stringer); ok {
-			ss.WriteString(sss.String())
+		if sss, ok := fn.(fmt.GoStringer); ok {
+			ss.WriteString(sss.GoString())
 		}
 		if i < len(a)-1 {
 			ss.WriteRune(',')
 		}
 	}
+	ss.WriteString("}")
 	return ss.String()
 }
 
 func Target(fns ...Check) Check {
+	if len(fns) == 0 {
+		return nil
+	}
 	return targetChecks(fns)
 }
 
@@ -55,17 +62,21 @@ func (t targetChecks) Match(it vocab.Item) bool {
 	return All(t...).Match(act.Target)
 }
 
-func (t targetChecks) String() string {
+func (t targetChecks) GoString() string {
+	if len(t) == 0 {
+		return ""
+	}
 	ss := strings.Builder{}
-	ss.WriteString("target.")
+	ss.WriteString("target={")
 	for i, fn := range t {
-		if sss, ok := fn.(fmt.Stringer); ok {
-			ss.WriteString(sss.String())
+		if sss, ok := fn.(fmt.GoStringer); ok {
+			ss.WriteString(sss.GoString())
 		}
 		if i < len(t)-1 {
 			ss.WriteRune(',')
 		}
 	}
+	ss.WriteString("}")
 	return ss.String()
 }
 
@@ -86,16 +97,20 @@ func (o objectChecks) Match(it vocab.Item) bool {
 	return All(o...).Match(act.Object)
 }
 
-func (o objectChecks) String() string {
+func (o objectChecks) GoString() string {
+	if len(o) == 0 {
+		return ""
+	}
 	ss := strings.Builder{}
-	ss.WriteString("object.")
+	ss.WriteString("object={")
 	for i, fn := range o {
-		if sss, ok := fn.(fmt.Stringer); ok {
-			ss.WriteString(sss.String())
+		if sss, ok := fn.(fmt.GoStringer); ok {
+			ss.WriteString(sss.GoString())
 		}
 		if i < len(o)-1 {
 			ss.WriteRune(',')
 		}
 	}
+	ss.WriteString("}")
 	return ss.String()
 }

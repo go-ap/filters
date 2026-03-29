@@ -4,7 +4,6 @@ import (
 	"errors"
 	"net/url"
 	"reflect"
-	"strings"
 	"testing"
 
 	vocab "github.com/go-ap/activitypub"
@@ -538,17 +537,159 @@ func Test_fromValues(t *testing.T) {
 			arg:  vals(kv("name", "john doe")),
 			want: Checks{NameIs("john doe")},
 		},
+		// Summary
+		{
+			name: "Empty Summary",
+			arg:  vals(kv("summary", "")),
+			want: Checks{SummaryEmpty},
+		},
+		{
+			name: "Not empty Summary",
+			arg:  vals(kv("summary", "!")),
+			want: Checks{Not(SummaryEmpty)},
+		},
+		{
+			name: "Summary like",
+			arg:  vals(kv("summary", "~test")),
+			want: Checks{SummaryLike("test")},
+		},
+		{
+			name: "Summary equals",
+			arg:  vals(kv("summary", "john doe")),
+			want: Checks{SummaryIs("john doe")},
+		},
+		// Content
+		{
+			name: "Empty Content",
+			arg:  vals(kv("content", "")),
+			want: Checks{ContentEmpty},
+		},
+		{
+			name: "Not empty Content",
+			arg:  vals(kv("content", "!")),
+			want: Checks{Not(ContentEmpty)},
+		},
+		{
+			name: "Content like",
+			arg:  vals(kv("content", "~test")),
+			want: Checks{ContentLike("test")},
+		},
+		{
+			name: "Content equals",
+			arg:  vals(kv("content", "john doe")),
+			want: Checks{ContentIs("john doe")},
+		},
+		// PreferredUsername
+		{
+			name: "Empty PreferredUsername",
+			arg:  vals(kv("preferredUsername", "")),
+			want: Checks{PreferredUsernameEmpty},
+		},
+		{
+			name: "Not empty PreferredUsername",
+			arg:  vals(kv("preferredUsername", "!")),
+			want: Checks{Not(PreferredUsernameEmpty)},
+		},
+		{
+			name: "PreferredUsername like",
+			arg:  vals(kv("preferredUsername", "~test")),
+			want: Checks{PreferredUsernameLike("test")},
+		},
+		{
+			name: "PreferredUsername equals",
+			arg:  vals(kv("preferredUsername", "john doe")),
+			want: Checks{PreferredUsernameIs("john doe")},
+		},
+		// Actor
+		{
+			name: "actor id equals",
+			arg:  vals(kv("actor.id", "http://example.com/~jdoe")),
+			want: Checks{Actor(SameID("http://example.com/~jdoe"))},
+		},
+		// Object
+		{
+			name: "object id equals",
+			arg:  vals(kv("object.id", "http://example.com/1")),
+			want: Checks{Object(SameID("http://example.com/1"))},
+		},
+		// Target
+		{
+			name: "target id equals",
+			arg:  vals(kv("target.id", "http://example.com/2")),
+			want: Checks{Target(SameID("http://example.com/2"))},
+		},
+		// Tag
+		{
+			name: "tag id equals",
+			arg:  vals(kv("tag.id", "http://example.com/tag1")),
+			want: Checks{Tag(SameID("http://example.com/tag1"))},
+		},
+		// AttributedTo
+		{
+			name: "Empty AttributedTo",
+			arg:  vals(kv("attributedTo", "")),
+			want: Checks{attributedToNil{}},
+		},
+		{
+			name: "Not empty AttributedTo",
+			arg:  vals(kv("attributedTo", "!")),
+			want: Checks{Not(attributedToNil{})},
+		},
+		{
+			name: "AttributedTo like",
+			arg:  vals(kv("attributedTo", "~test")),
+			want: Checks{AttributedToLike("test")},
+		},
+		{
+			name: "AttributedTo equals",
+			arg:  vals(kv("attributedTo", "https://example.com")),
+			want: Checks{SameAttributedTo("https://example.com")},
+		},
+		// InReplyTo
+		{
+			name: "Empty InReplyTo",
+			arg:  vals(kv("inReplyTo", "")),
+			want: Checks{inReplyToNil{}},
+		},
+		{
+			name: "Not empty InReplyTo",
+			arg:  vals(kv("inReplyTo", "!")),
+			want: Checks{Not(inReplyToNil{})},
+		},
+		{
+			name: "InReplyTo like",
+			arg:  vals(kv("inReplyTo", "~test")),
+			want: Checks{InReplyToLike("test")},
+		},
+		{
+			name: "InReplyTo equals",
+			arg:  vals(kv("inReplyTo", "https://example.com")),
+			want: Checks{SameInReplyTo("https://example.com")},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if strings.Contains(tt.name, "Name") {
-				t.Skipf("Skipping because the reflect.DeepEquals doesn't work for NaturalLanguageValChecks as they contain function pointers")
-			}
-			if got := fromValues(tt.arg); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("fromValues() = %v, want %v", got, tt.want)
+			if got := fromValues(tt.arg); !cmp.Equal(got, tt.want, cmp.Comparer(NaturalLanguageValuesComparer)) {
+				t.Errorf("fromValues() = %s", cmp.Diff(tt.want, got, cmp.Comparer(NaturalLanguageValuesComparer)))
 			}
 		})
 	}
+}
+
+func NaturalLanguageValuesComparer(n1, n2 naturalLanguageValCheck) bool {
+	if !sameFns(n1.checkFn, n2.checkFn) {
+		return false
+	}
+	if !sameFns(n1.accumFn, n2.accumFn) {
+		return false
+	}
+	if n1.checkValue != n2.checkValue {
+		return false
+	}
+	if n1.typ != n2.typ {
+		return false
+	}
+	return true
 }
 
 func kv(key string, values ...string) url.Values {

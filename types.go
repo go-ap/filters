@@ -29,16 +29,16 @@ func HasType(ty ...vocab.ActivityVocabularyType) Check {
 
 type withTypes vocab.ActivityVocabularyTypes
 
-func (types withTypes) Match(it vocab.Item) bool {
+func (tt withTypes) Match(it vocab.Item) bool {
 	if vocab.IsNil(it) || it.GetType() == nil {
-		return len(types) == 0
+		return len(tt) == 0
 	}
 	matchFn := func(ob vocab.Item) bool {
 		withType := vocab.ActivityVocabularyTypes{}
 		if typ := ob.GetType(); typ != nil {
 			withType = typ.AsTypes()
 		}
-		return vocab.AnyTypes(types...).Match(withType...)
+		return vocab.AnyTypes(tt...).Match(withType...)
 	}
 
 	if !vocab.IsItemCollection(it) {
@@ -46,24 +46,19 @@ func (types withTypes) Match(it vocab.Item) bool {
 	}
 
 	itemsHaveType := false
-	_ = vocab.OnItemCollection(it, func(col *vocab.ItemCollection) error {
-		for _, ob := range col.Collection() {
-			if itemsHaveType = matchFn(ob); itemsHaveType {
-				break
-			}
-		}
+	_ = vocab.OnItem(it, func(it vocab.Item) error {
+		itemsHaveType = itemsHaveType || matchFn(it)
 		return nil
 	})
-
 	return itemsHaveType
 }
 
-func (types withTypes) String() string {
+func (tt withTypes) GoString() string {
 	ss := strings.Builder{}
 	ss.WriteString("type=[")
-	for i, typ := range types {
+	for i, typ := range tt {
 		ss.WriteString(string(typ))
-		if i < len(types)-1 {
+		if i < len(tt)-1 {
 			ss.WriteRune(',')
 		}
 	}

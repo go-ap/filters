@@ -161,12 +161,10 @@ var idFilters = checkGroup{
 	},
 }
 
-var iriFilters = checkGroup{
-	nilFn:  NilIRI,
-	likeFn: IRILike,
-	sameFn: func(s string) Check {
-		return SameIRI(vocab.IRI(s))
-	},
+var preferredUsernameFilters = checkGroup{
+	nilFn:  PreferredUsernameEmpty,
+	likeFn: PreferredUsernameLike,
+	sameFn: PreferredUsernameIs,
 }
 
 var nameFilters = checkGroup{
@@ -246,7 +244,7 @@ func fromValues(q url.Values) Checks {
 		case keyContent:
 			f = append(f, contentFilters.build(vv...))
 		case keyPreferredUsername:
-			f = append(f, contentFilters.build(vv...))
+			f = append(f, preferredUsernameFilters.build(vv...))
 		case keyActor:
 			if len(remainder) == 0 {
 				remainder = keyID

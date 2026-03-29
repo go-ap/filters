@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	vocab "github.com/go-ap/activitypub"
+	"github.com/google/go-cmp/cmp"
 )
 
 func Test_Recipients_Match(t *testing.T) {
@@ -63,6 +64,42 @@ func Test_Recipients_Match(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := Recipients(tt.a).Match(tt.it); got != tt.want {
 				t.Errorf("Match() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestRecipientsChecks(t *testing.T) {
+	tests := []struct {
+		name string
+		args []Check
+		want Checks
+	}{
+		{
+			name: "empty",
+			args: nil,
+			want: Checks{},
+		},
+		{
+			name: "no match, one filter",
+			args: []Check{NilInReplyTo},
+			want: Checks{},
+		},
+		{
+			name: "no match, multiple filters",
+			args: []Check{NilInReplyTo, SameID("http://example.com")},
+			want: Checks{},
+		},
+		{
+			name: "matches, multiple filters",
+			args: []Check{NilInReplyTo, SameID("http://example.com"), Recipients("http://example.com")},
+			want: Checks{recipients("http://example.com")},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := RecipientsChecks(tt.args...); !cmp.Equal(got, tt.want) {
+				t.Errorf("RecipientsChecks() = %v, want %v", got, tt.want)
 			}
 		})
 	}

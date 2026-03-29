@@ -19,10 +19,16 @@ func FirstPage() pagValues {
 }
 
 func PrevPage(it vocab.Item) pagValues {
+	if vocab.IsNil(it) || len(it.GetLink()) == 0 {
+		return pagValues{}
+	}
 	return pagValues{keyBefore: []string{string(it.GetLink())}}
 }
 
 func NextPage(it vocab.Item) pagValues {
+	if vocab.IsNil(it) || len(it.GetLink()) == 0 {
+		return pagValues{}
+	}
 	return pagValues{keyAfter: []string{string(it.GetLink())}}
 }
 

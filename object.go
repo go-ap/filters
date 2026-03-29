@@ -43,7 +43,7 @@ func (i idEquals) Match(item vocab.Item) bool {
 	return item.GetID().Equals(vocab.IRI(i), false)
 }
 
-func (i idEquals) String() string {
+func (i idEquals) GoString() string {
 	return `id=` + string(i)
 }
 
@@ -63,7 +63,7 @@ func (l idLike) Match(item vocab.Item) bool {
 	return strings.Contains(nfc(item.GetID().String()), nfc(fragStr))
 }
 
-func (l idLike) String() string {
+func (l idLike) GoString() string {
 	return `id=~` + string(l)
 }
 

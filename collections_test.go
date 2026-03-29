@@ -118,3 +118,37 @@ func TestAfter(t *testing.T) {
 		})
 	}
 }
+
+func Test_afterCrit_GoString(t *testing.T) {
+	type fields struct {
+		check bool
+		fns   []Check
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   string
+	}{
+		{
+			name:   "empty",
+			fields: fields{},
+			want:   "",
+		},
+		{
+			name:   "after id",
+			fields: fields{fns: Checks{SameID("http://example.com")}},
+			want:   "after={id=http://example.com}",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			a := afterCrit{
+				check: tt.fields.check,
+				fns:   tt.fields.fns,
+			}
+			if got := a.GoString(); got != tt.want {
+				t.Errorf("GoString() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

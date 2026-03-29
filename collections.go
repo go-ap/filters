@@ -31,7 +31,7 @@ func (cnt *counter) Match(it vocab.Item) bool {
 	return true
 }
 
-func (cnt *counter) String() string {
+func (cnt *counter) GoString() string {
 	return "maxItems=" + strconv.Itoa(cnt.max)
 }
 
@@ -44,17 +44,21 @@ func After(fns ...Check) Check {
 	return &afterCrit{check: false, fns: fns}
 }
 
-func (a afterCrit) String() string {
+func (a afterCrit) GoString() string {
+	if len(a.fns) == 0 {
+		return ""
+	}
 	ss := strings.Builder{}
-	ss.WriteString("after.")
+	ss.WriteString("after={")
 	for i, fn := range a.fns {
-		if sss, ok := fn.(fmt.Stringer); ok {
-			ss.WriteString(sss.String())
+		if sss, ok := fn.(fmt.GoStringer); ok {
+			ss.WriteString(sss.GoString())
 		}
 		if i < len(a.fns)-1 {
 			ss.WriteRune(',')
 		}
 	}
+	ss.WriteString("}")
 	return ss.String()
 }
 

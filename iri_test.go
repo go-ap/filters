@@ -255,7 +255,7 @@ func Test_iriNil_Match(t *testing.T) {
 	}
 }
 
-func Test_iriLike_String(t *testing.T) {
+func Test_iriLike_GoString(t *testing.T) {
 	tests := []struct {
 		name string
 		l    iriLike
@@ -274,14 +274,14 @@ func Test_iriLike_String(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.l.String(); got != tt.want {
+			if got := tt.l.GoString(); got != tt.want {
 				t.Errorf("String() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func Test_iriEquals_String(t *testing.T) {
+func Test_iriEquals_GoString(t *testing.T) {
 	tests := []struct {
 		name string
 		i    iriEquals
@@ -300,7 +300,7 @@ func Test_iriEquals_String(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.i.String(); got != tt.want {
+			if got := tt.i.GoString(); got != tt.want {
 				t.Errorf("String() = %v, want %v", got, tt.want)
 			}
 		})

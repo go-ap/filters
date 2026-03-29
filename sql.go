@@ -33,6 +33,7 @@ func SQLWhere(s *Stmt, ff ...Check) error {
 }
 
 func getWhereClauses(s *Stmt, f ...Check) {
+	//addNotClauses(s, f...)
 	addTypeWheres(s, f...)
 	addIRIWheres(s, f...)
 	addNLVWheres(s, f...)
@@ -40,6 +41,35 @@ func getWhereClauses(s *Stmt, f ...Check) {
 	addAttributedToWheres(s, f...)
 	addURLWheres(s, f...)
 	addContextWheres(s, f...)
+}
+
+func addNotClauses(s *Stmt, f ...Check) {
+	if s == nil || len(f) == 0 {
+		return
+	}
+
+	nots := make([]any, 0)
+	var os *Stmt
+	hasNots := false
+	/*
+		for _, check := range f {
+			switch c := check.(type) {
+			case notCrit:
+				nots = append()
+			}
+		}
+	*/
+	if len(nots) > 0 {
+		if len(nots) == 1 {
+			s.Where("iri = ?", nots[0])
+		} else {
+			s.Where("iri").In(nots...)
+		}
+	}
+	if hasNots {
+		tsql := strings.TrimPrefix(s.String(), " WHERE ")
+		os.Where("("+tsql+" OR iri IS NULL)", s.Args()...)
+	}
 }
 
 func addIRIWheres(s *Stmt, f ...Check) {

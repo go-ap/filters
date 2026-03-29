@@ -3,6 +3,8 @@ packages:
   - go
 sources:
   - https://github.com/go-ap/filters
+secrets:
+  - 59b89b62-3caa-418d-938f-0cd45027f310
 environment:
   GO111MODULE: 'on'
 tasks:
@@ -13,3 +15,4 @@ tasks:
       set -a +x
       cd filters
       make coverage
+      go tool goveralls -flagname unit-tests -service=${CI_NAME} -coverprofile filters.coverprofile -repotokenfile ~/.coveralls.tok

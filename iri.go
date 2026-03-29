@@ -17,7 +17,7 @@ func (i iriEquals) Match(it vocab.Item) bool {
 	return it.GetLink().Equal(vocab.IRI(i))
 }
 
-func (i iriEquals) String() string {
+func (i iriEquals) GoString() string {
 	return `iri=` + string(i)
 }
 
@@ -37,7 +37,7 @@ func (frag iriLike) Match(it vocab.Item) bool {
 	return strings.Contains(nfc(it.GetLink().String()), nfc(fragStr))
 }
 
-func (frag iriLike) String() string {
+func (frag iriLike) GoString() string {
 	return `iri=~` + string(frag)
 }
 

@@ -49,11 +49,13 @@ func (ff Checks) runOnItem(it vocab.Item) vocab.Item {
 	return nil
 }
 
+var nilCheck = func(_ vocab.Item) bool {
+	return true
+}
+
 func checkFn(ff Checks) func(vocab.Item) bool {
 	if len(ff) == 0 {
-		return func(_ vocab.Item) bool {
-			return true
-		}
+		return nilCheck
 	}
 	if len(ff) == 1 && ff[0] != nil {
 		return Check(ff[0]).Match
