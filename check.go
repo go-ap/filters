@@ -2,7 +2,12 @@
 // at load time.
 package filters
 
-import vocab "github.com/go-ap/activitypub"
+import (
+	"fmt"
+	"strings"
+
+	vocab "github.com/go-ap/activitypub"
+)
 
 // Check represents an interface for a filter that can be applied on a [vocab.Item]
 // and it returns true if it matches and false if it does not.
@@ -47,6 +52,14 @@ func (ff Checks) runOnItem(it vocab.Item) vocab.Item {
 		return it
 	}
 	return nil
+}
+
+func (ff Checks) GoString() string {
+	b := make([]string, 0, len(ff))
+	for _, f := range ff {
+		b = append(b, fmt.Sprintf("%#v", f))
+	}
+	return strings.Join(b, "&")
 }
 
 var nilCheck = func(_ vocab.Item) bool {

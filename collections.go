@@ -44,17 +44,17 @@ func After(fns ...Check) Check {
 	return &afterCrit{check: false, fns: fns}
 }
 
-func (a afterCrit) GoString() string {
-	if len(a.fns) == 0 {
+func (isAfter *afterCrit) GoString() string {
+	if len(isAfter.fns) == 0 {
 		return ""
 	}
 	ss := strings.Builder{}
 	ss.WriteString("after={")
-	for i, fn := range a.fns {
+	for i, fn := range isAfter.fns {
 		if sss, ok := fn.(fmt.GoStringer); ok {
 			ss.WriteString(sss.GoString())
 		}
-		if i < len(a.fns)-1 {
+		if i < len(isAfter.fns)-1 {
 			ss.WriteRune(',')
 		}
 	}

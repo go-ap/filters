@@ -155,3 +155,24 @@ func Test_checkFn(t *testing.T) {
 		})
 	}
 }
+
+func TestChecks_GoString(t *testing.T) {
+	tests := []struct {
+		name string
+		ff   Checks
+		want string
+	}{
+		{
+			name: "empty",
+			ff:   nil,
+			want: "",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.ff.GoString(); got != tt.want {
+				t.Errorf("GoString() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
