@@ -1,6 +1,7 @@
 package index
 
 import (
+	"bytes"
 	"time"
 
 	vocab "github.com/go-ap/activitypub"
@@ -74,6 +75,15 @@ func ExtractSummary(li vocab.LinkOrIRI) []string {
 	return result
 }
 
+func contentHasDataURI(nlv vocab.NaturalLanguageValues) bool {
+	for _, nv := range nlv {
+		if bytes.HasPrefix(nv, []byte("data:")) {
+			return true
+		}
+	}
+	return false
+}
+
 // ExtractContent returns the tokens in the "content" property of the [vocab.Item]
 func ExtractContent(li vocab.LinkOrIRI) []string {
 	it, ok := li.(vocab.Item)
@@ -123,7 +133,7 @@ func textToWords(text string) []string {
 //
 //	See something like https://pkg.go.dev/github.com/huantt/plaintext-extractor
 func tokenizeNatLangVal(nlv vocab.NaturalLanguageValues) []string {
-	if nlv == nil {
+	if nlv == nil || contentHasDataURI(nlv) {
 		return nil
 	}
 

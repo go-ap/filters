@@ -1,7 +1,6 @@
 package index
 
 import (
-	"reflect"
 	"sort"
 	"testing"
 	"time"
@@ -40,8 +39,8 @@ func Test_derefObject(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := derefObject(tt.arg); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("derefObject() = %v, want %v", got, tt.want)
+			if got := derefObject(tt.arg); !cmp.Equal(got, tt.want) {
+				t.Errorf("derefObject() = %s", cmp.Diff(tt.want, got))
 			}
 		})
 	}
@@ -211,8 +210,8 @@ func Test_ExtractType(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := ExtractType(tt.arg); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ExtractType() = %#v, want %#v", got, tt.want)
+			if got := ExtractType(tt.arg); !cmp.Equal(got, tt.want) {
+				t.Errorf("ExtractType() = %s", cmp.Diff(tt.want, got))
 			}
 		})
 	}
@@ -250,8 +249,8 @@ func Test_ExtractName(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := ExtractName(tt.arg); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ExtractName() = %#v, want %#v", got, tt.want)
+			if got := ExtractName(tt.arg); !cmp.Equal(got, tt.want, cmp.Comparer(NaturalLanguageValueEqual)) {
+				t.Errorf("ExtractName() = %s", cmp.Diff(tt.want, got, cmp.Comparer(NaturalLanguageValueEqual)))
 			}
 		})
 	}
@@ -280,8 +279,8 @@ func Test_ExtractPreferredUsername(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := ExtractPreferredUsername(tt.arg)
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ExtractPreferredUsername() = %#v, want %#v", got, tt.want)
+			if !cmp.Equal(got, tt.want, cmp.Comparer(NaturalLanguageValueEqual)) {
+				t.Errorf("ExtractPreferredUsername() = %s", cmp.Diff(tt.want, got, cmp.Comparer(NaturalLanguageValueEqual)))
 			}
 		})
 	}
@@ -306,15 +305,21 @@ func Test_ExtractSummary(t *testing.T) {
 			arg:  vocab.Object{Summary: nlv(kv(vocab.NilLangRef, vocab.Content("Lorem ipsum dolor sic amet")))},
 			want: []string{"Lorem", "ipsum", "dolor", "amet"},
 		},
+		{
+			name: "skip media URI content",
+			arg:  vocab.Object{Content: nlv(kv(vocab.NilLangRef, vocab.Content("data:image/png;base64,")))},
+			want: nil,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := ExtractSummary(tt.arg); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ExtractSummary() = %#v, want %#v", got, tt.want)
+			if got := ExtractSummary(tt.arg); !cmp.Equal(got, tt.want) {
+				t.Errorf("ExtractSummary() = %s", cmp.Diff(tt.want, got, cmp.Comparer(NaturalLanguageValueEqual)))
 			}
 		})
 	}
 }
+
 func Test_ExtractContent(t *testing.T) {
 	tests := []struct {
 		name string
@@ -334,11 +339,16 @@ func Test_ExtractContent(t *testing.T) {
 			arg:  vocab.Object{Content: nlv(kv(vocab.NilLangRef, vocab.Content("Lorem ipsum dolor sic amet")))},
 			want: []string{"Lorem", "ipsum", "dolor", "amet"},
 		},
+		{
+			name: "skip media URI content",
+			arg:  vocab.Object{Content: nlv(kv(vocab.NilLangRef, vocab.Content("data:image/png;base64,")))},
+			want: nil,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := ExtractContent(tt.arg); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ExtractContent() = %#v, want %#v", got, tt.want)
+			if got := ExtractContent(tt.arg); !cmp.Equal(got, tt.want) {
+				t.Errorf("ExtractContent() = %s", cmp.Diff(tt.want, got, cmp.Comparer(NaturalLanguageValueEqual)))
 			}
 		})
 	}
@@ -429,8 +439,8 @@ func Test_ExtractActor(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := ExtractActor(tt.arg); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ExtractActor() = %#v, want %#v", got, tt.want)
+			if got := ExtractActor(tt.arg); !cmp.Equal(got, tt.want) {
+				t.Errorf("ExtractActor() = %s", cmp.Diff(tt.want, got))
 			}
 		})
 	}
@@ -483,8 +493,8 @@ func Test_ExtractObject(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := ExtractObject(tt.arg); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ExtractObject() = %#v, want %#v", got, tt.want)
+			if got := ExtractObject(tt.arg); !cmp.Equal(got, tt.want) {
+				t.Errorf("ExtractObject() = %s", cmp.Diff(tt.want, got))
 			}
 		})
 	}
@@ -551,8 +561,8 @@ func Test_ExtractRecipients(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := ExtractRecipients(tt.arg)
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ExtractRecipients() = %#v, want %#v", got, tt.want)
+			if !cmp.Equal(got, tt.want) {
+				t.Errorf("ExtractRecipients() = %s", cmp.Diff(tt.want, got))
 			}
 		})
 	}
@@ -592,8 +602,8 @@ func TestExtractInReplyTo(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := ExtractInReplyTo(tt.arg); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ExtractInReplyTo() = %v, want %v", got, tt.want)
+			if got := ExtractInReplyTo(tt.arg); !cmp.Equal(got, tt.want) {
+				t.Errorf("ExtractInReplyTo() = %s", cmp.Diff(tt.want, got))
 			}
 		})
 	}
@@ -625,8 +635,8 @@ func TestExtractPublished(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := ExtractPublished(tt.arg); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ExtractPublished() = %v, want %v", got, tt.want)
+			if got := ExtractPublished(tt.arg); !cmp.Equal(got, tt.want) {
+				t.Errorf("ExtractPublished() = %s", cmp.Diff(tt.want, got))
 			}
 		})
 	}
@@ -658,8 +668,8 @@ func TestExtractUpdated(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := ExtractUpdated(tt.arg); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ExtractUpdated() = %v, want %v", got, tt.want)
+			if got := ExtractUpdated(tt.arg); !cmp.Equal(got, tt.want) {
+				t.Errorf("ExtractUpdated() = %s", cmp.Diff(tt.want, got))
 			}
 		})
 	}
@@ -702,8 +712,8 @@ func TestExtractCollectionItems(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := ExtractCollectionItems(tt.arg); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ExtractCollectionItems() = %v, want %v", got, tt.want)
+			if got := ExtractCollectionItems(tt.arg); !cmp.Equal(got, tt.want) {
+				t.Errorf("ExtractCollectionItems() = %s", cmp.Diff(tt.want, got))
 			}
 		})
 	}
