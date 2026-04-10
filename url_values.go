@@ -3,6 +3,7 @@ package filters
 import (
 	"fmt"
 	"net/url"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -304,12 +305,11 @@ func fromValues(q url.Values) Checks {
 	return Checks{All(f...)}
 }
 
-func urlValue(f Check) url.Values {
+func urlValue(f Check, q url.Values) {
 	if f == nil {
-		return nil
+		return
 	}
 
-	q := url.Values{}
 	switch check := f.(type) {
 	case iriNil:
 		q.Add(keyIRI, "")
@@ -376,8 +376,28 @@ func urlValue(f Check) url.Values {
 		}
 	case *counter:
 		q.Set(keyMaxItems, strconv.FormatInt(int64(check.max), 10))
+	case naturalLanguageValCheck:
+		var name string
+		switch check.typ {
+		case byName:
+			name = keyName
+		case byPreferredUsername:
+			name = keyPreferredUsername
+		case bySummary:
+			name = keySummary
+		case byContent:
+			name = keyContent
+		}
+		rCheckFn := reflect.ValueOf(check.checkFn)
+		switch rCheckFn.Pointer() {
+		case nlvEqCheck.Pointer():
+			q.Add(name, check.checkValue)
+		case nlvEmptyCheck.Pointer():
+			q.Add(name, "")
+		case nlvLikeCheck.Pointer():
+			q.Add(name, "~"+check.checkValue)
+		}
 	}
-	return q
 }
 
 func extractURLVal(cc Check) string {
@@ -409,11 +429,7 @@ func urlValues(ff ...Check) url.Values {
 	}
 	q := url.Values{}
 	for _, f := range ff {
-		if qq := urlValue(f); len(qq) > 0 {
-			for k, v := range qq {
-				q[k] = v
-			}
-		}
+		urlValue(f, q)
 	}
 	return q
 }

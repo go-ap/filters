@@ -719,7 +719,7 @@ func Test_urlValue(t *testing.T) {
 		{
 			name: "empty",
 			arg:  nil,
-			want: nil,
+			want: url.Values{},
 		},
 		{
 			name: "id",
@@ -751,11 +751,72 @@ func Test_urlValue(t *testing.T) {
 			arg:  After(SameID("https://example.com")),
 			want: vals(kv(keyAfter, "https://example.com")),
 		},
+		{
+			name: "name is",
+			arg:  NameIs("jdoe"),
+			want: vals(kv(keyName, "jdoe")),
+		},
+		{
+			name: "name like",
+			arg:  NameLike("jdoe"),
+			want: vals(kv(keyName, "~jdoe")),
+		},
+		{
+			name: "name empty",
+			arg:  NameEmpty,
+			want: vals(kv(keyName, "")),
+		},
+		{
+			name: "preferredUsername is",
+			arg:  PreferredUsernameIs("rwar"),
+			want: vals(kv(keyPreferredUsername, "rwar")),
+		},
+		{
+			name: "preferredUsername like",
+			arg:  PreferredUsernameLike("rwar"),
+			want: vals(kv(keyPreferredUsername, "~rwar")),
+		},
+		{
+			name: "preferredUsername empty",
+			arg:  PreferredUsernameEmpty,
+			want: vals(kv(keyPreferredUsername, "")),
+		},
+		{
+			name: "summary is",
+			arg:  SummaryIs("lorem ipsum"),
+			want: vals(kv(keySummary, "lorem ipsum")),
+		},
+		{
+			name: "summary like",
+			arg:  SummaryLike("lorem ipsum"),
+			want: vals(kv(keySummary, "~lorem ipsum")),
+		},
+		{
+			name: "summary empty",
+			arg:  SummaryEmpty,
+			want: vals(kv(keySummary, "")),
+		},
+		{
+			name: "content is",
+			arg:  ContentIs("lorem ipsum"),
+			want: vals(kv(keyContent, "lorem ipsum")),
+		},
+		{
+			name: "content like",
+			arg:  ContentLike("lorem ipsum"),
+			want: vals(kv(keyContent, "~lorem ipsum")),
+		},
+		{
+			name: "content empty",
+			arg:  ContentEmpty,
+			want: vals(kv(keyContent, "")),
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := urlValue(tt.arg); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("urlValue() = %v, want %v", got, tt.want)
+			got := make(url.Values)
+			if urlValue(tt.arg, got); !cmp.Equal(got, tt.want) {
+				t.Errorf("urlValue() = %s", cmp.Diff(tt.want, got))
 			}
 		})
 	}

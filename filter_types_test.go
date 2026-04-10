@@ -1,6 +1,7 @@
 package filters
 
 import (
+	"net/url"
 	"reflect"
 	"testing"
 
@@ -320,8 +321,10 @@ func TestCursorChecks(t *testing.T) {
 }
 
 func checksEq(c1, c2 Check) bool {
-	u1 := urlValue(c1)
-	u2 := urlValue(c2)
+	u1 := make(url.Values)
+	u2 := make(url.Values)
+	urlValue(c1, u1)
+	urlValue(c2, u2)
 	return u1.Encode() == u2.Encode()
 }
 
