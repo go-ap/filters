@@ -20,9 +20,7 @@ go.sum: go.mod
 	$(GO) mod tidy
 
 test: go.sum clean
-	@
-	$(TEST) $(TEST_FLAGS) -cover $(TEST_TARGET) -json > tests.json || true
-	$(GO) tool tparse -file tests.json
+	$(TEST) $(TEST_FLAGS) -cover $(TEST_TARGET) -json | $(GO) tool tparse -all
 
 coverage: go.sum clean
 	@mkdir ./_coverage
