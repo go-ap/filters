@@ -69,15 +69,6 @@ func Test_SQLWhere(t *testing.T) {
 			gotArgs:  []any{vocab.IRI("http://example.com")},
 		},
 		{
-			name: "one ID with trailing /",
-			args: args{
-				s: sqlf.New(""),
-				f: []Check{SameID("http://example.com/")},
-			},
-			gotQuery: " WHERE iri IN (?,?)",
-			gotArgs:  []any{vocab.IRI("http://example.com"), vocab.IRI("http://example.com/")},
-		},
-		{
 			name: "multiple IDs",
 			args: args{
 				s: sqlf.New(""),
@@ -113,15 +104,6 @@ func Test_SQLWhere(t *testing.T) {
 			},
 			gotQuery: " WHERE iri = ?",
 			gotArgs:  []any{vocab.IRI("http://example.com")},
-		},
-		{
-			name: "one iri with trailing /",
-			args: args{
-				s: sqlf.New(""),
-				f: []Check{SameIRI("http://example.com/")},
-			},
-			gotQuery: " WHERE iri IN (?,?)",
-			gotArgs:  []any{vocab.IRI("http://example.com"), vocab.IRI("http://example.com/")},
 		},
 		{
 			name: "iri like",

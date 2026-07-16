@@ -86,14 +86,8 @@ func addIRIWheres(s *Stmt, f ...Check) {
 		switch i := check.(type) {
 		case idEquals:
 			inVal = append(inVal, vocab.IRI(i))
-			if ti, found := strings.CutSuffix(string(i), "/"); found {
-				inVal = append(inVal, vocab.IRI(ti))
-			}
 		case iriEquals:
 			inVal = append(inVal, vocab.IRI(i))
-			if ti, found := strings.CutSuffix(string(i), "/"); found {
-				inVal = append(inVal, vocab.IRI(ti))
-			}
 		case iriLike:
 			likeVal = append(likeVal, "%"+string(i)+"%")
 		case idLike:
