@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/RoaringBitmap/roaring v1.9.4
-	github.com/go-ap/activitypub v0.0.0-20260701132640-13f25467c431
+	github.com/go-ap/activitypub v0.0.0-20260720130625-e2c76676dde7
 	github.com/google/go-cmp v0.7.0
 	github.com/jdkato/prose v1.2.1
 	github.com/leporo/sqlf v1.4.0
