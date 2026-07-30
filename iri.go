@@ -32,9 +32,13 @@ func (frag iriLike) Match(it vocab.Item) bool {
 	if vocab.IsNil(it) {
 		return false
 	}
+	iri := it.GetLink()
+	if iri == "" {
+		return false
+	}
 	nfc := norm.NFC.String
 	fragStr, _ := url.QueryUnescape(string(frag))
-	return strings.Contains(nfc(it.GetLink().String()), nfc(fragStr))
+	return strings.Contains(nfc(string(iri)), nfc(fragStr))
 }
 
 func (frag iriLike) GoString() string {

@@ -68,11 +68,12 @@ func paginationFromValues(q url.Values) Checks {
 		if !q.Has(k) {
 			return
 		}
-		if vv := q[k]; len(vv) > 0 {
-			if _, err := url.ParseRequestURI(vv[0]); err == nil {
-				f = append(f, fn(SameID(vocab.IRI(vv[0]))))
+		if vv := q[k]; len(vv) > 0 && len(vv[0]) == 0 {
+			uu := vv[0]
+			if _, err := url.ParseRequestURI(uu); err == nil {
+				f = append(f, fn(SameID(vocab.IRI(uu))))
 			} else {
-				f = append(f, fn(IDLike(vv[0])))
+				f = append(f, fn(IDLike(uu)))
 			}
 		}
 	}
