@@ -20,6 +20,9 @@ func WithMaxCount(max int) Check {
 	return &counter{max: max}
 }
 
+// Match returns true if cnt.max has not been reached and false otherwise.
+// Please note than when used alongside other filters, it should be at the end
+// of the filter list, to apply **only** when all the others have returned true.
 func (cnt *counter) Match(it vocab.Item) bool {
 	if vocab.IsNil(it) {
 		return false

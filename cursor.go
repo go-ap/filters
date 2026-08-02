@@ -46,30 +46,13 @@ func PaginateCollection(it vocab.Item, filters ...Check) vocab.Item {
 
 	typ := col.GetType()
 	switch {
-	case vocab.OrderedCollectionType.Match(typ):
+	case vocab.OrderedCollectionType.Match(typ), vocab.CollectionType.Match(typ):
 		_ = vocab.OnOrderedCollection(col, func(c *vocab.OrderedCollection) error {
 			c.First = firstIRI
 			return nil
 		})
-	case vocab.OrderedCollectionPageType.Match(typ):
+	case vocab.OrderedCollectionPageType.Match(typ), vocab.CollectionPageType.Match(typ):
 		_ = vocab.OnOrderedCollectionPage(col, func(c *vocab.OrderedCollectionPage) error {
-			c.PartOf = partOfIRI
-			c.First = firstIRI
-			if !nextIRI.GetLink().Equal(vocab.EmptyIRI) && !nextIRI.GetLink().Equal(firstIRI) {
-				c.Next = nextIRI
-			}
-			if !prevIRI.GetLink().Equal(vocab.EmptyIRI) && !prevIRI.GetLink().Equal(firstIRI) {
-				c.Prev = prevIRI
-			}
-			return nil
-		})
-	case vocab.CollectionType.Match(typ):
-		_ = vocab.OnCollection(col, func(c *vocab.Collection) error {
-			c.First = firstIRI
-			return nil
-		})
-	case vocab.CollectionPageType.Match(typ):
-		_ = vocab.OnCollectionPage(col, func(c *vocab.CollectionPage) error {
 			c.PartOf = partOfIRI
 			c.First = firstIRI
 			if !nextIRI.GetLink().Equal(vocab.EmptyIRI) && !nextIRI.GetLink().Equal(firstIRI) {
