@@ -68,7 +68,7 @@ func paginationFromValues(q url.Values) Checks {
 		if !q.Has(k) {
 			return
 		}
-		if vv := q[k]; len(vv) > 0 && len(vv[0]) == 0 {
+		if vv := q[k]; len(vv) > 0 && len(vv[0]) > 0 {
 			uu := vv[0]
 			if _, err := url.ParseRequestURI(uu); err == nil {
 				f = append(f, fn(SameID(vocab.IRI(uu))))
