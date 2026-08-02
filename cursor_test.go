@@ -466,3 +466,23 @@ func TestPaginateCollection(t *testing.T) {
 		})
 	}
 }
+
+func TestResetPagination(t *testing.T) {
+	tests := []struct {
+		name   string
+		fns    []Check
+		wanted []Check
+	}{
+		{
+			name: "empty",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ResetPagination(tt.fns...)
+			if !cmp.Equal(tt.fns, tt.wanted) {
+				t.Errorf("ResetPagination() failed resetting %s", cmp.Diff(tt.wanted, tt.fns))
+			}
+		})
+	}
+}

@@ -8,6 +8,12 @@ import (
 	vocab "github.com/go-ap/activitypub"
 )
 
+func ResetPagination(fns ...Check) {
+	resetCounter(MaxCountCheck(fns...))
+	resetAfter(fns...)
+	resetBefore(fns...)
+}
+
 // PaginateCollection is a function that populates the received collection
 func PaginateCollection(it vocab.Item, filters ...Check) vocab.Item {
 	if vocab.IsNil(it) || !it.IsCollection() {
