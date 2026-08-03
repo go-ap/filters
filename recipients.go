@@ -9,10 +9,13 @@ func (r recipients) Match(it vocab.Item) bool {
 		return false
 	}
 	aud := accumRecipients(it)
-	return aud.Contains(vocab.IRI(r)) || aud.Contains(vocab.PublicNS)
+	return aud.Contains(vocab.IRI(r))
 }
 
 // Recipients creates a filter that checks the [vocab.IRI] against the recipients list of the item it gets applied on.
+// Please take care that vocabulary objects that do not satisfy the [vocab.HasRecipients] interface, will return the
+// [vocab.PublicNS] IRI as a recipient.
+// This mechanism is used by the Authorized filter to convey that they are considered public.
 func Recipients(iri vocab.IRI) Check {
 	return recipients(iri)
 }

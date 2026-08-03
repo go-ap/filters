@@ -35,6 +35,7 @@ func (ff Checks) Run(item vocab.Item) vocab.Item {
 		return FilterChecks(ff...).runOnItem(item)
 	}
 
+	// NOTE(marius): for collections, we first filter them, and then we paginate them
 	_ = vocab.OnItemCollection(item, func(col *vocab.ItemCollection) error {
 		if vocab.IsItemCollection(item) {
 			item = FilterChecks(ff...).runOnItems(*col)

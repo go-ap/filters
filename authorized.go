@@ -9,10 +9,18 @@ func (a authorized) Match(it vocab.Item) bool {
 		return false
 	}
 	i := vocab.IRI(a)
-	return Any(
-		Any(Actor(SameID(i)), Object(SameID(i)), SameAttributedTo(i)),
-		Any(Recipients(vocab.PublicNS), Recipients(i)),
-	).Match(it)
+	ff := Checks{
+		Actor(SameID(i)),
+		Object(SameID(i)),
+		SameAttributedTo(i),
+		Recipients(i),
+	}
+	if !vocab.PublicNS.Equal(i) {
+		// NOTE(marius): if any of the recipients is the public collection, the object is public
+		// and should match any authorized filter.
+		ff = append(ff, Recipients(vocab.PublicNS))
+	}
+	return Any(ff...).Match(it)
 }
 
 // Authorized creates a filter that checks the [vocab.IRI] against the recipients list of the item it gets applied on.

@@ -24,10 +24,10 @@ func Test_Recipients_Match(t *testing.T) {
 			want: false,
 		},
 		{
-			name: "example.com should implicitly match with public To",
+			name: "example.com negative match for public To",
 			a:    "https://example.com",
 			it:   &vocab.Object{To: vocab.ItemCollection{vocab.PublicNS}},
-			want: true,
+			want: false,
 		},
 		{
 			name: "example.com in To",
@@ -60,13 +60,13 @@ func Test_Recipients_Match(t *testing.T) {
 			want: true,
 		},
 		{
-			name: "Link should be public",
+			name: "Link negative match for specific recipient",
 			a:    "https://example.com",
 			it:   &vocab.Link{},
-			want: true,
+			want: false,
 		},
 		{
-			name: "Link should be public",
+			name: "Link positive match for public collection recipient",
 			a:    vocab.PublicNS,
 			it:   &vocab.Link{},
 			want: true,
