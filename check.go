@@ -31,7 +31,7 @@ func (ff Checks) Run(item vocab.Item) vocab.Item {
 		return item
 	}
 
-	if !item.IsCollection() {
+	if !vocab.IsCollection(item) {
 		return FilterChecks(ff...).runOnItem(item)
 	}
 

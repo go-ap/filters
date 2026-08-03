@@ -16,7 +16,7 @@ func ResetPagination(fns ...Check) {
 
 // PaginateCollection is a function that populates the received collection
 func PaginateCollection(it vocab.Item, filters ...Check) vocab.Item {
-	if vocab.IsNil(it) || !it.IsCollection() {
+	if vocab.IsNil(it) || !vocab.IsCollection(it) {
 		return it
 	}
 

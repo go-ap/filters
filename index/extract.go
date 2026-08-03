@@ -296,16 +296,10 @@ func derefObject(it vocab.Item) []vocab.IRI {
 		return nil
 	}
 	iris := make(vocab.IRIs, 0)
-	if it.IsCollection() {
-		_ = vocab.OnCollectionIntf(it, func(c vocab.CollectionInterface) error {
-			for _, ob := range c.Collection() {
-				iris = append(iris, ob.GetLink())
-			}
-			return nil
-		})
-	} else {
-		iris = append(iris, it.GetLink())
-	}
+	_ = vocab.OnItem(it, func(item vocab.Item) error {
+		iris = append(iris, item.GetLink())
+		return nil
+	})
 	return iris
 }
 
@@ -351,7 +345,7 @@ func ExtractUpdated(li vocab.LinkOrIRI) []uint64 {
 // of the received [vocab.Item]
 func ExtractCollectionItems(li vocab.LinkOrIRI) []uint64 {
 	it, ok := li.(vocab.Item)
-	if !ok || !it.IsCollection() {
+	if !ok || !vocab.IsCollection(it) {
 		return nil
 	}
 
