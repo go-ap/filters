@@ -9,7 +9,7 @@ func (r recipients) Match(it vocab.Item) bool {
 		return false
 	}
 	aud := accumRecipients(it)
-	return aud.Contains(vocab.IRI(r))
+	return aud.Contains(vocab.IRI(r)) || aud.Contains(vocab.PublicNS)
 }
 
 // Recipients creates a filter that checks the [vocab.IRI] against the recipients list of the item it gets applied on.
@@ -21,7 +21,9 @@ func accumRecipients(it vocab.Item) vocab.ItemCollection {
 	if withRec, ok := it.(vocab.HasRecipients); ok {
 		return withRec.Recipients()
 	}
-	return nil
+	// NOTE(marius): we consider the objects that don't implement
+	// the [vocab.HasRecipients] interface as being public.
+	return vocab.ItemCollection{vocab.PublicNS}
 }
 
 // RecipientsChecks returns all the Recipients checks in the fns slice.
