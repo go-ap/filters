@@ -22,18 +22,16 @@ func (a authorized) Match(it vocab.Item) bool {
 		Actor(SameID(i)),
 		SameAttributedTo(i),
 		Recipients(i),
+		// NOTE(marius): check also if the item is public.
+		IsPublic(),
 	}
+
 	if itemIsBlock(it) {
 		// NOTE(marius): if the authorized actor filter matches a Block activity's object, we return false.
 		// This translates into that specific actor not having access to the Block activities operated against them.
 		ff = append(ff, Object(Not(SameID(i))))
 	} else {
 		ff = append(ff, Object(SameID(i)))
-	}
-	if !vocab.PublicNS.Equal(i) {
-		// NOTE(marius): if any of the recipients is the public collection, the object is public
-		// and should match any authorized filter.
-		ff = append(ff, Recipients(vocab.PublicNS))
 	}
 	return Any(ff...).Match(it)
 }
@@ -45,6 +43,9 @@ func (a authorized) Match(it vocab.Item) bool {
 //   - for Objects we check their attributedTo property, and their recipients (to, bto, cc, bcc and audience)
 //   - for Activities and Intransitive Activities we also check the actor property.
 func Authorized(iri vocab.IRI) Check {
+	if vocab.PublicNS.Equal(iri) {
+		return public{}
+	}
 	return authorized(iri)
 }
 
@@ -59,4 +60,20 @@ func AuthorizedChecks(fns ...Check) Checks {
 		return ok
 	}
 	return filterCheckFns(validCheck, fns...)
+}
+
+// IsPublic creates a filter that matches if items have the [vocab.PublicNS] collection as a recipient.
+// This is the general convention for publicly addressed items.
+func IsPublic() Check {
+	return public{}
+}
+
+type public struct{}
+
+// Match checks all the "it" Item's recipients against the public namespace.
+func (p public) Match(it vocab.Item) bool {
+	if vocab.IsNil(it) {
+		return false
+	}
+	return accumRecipients(it).Contains(vocab.PublicNS)
 }

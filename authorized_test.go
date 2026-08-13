@@ -244,3 +244,88 @@ func TestAuthorizedChecks(t *testing.T) {
 		})
 	}
 }
+
+func Test_IsPublic_Match(t *testing.T) {
+	tests := []struct {
+		name string
+		it   vocab.Item
+		want bool
+	}{
+		{
+			name: "empty is not authorized",
+			want: false,
+		},
+		{
+			name: "object does not have public To",
+			it:   &vocab.Object{To: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
+			want: false,
+		},
+		{
+			name: "object has public To",
+			it:   &vocab.Object{To: vocab.ItemCollection{vocab.PublicNS}},
+			want: true,
+		},
+		{
+			name: "object does not have public CC",
+			it:   &vocab.Object{CC: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
+			want: false,
+		},
+		{
+			name: "object has public CC",
+			it:   &vocab.Object{CC: vocab.ItemCollection{vocab.PublicNS}},
+			want: true,
+		},
+		{
+			name: "object does not have public Bto",
+			it:   &vocab.Object{Bto: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
+			want: false,
+		},
+		{
+			name: "object has public Bto",
+			it:   &vocab.Object{Bto: vocab.ItemCollection{vocab.PublicNS}},
+			want: true,
+		},
+		{
+			name: "object does not have public BCC",
+			it:   &vocab.Object{BCC: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
+			want: false,
+		},
+		{
+			name: "object has public BCC",
+			it:   &vocab.Object{BCC: vocab.ItemCollection{vocab.PublicNS}},
+			want: true,
+		},
+		{
+			name: "object does not have public Audience",
+			it:   &vocab.Object{Audience: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
+			want: false,
+		},
+		{
+			name: "object has public Audience",
+			it:   &vocab.Object{Audience: vocab.ItemCollection{vocab.PublicNS}},
+			want: true,
+		},
+		{
+			name: "empty recipients is not public",
+			it:   &vocab.Object{Type: vocab.TombstoneType},
+			want: false,
+		},
+		{
+			name: "link matches any IRI",
+			it:   &vocab.Link{},
+			want: true,
+		},
+		{
+			name: "link matches public collection",
+			it:   &vocab.Link{},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsPublic().Match(tt.it); got != tt.want {
+				t.Errorf("Match() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

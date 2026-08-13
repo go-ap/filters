@@ -100,16 +100,11 @@ func extractBitmaps(checks Checks, indexes map[index.Type]index.Indexable) []*ro
 			result = append(result, index.GetBitmaps[uint64](indexes[ByAttributedTo], hFn(vocab.IRI(fil)))...)
 		case inReplyToEquals:
 			result = append(result, index.GetBitmaps[uint64](indexes[ByInReplyTo], hFn(vocab.IRI(fil)))...)
+		case public:
+			result = append(result, index.GetBitmaps[uint64](indexes[ByRecipients], hFn(vocab.PublicNS))...)
 		case authorized:
-			if iri := vocab.IRI(fil); iri.Equal(vocab.PublicNS) {
-				result = append(result, index.GetBitmaps[uint64](indexes[ByRecipients], hFn(iri))...)
-			} else {
-				result = append(result,
-					roaring64.FastOr(
-						index.GetBitmaps[uint64](indexes[ByRecipients], hFn(vocab.PublicNS), hFn(iri))...,
-					),
-				)
-			}
+			bmps := index.GetBitmaps[uint64](indexes[ByRecipients], hFn(vocab.PublicNS), hFn(vocab.IRI(fil)))
+			result = append(result, roaring64.FastOr(bmps...))
 		case recipients:
 			result = append(result, index.GetBitmaps[uint64](indexes[ByRecipients], hFn(vocab.IRI(fil)))...)
 		}
