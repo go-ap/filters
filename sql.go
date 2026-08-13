@@ -85,9 +85,25 @@ func addIRIWheres(s *Stmt, f ...Check) {
 	for _, check := range f {
 		switch i := check.(type) {
 		case idEquals:
-			inVal = append(inVal, vocab.IRI(i))
+			if u, err := vocab.IRI(i).URL(); err == nil {
+				inVal = append(inVal, vocab.IRI(u.String()))
+				if u.Scheme == "https" {
+					u.Scheme = "http"
+				} else {
+					u.Scheme = "https"
+				}
+				inVal = append(inVal, vocab.IRI(u.String()))
+			}
 		case iriEquals:
-			inVal = append(inVal, vocab.IRI(i))
+			if u, err := vocab.IRI(i).URL(); err == nil {
+				inVal = append(inVal, vocab.IRI(u.String()))
+				if u.Scheme == "https" {
+					u.Scheme = "http"
+				} else {
+					u.Scheme = "https"
+				}
+				inVal = append(inVal, vocab.IRI(u.String()))
+			}
 		case iriLike:
 			likeVal = append(likeVal, "%"+string(i)+"%")
 		case idLike:

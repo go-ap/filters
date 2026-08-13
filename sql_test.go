@@ -65,8 +65,8 @@ func Test_SQLWhere(t *testing.T) {
 				s: sqlf.New(""),
 				f: []Check{SameID("http://example.com")},
 			},
-			gotQuery: " WHERE iri = ?",
-			gotArgs:  []any{vocab.IRI("http://example.com")},
+			gotQuery: " WHERE iri IN (?,?)",
+			gotArgs:  []any{vocab.IRI("http://example.com"), vocab.IRI("https://example.com")},
 		},
 		{
 			name: "multiple IDs",
@@ -74,8 +74,11 @@ func Test_SQLWhere(t *testing.T) {
 				s: sqlf.New(""),
 				f: []Check{SameID("http://example.com"), SameID("http://social.example.com")},
 			},
-			gotQuery: " WHERE iri IN (?,?)",
-			gotArgs:  []any{vocab.IRI("http://example.com"), vocab.IRI("http://social.example.com")},
+			gotQuery: " WHERE iri IN (?,?,?,?)",
+			gotArgs: []any{
+				vocab.IRI("http://example.com"), vocab.IRI("https://example.com"),
+				vocab.IRI("http://social.example.com"), vocab.IRI("https://social.example.com"),
+			},
 		},
 		{
 			name: "one ID with nil",
@@ -83,8 +86,8 @@ func Test_SQLWhere(t *testing.T) {
 				s: sqlf.New(""),
 				f: []Check{SameID("http://example.com"), NilID},
 			},
-			gotQuery: " WHERE (iri = ? OR iri IS NULL)",
-			gotArgs:  []any{vocab.IRI("http://example.com")},
+			gotQuery: " WHERE (iri IN (?,?) OR iri IS NULL)",
+			gotArgs:  []any{vocab.IRI("http://example.com"), vocab.IRI("https://example.com")},
 		},
 		{
 			name: "multiple IDs with nil",
@@ -92,8 +95,11 @@ func Test_SQLWhere(t *testing.T) {
 				s: sqlf.New(""),
 				f: []Check{SameID("http://example.com"), SameID("http://social.example.com"), NilID},
 			},
-			gotQuery: " WHERE (iri IN (?,?) OR iri IS NULL)",
-			gotArgs:  []any{vocab.IRI("http://example.com"), vocab.IRI("http://social.example.com")},
+			gotQuery: " WHERE (iri IN (?,?,?,?) OR iri IS NULL)",
+			gotArgs: []any{
+				vocab.IRI("http://example.com"), vocab.IRI("https://example.com"),
+				vocab.IRI("http://social.example.com"), vocab.IRI("https://social.example.com"),
+			},
 		},
 		//
 		{
@@ -102,8 +108,8 @@ func Test_SQLWhere(t *testing.T) {
 				s: sqlf.New(""),
 				f: []Check{SameIRI("http://example.com")},
 			},
-			gotQuery: " WHERE iri = ?",
-			gotArgs:  []any{vocab.IRI("http://example.com")},
+			gotQuery: " WHERE iri IN (?,?)",
+			gotArgs:  []any{vocab.IRI("http://example.com"), vocab.IRI("https://example.com")},
 		},
 		{
 			name: "iri like",
@@ -120,8 +126,11 @@ func Test_SQLWhere(t *testing.T) {
 				s: sqlf.New(""),
 				f: []Check{SameIRI("http://example.com"), SameIRI("http://social.example.com")},
 			},
-			gotQuery: " WHERE iri IN (?,?)",
-			gotArgs:  []any{vocab.IRI("http://example.com"), vocab.IRI("http://social.example.com")},
+			gotQuery: " WHERE iri IN (?,?,?,?)",
+			gotArgs: []any{
+				vocab.IRI("http://example.com"), vocab.IRI("https://example.com"),
+				vocab.IRI("http://social.example.com"), vocab.IRI("https://social.example.com"),
+			},
 		},
 		{
 			name: "one iri with nil",
@@ -129,8 +138,8 @@ func Test_SQLWhere(t *testing.T) {
 				s: sqlf.New(""),
 				f: []Check{SameIRI("http://example.com"), NilIRI},
 			},
-			gotQuery: " WHERE (iri = ? OR iri IS NULL)",
-			gotArgs:  []any{vocab.IRI("http://example.com")},
+			gotQuery: " WHERE (iri IN (?,?) OR iri IS NULL)",
+			gotArgs:  []any{vocab.IRI("http://example.com"), vocab.IRI("https://example.com")},
 		},
 		{
 			name: "iri like with nil",
@@ -156,8 +165,11 @@ func Test_SQLWhere(t *testing.T) {
 				s: sqlf.New(""),
 				f: []Check{SameIRI("http://example.com"), SameIRI("http://social.example.com"), NilIRI},
 			},
-			gotQuery: " WHERE (iri IN (?,?) OR iri IS NULL)",
-			gotArgs:  []any{vocab.IRI("http://example.com"), vocab.IRI("http://social.example.com")},
+			gotQuery: " WHERE (iri IN (?,?,?,?) OR iri IS NULL)",
+			gotArgs: []any{
+				vocab.IRI("http://example.com"), vocab.IRI("https://example.com"),
+				vocab.IRI("http://social.example.com"), vocab.IRI("https://social.example.com"),
+			},
 		},
 		{
 			name: "name empty",
