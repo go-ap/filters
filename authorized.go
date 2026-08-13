@@ -4,6 +4,15 @@ import vocab "github.com/go-ap/activitypub"
 
 type authorized vocab.IRI
 
+func itemIsBlock(it vocab.Item) bool {
+	isBlock := false
+	_ = vocab.OnActivity(it, func(a *vocab.Activity) error {
+		isBlock = vocab.BlockType.Match(a.Type)
+		return nil
+	})
+	return isBlock
+}
+
 func (a authorized) Match(it vocab.Item) bool {
 	if vocab.IsNil(it) {
 		return false
@@ -11,9 +20,15 @@ func (a authorized) Match(it vocab.Item) bool {
 	i := vocab.IRI(a)
 	ff := Checks{
 		Actor(SameID(i)),
-		Object(SameID(i)),
 		SameAttributedTo(i),
 		Recipients(i),
+	}
+	if itemIsBlock(it) {
+		// NOTE(marius): if the authorized actor filter matches a Block activity's object, we return false.
+		// This translates into that specific actor not having access to the Block activities operated against them.
+		ff = append(ff, Object(Not(SameID(i))))
+	} else {
+		ff = append(ff, Object(SameID(i)))
 	}
 	if !vocab.PublicNS.Equal(i) {
 		// NOTE(marius): if any of the recipients is the public collection, the object is public

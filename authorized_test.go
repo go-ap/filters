@@ -18,7 +18,7 @@ func Test_Authorized_Match(t *testing.T) {
 			name: "empty is not authorized",
 		},
 		{
-			name: "example.com is not allowed",
+			name: "example.com is not allowed when not matching To",
 			a:    "https://example.com",
 			it:   &vocab.Object{To: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
 			want: false,
@@ -36,7 +36,7 @@ func Test_Authorized_Match(t *testing.T) {
 			want: true,
 		},
 		{
-			name: "example.com is not allowed",
+			name: "example.com is not allowed when not matching CC",
 			a:    "https://example.com",
 			it:   &vocab.Object{CC: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
 			want: false,
@@ -54,7 +54,7 @@ func Test_Authorized_Match(t *testing.T) {
 			want: true,
 		},
 		{
-			name: "example.com is not allowed",
+			name: "example.com is not allowed when not matching Bto",
 			a:    "https://example.com",
 			it:   &vocab.Object{Bto: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
 			want: false,
@@ -72,7 +72,7 @@ func Test_Authorized_Match(t *testing.T) {
 			want: true,
 		},
 		{
-			name: "example.com is not allowed",
+			name: "example.com is not allowed when not matching BCC",
 			a:    "https://example.com",
 			it:   &vocab.Object{BCC: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
 			want: false,
@@ -90,7 +90,7 @@ func Test_Authorized_Match(t *testing.T) {
 			want: true,
 		},
 		{
-			name: "example.com is not allowed",
+			name: "example.com is not allowed when not matching audience",
 			a:    "https://example.com",
 			it:   &vocab.Object{Audience: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
 			want: false,
@@ -175,6 +175,24 @@ func Test_Authorized_Match(t *testing.T) {
 			a:    vocab.PublicNS,
 			it:   &vocab.Link{},
 			want: true,
+		},
+		{
+			name: "object of block",
+			a:    "https://example.com/~jdoe",
+			it: &vocab.Activity{
+				Type:   vocab.BlockType,
+				Object: vocab.IRI("https://example.com/~jdoe"),
+			},
+			want: false,
+		},
+		{
+			name: "object with multiple values of block",
+			a:    "https://example.com/~jdoe",
+			it: &vocab.Activity{
+				Type:   vocab.BlockType,
+				Object: vocab.ItemCollection{vocab.IRI("https://example.com/~jdoe"), vocab.IRI("https://example.com/~alice")},
+			},
+			want: false,
 		},
 	}
 	for _, tt := range tests {
