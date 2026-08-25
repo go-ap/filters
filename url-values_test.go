@@ -927,6 +927,54 @@ func TestIRIf(t *testing.T) {
 			},
 			want: "http://example.com?maxItems=100",
 		},
+		{
+			name: "existing param maxItems=10",
+			args: args{
+				iri: "http://example.com?maxItems=100",
+				ff:  []Check{WithMaxCount(10)},
+			},
+			want: "http://example.com?maxItems=10",
+		},
+		{
+			name: "existing param maxItems=100 and type empty",
+			args: args{
+				iri: "http://example.com?maxItems=100",
+				ff:  []Check{HasType("")},
+			},
+			want: "http://example.com?maxItems=100&type=",
+		},
+		{
+			name: "existing param maxItems=100 and objects.type empty",
+			args: args{
+				iri: "http://example.com?maxItems=100",
+				ff:  []Check{Object(HasType(""))},
+			},
+			want: "http://example.com?maxItems=100&object.type=",
+		},
+		{
+			name: "maxItems=13 objects.type empty",
+			args: args{
+				iri: "http://example.com",
+				ff:  []Check{WithMaxCount(13), Object(HasType(""))},
+			},
+			want: "http://example.com?maxItems=13&object.type=",
+		},
+		{
+			name: "is public maxItems=13 objects.type empty",
+			args: args{
+				iri: "http://example.com",
+				ff:  []Check{IsPublic(), WithMaxCount(13), Object(HasType(""))},
+			},
+			want: "http://example.com?maxItems=13&object.type=",
+		},
+		{
+			name: "A real life example",
+			args: args{
+				iri: "http://example.com/inbox",
+				ff:  []Check{WithMaxCount(100), Object(HasType(vocab.ActorTypes...)), HasType(vocab.IgnoreType)},
+			},
+			want: "http://example.com/inbox?maxItems=100&object.type=Application&object.type=Group&object.type=Organization&object.type=Person&object.type=Service&type=Ignore",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

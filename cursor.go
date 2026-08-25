@@ -163,6 +163,7 @@ func CursorFromItem(it vocab.Item, filters ...Check) (vocab.Item, vocab.Item, vo
 	switch {
 	case vocab.OrderedCollectionPageType.Match(typ):
 		_ = vocab.OnOrderedCollectionPage(it, func(new *vocab.OrderedCollectionPage) error {
+			new.ID = IRIf(new.ID, filters...)
 			items := new.OrderedItems
 			new.OrderedItems, prev, next = filterCollection(sortItemsByPublishedUpdated(items), filters...)
 			if len(prev) > 0 {
@@ -175,6 +176,7 @@ func CursorFromItem(it vocab.Item, filters ...Check) (vocab.Item, vocab.Item, vo
 		})
 	case vocab.CollectionPageType.Match(typ):
 		_ = vocab.OnCollectionPage(it, func(new *vocab.CollectionPage) error {
+			new.ID = IRIf(new.ID, filters...)
 			items := new.Items
 			new.Items, prev, next = filterCollection(items, filters...)
 			if len(prev) > 0 {
@@ -190,6 +192,7 @@ func CursorFromItem(it vocab.Item, filters ...Check) (vocab.Item, vocab.Item, vo
 			result := new(vocab.OrderedCollectionPage)
 			old, _ := it.(*vocab.OrderedCollection)
 			err := vocab.OnOrderedCollection(result, func(new *vocab.OrderedCollection) error {
+				new.ID = IRIf(new.ID, filters...)
 				_, err := vocab.CopyOrderedCollectionProperties(new, old)
 				new.Type = vocab.OrderedCollectionPageType
 				items := new.OrderedItems
@@ -207,6 +210,7 @@ func CursorFromItem(it vocab.Item, filters ...Check) (vocab.Item, vocab.Item, vo
 			}
 		} else {
 			_ = vocab.OnOrderedCollection(it, func(new *vocab.OrderedCollection) error {
+				new.ID = IRIf(new.ID, filters...)
 				items := new.OrderedItems
 				new.OrderedItems, prev, next = filterCollection(sortItemsByPublishedUpdated(items), filters...)
 				if len(next) > 0 {
@@ -220,6 +224,7 @@ func CursorFromItem(it vocab.Item, filters ...Check) (vocab.Item, vocab.Item, vo
 			result := new(vocab.CollectionPage)
 			old, _ := it.(*vocab.Collection)
 			err := vocab.OnCollection(result, func(new *vocab.Collection) error {
+				new.ID = IRIf(new.ID, filters...)
 				_, err := vocab.CopyCollectionProperties(new, old)
 				new.Type = vocab.CollectionPageType
 				items := new.Items
@@ -237,6 +242,7 @@ func CursorFromItem(it vocab.Item, filters ...Check) (vocab.Item, vocab.Item, vo
 			}
 		} else {
 			_ = vocab.OnCollection(it, func(new *vocab.Collection) error {
+				new.ID = IRIf(new.ID, filters...)
 				items := new.Items
 				new.Items, prev, next = filterCollection(items, filters...)
 				if len(next) > 0 {

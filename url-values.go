@@ -444,7 +444,14 @@ func IRIf(iri vocab.IRI, ff ...Check) vocab.IRI {
 	if len(ff) == 0 {
 		return iri
 	}
-	u, _ := iri.URL()
-	u.RawQuery = urlValues(ff...).Encode()
+	u, err := iri.URL()
+	if err != nil {
+		u = new(url.URL)
+	}
+	q := u.Query()
+	for k, vv := range urlValues(ff...) {
+		q[k] = vv
+	}
+	u.RawQuery = q.Encode()
 	return vocab.IRI(u.String())
 }
