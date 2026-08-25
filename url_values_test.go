@@ -903,3 +903,36 @@ func TestToValues(t *testing.T) {
 		})
 	}
 }
+
+func TestIRIf(t *testing.T) {
+	type args struct {
+		iri vocab.IRI
+		ff  []Check
+	}
+	tests := []struct {
+		name string
+		args args
+		want vocab.IRI
+	}{
+		{
+			name: "empty",
+			args: args{},
+			want: "",
+		},
+		{
+			name: "maxItems=100",
+			args: args{
+				iri: "http://example.com",
+				ff:  []Check{WithMaxCount(100)},
+			},
+			want: "http://example.com?maxItems=100",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IRIf(tt.args.iri, tt.args.ff...); got != tt.want {
+				t.Errorf("IRIf() = %s, want %s", got, tt.want)
+			}
+		})
+	}
+}

@@ -439,3 +439,12 @@ func urlValues(ff ...Check) url.Values {
 func ToValues(ff ...Check) url.Values {
 	return urlValues(ff...)
 }
+
+func IRIf(iri vocab.IRI, ff ...Check) vocab.IRI {
+	if len(ff) == 0 {
+		return iri
+	}
+	u, _ := iri.URL()
+	u.RawQuery = urlValues(ff...).Encode()
+	return vocab.IRI(u.String())
+}
