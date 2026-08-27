@@ -457,6 +457,102 @@ func TestPaginateCollection(t *testing.T) {
 				vocab.Object{ID: "https://example.com/8", Type: vocab.DocumentType},
 			},
 		},
+		{
+			name: "links with pagination",
+			args: args{
+				it: vocab.ItemCollection{
+					vocab.Object{ID: "https://example.com/0", Type: vocab.NoteType},
+					vocab.Link{ID: "https://example.com/1", Type: vocab.LinkType},
+					vocab.Object{ID: "https://example.com/2", Type: vocab.DocumentType},
+					vocab.Link{ID: "https://example.com/3", Type: vocab.MentionType},
+					vocab.Object{ID: "https://example.com/4", Type: vocab.ArticleType},
+					vocab.Link{ID: "https://example.com/5", Type: vocab.LinkType},
+					vocab.Object{ID: "https://example.com/6", Type: vocab.NoteType},
+					vocab.Object{ID: "https://example.com/7", Type: vocab.ArticleType},
+					vocab.Object{ID: "https://example.com/8", Type: vocab.DocumentType},
+				},
+				filters: Checks{After(SameID("http://example.com/2")), WithMaxCount(3)},
+			},
+			want: vocab.ItemCollection{
+				vocab.Link{ID: "https://example.com/3", Type: vocab.MentionType},
+				vocab.Object{ID: "https://example.com/4", Type: vocab.ArticleType},
+				vocab.Link{ID: "https://example.com/5", Type: vocab.LinkType},
+			},
+		},
+		{
+			name: "ordered collection with after",
+			args: args{
+				it: &vocab.OrderedCollection{
+					ID:         "https://example.com/ordered-1",
+					Type:       vocab.OrderedCollectionType,
+					TotalItems: 9,
+					OrderedItems: vocab.ItemCollection{
+						vocab.Object{ID: "https://example.com/0", Type: vocab.NoteType},
+						vocab.Link{ID: "https://example.com/1", Type: vocab.LinkType},
+						vocab.Object{ID: "https://example.com/2", Type: vocab.DocumentType},
+						vocab.Link{ID: "https://example.com/3", Type: vocab.MentionType},
+						vocab.Object{ID: "https://example.com/4", Type: vocab.ArticleType},
+						vocab.Link{ID: "https://example.com/5", Type: vocab.LinkType},
+						vocab.Object{ID: "https://example.com/6", Type: vocab.NoteType},
+						vocab.Object{ID: "https://example.com/7", Type: vocab.ArticleType},
+						vocab.Object{ID: "https://example.com/8", Type: vocab.DocumentType},
+					},
+				},
+				filters: Checks{After(SameID("http://example.com/2")), WithMaxCount(3)},
+			},
+			want: &vocab.OrderedCollectionPage{
+				ID:         "https://example.com/ordered-1?after=http%3a%2F%2Fexample.com%2F2&maxItems=3",
+				Type:       vocab.OrderedCollectionPageType,
+				TotalItems: 9,
+				First:      vocab.IRI("https://example.com/ordered-1?maxItems=3"),
+				OrderedItems: vocab.ItemCollection{
+					vocab.Link{ID: "https://example.com/3", Type: vocab.MentionType},
+					vocab.Object{ID: "https://example.com/4", Type: vocab.ArticleType},
+					vocab.Link{ID: "https://example.com/5", Type: vocab.LinkType},
+				},
+				PartOf: vocab.IRI("https://example.com/ordered-1"),
+				Next:   vocab.IRI("https://example.com/ordered-1?after=https%3a%2F%2Fexample.com%2F5&maxItems=3"),
+				Prev:   vocab.IRI("https://example.com/ordered-1?before=https%3a%2F%2Fexample.com%2F3&maxItems=3"),
+			},
+		},
+		{
+			name: "collection with before",
+			args: args{
+				it: &vocab.Collection{
+					ID:         "https://example.com/ordered-1",
+					Type:       vocab.CollectionType,
+					TotalItems: 9,
+					Items: vocab.ItemCollection{
+						vocab.Object{ID: "https://example.com/0", Type: vocab.NoteType},
+						vocab.Link{ID: "https://example.com/1", Type: vocab.LinkType},
+						vocab.Object{ID: "https://example.com/2", Type: vocab.DocumentType},
+						vocab.Link{ID: "https://example.com/3", Type: vocab.MentionType},
+						vocab.Object{ID: "https://example.com/4", Type: vocab.ArticleType},
+						vocab.Link{ID: "https://example.com/5", Type: vocab.LinkType},
+						vocab.Object{ID: "https://example.com/6", Type: vocab.NoteType},
+						vocab.Object{ID: "https://example.com/7", Type: vocab.ArticleType},
+						vocab.Object{ID: "https://example.com/8", Type: vocab.DocumentType},
+					},
+				},
+				filters: Checks{Before(SameID("http://example.com/7")), WithMaxCount(5)},
+			},
+			want: &vocab.CollectionPage{
+				ID:         "https://example.com/ordered-1?before=http%3A%2F%2Fexample.com%2F7&maxItems=5",
+				Type:       vocab.CollectionPageType,
+				TotalItems: 9,
+				First:      vocab.IRI("https://example.com/ordered-1?maxItems=5"),
+				Items: vocab.ItemCollection{
+					vocab.Object{ID: "https://example.com/2", Type: vocab.DocumentType},
+					vocab.Link{ID: "https://example.com/3", Type: vocab.MentionType},
+					vocab.Object{ID: "https://example.com/4", Type: vocab.ArticleType},
+					vocab.Link{ID: "https://example.com/5", Type: vocab.LinkType},
+					vocab.Object{ID: "https://example.com/6", Type: vocab.NoteType},
+				},
+				PartOf: vocab.IRI("https://example.com/ordered-1"),
+				Prev:   vocab.IRI("https://example.com/ordered-1?before=https%3A%2F%2Fexample.com%2F2&maxItems=5"),
+				Next:   vocab.IRI("https://example.com/ordered-1?after=https%3A%2F%2Fexample.com%2F6&maxItems=5"),
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

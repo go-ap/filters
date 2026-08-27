@@ -2,7 +2,7 @@ package filters
 
 import (
 	"net/url"
-	"sort"
+	"slices"
 	"strconv"
 
 	vocab "github.com/go-ap/activitypub"
@@ -165,7 +165,8 @@ func CursorFromItem(it vocab.Item, filters ...Check) (vocab.Item, vocab.Item, vo
 		_ = vocab.OnOrderedCollectionPage(it, func(new *vocab.OrderedCollectionPage) error {
 			new.ID = IRIf(new.ID, filters...)
 			items := new.OrderedItems
-			new.OrderedItems, prev, next = filterCollection(sortItemsByPublishedUpdated(items), filters...)
+			slices.SortStableFunc(items, vocab.TimestampSortFunc)
+			new.OrderedItems, prev, next = filterCollection(items, filters...)
 			if len(prev) > 0 {
 				prevIRI = getURL(it.GetLink(), prev)
 			}
@@ -190,20 +191,22 @@ func CursorFromItem(it vocab.Item, filters ...Check) (vocab.Item, vocab.Item, vo
 	case vocab.OrderedCollectionType.Match(typ):
 		if shouldBePage {
 			result := new(vocab.OrderedCollectionPage)
-			old, _ := it.(*vocab.OrderedCollection)
-			err := vocab.OnOrderedCollection(result, func(new *vocab.OrderedCollection) error {
-				new.ID = IRIf(new.ID, filters...)
-				_, err := vocab.CopyOrderedCollectionProperties(new, old)
-				new.Type = vocab.OrderedCollectionPageType
-				items := new.OrderedItems
-				new.OrderedItems, prev, next = filterCollection(sortItemsByPublishedUpdated(items), filters...)
-				if len(prev) > 0 {
-					prevIRI = getURL(it.GetLink(), prev)
-				}
-				if len(next) > 0 {
-					nextIRI = getURL(it.GetLink(), next)
-				}
-				return err
+			err := vocab.OnOrderedCollection(it, func(old *vocab.OrderedCollection) error {
+				return vocab.OnOrderedCollection(result, func(new *vocab.OrderedCollection) error {
+					_, err := vocab.CopyOrderedCollectionProperties(new, old)
+					new.ID = IRIf(new.ID, filters...)
+					new.Type = vocab.OrderedCollectionPageType
+					items := new.OrderedItems
+					slices.SortStableFunc(items, vocab.TimestampSortFunc)
+					new.OrderedItems, prev, next = filterCollection(items, filters...)
+					if len(prev) > 0 {
+						prevIRI = getURL(it.GetLink(), prev)
+					}
+					if len(next) > 0 {
+						nextIRI = getURL(it.GetLink(), next)
+					}
+					return err
+				})
 			})
 			if err == nil {
 				it = result
@@ -212,7 +215,8 @@ func CursorFromItem(it vocab.Item, filters ...Check) (vocab.Item, vocab.Item, vo
 			_ = vocab.OnOrderedCollection(it, func(new *vocab.OrderedCollection) error {
 				new.ID = IRIf(new.ID, filters...)
 				items := new.OrderedItems
-				new.OrderedItems, prev, next = filterCollection(sortItemsByPublishedUpdated(items), filters...)
+				slices.SortStableFunc(items, vocab.TimestampSortFunc)
+				new.OrderedItems, prev, next = filterCollection(items, filters...)
 				if len(next) > 0 {
 					new.First = getURL(it.GetLink(), next)
 				}
@@ -222,20 +226,21 @@ func CursorFromItem(it vocab.Item, filters ...Check) (vocab.Item, vocab.Item, vo
 	case vocab.CollectionType.Match(typ):
 		if shouldBePage {
 			result := new(vocab.CollectionPage)
-			old, _ := it.(*vocab.Collection)
-			err := vocab.OnCollection(result, func(new *vocab.Collection) error {
-				new.ID = IRIf(new.ID, filters...)
-				_, err := vocab.CopyCollectionProperties(new, old)
-				new.Type = vocab.CollectionPageType
-				items := new.Items
-				new.Items, prev, next = filterCollection(items, filters...)
-				if len(prev) > 0 {
-					prevIRI = getURL(it.GetLink(), prev)
-				}
-				if len(next) > 0 {
-					nextIRI = getURL(it.GetLink(), next)
-				}
-				return err
+			err := vocab.OnCollection(it, func(old *vocab.Collection) error {
+				return vocab.OnCollection(result, func(new *vocab.Collection) error {
+					_, err := vocab.CopyCollectionProperties(new, old)
+					new.ID = IRIf(new.ID, filters...)
+					new.Type = vocab.CollectionPageType
+					items := new.Items
+					new.Items, prev, next = filterCollection(items, filters...)
+					if len(prev) > 0 {
+						prevIRI = getURL(it.GetLink(), prev)
+					}
+					if len(next) > 0 {
+						nextIRI = getURL(it.GetLink(), next)
+					}
+					return err
+				})
 			})
 			if err == nil {
 				it = result
@@ -254,7 +259,8 @@ func CursorFromItem(it vocab.Item, filters ...Check) (vocab.Item, vocab.Item, vo
 	case vocab.CollectionOfItems.Match(typ):
 		_ = vocab.OnItemCollection(it, func(col *vocab.ItemCollection) error {
 			items := *col
-			it, prev, next = filterCollection(sortItemsByPublishedUpdated(items), filters...)
+			slices.SortStableFunc(items, vocab.TimestampSortFunc)
+			it, prev, next = filterCollection(items, filters...)
 			if len(prev) > 0 {
 				prevIRI = getURL(it.GetLink(), prev)
 			}
@@ -312,19 +318,35 @@ func filterCollection(col vocab.ItemCollection, fns ...Check) (vocab.ItemCollect
 	}
 	if maxItems == 0 {
 		// NOTE(marius): this is a shortcut. We're assuming that if the calling code wants max 0 items in the
-		// list, they're ok with circumventing the rest of filtering and receiving a hard 0 items collection.
+		//  list, they're ok with circumventing the rest of filtering and receiving a hard 0 items collection.
 		return vocab.ItemCollection{}, nil, nil
 	}
 	resetCounter(MaxCountCheck(fns...))
 	resetAfter(fns...)
 	resetBefore(fns...)
 
-	result = PaginationChecks(fns...).runOnItems(filteredNotPaginated)
+	result = filteredNotPaginated
+	after := AfterChecks(fns...)
+	if len(after) > 0 {
+		result = Checks{After(after...)}.runOnItems(result)
+	}
+	// NOTE(marius): checking a before filter is equivalent to reversing the result and using after
+	before := BeforeChecks(fns...)
+	if len(before) > 0 {
+		slices.Reverse(result)
+		result = Checks{After(before...)}.runOnItems(result)
+	}
+	if maxCountCheck := MaxCountCheck(fns...); maxCountCheck != nil {
+		result = Checks{maxCountCheck}.runOnItems(result)
+	}
 	if len(result) == 0 {
 		return result, pp, np
 	}
-	onLastPage := len(AfterChecks(fns...)) > 0 && len(filteredNotPaginated) < maxItems
-	onFirstPage := len(AfterChecks(fns...)) == 0 && filteredNotPaginated.First().GetLink().Equal(result.First().GetLink())
+	if len(before) > 0 {
+		slices.Reverse(result)
+	}
+	onLastPage := len(after) > 0 && len(filteredNotPaginated) < maxItems
+	onFirstPage := len(after) == 0 && filteredNotPaginated.First().GetLink().Equal(result.First().GetLink())
 
 	var firstPage vocab.ItemCollection
 	first := filteredNotPaginated.First()
@@ -341,7 +363,8 @@ func filterCollection(col vocab.ItemCollection, fns ...Check) (vocab.ItemCollect
 		}
 	}
 	if !onFirstPage {
-		pp.Add(keyBefore, first.GetLink().String())
+		before := result[0]
+		pp.Add(keyBefore, before.GetLink().String())
 	} else {
 		pp = nil
 	}
@@ -359,13 +382,6 @@ func filterCollection(col vocab.ItemCollection, fns ...Check) (vocab.ItemCollect
 		}
 	}
 	return result, pp, np
-}
-
-func sortItemsByPublishedUpdated(col vocab.ItemCollection) vocab.ItemCollection {
-	sort.SliceStable(col, func(i, j int) bool {
-		return vocab.ItemOrderTimestamp(col[i], col[j])
-	})
-	return col
 }
 
 func isCounterFn(fn Check) bool {

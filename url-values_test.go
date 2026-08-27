@@ -388,8 +388,8 @@ func Test_paginationFromValues(t *testing.T) {
 				vocab.Object{ID: "not-3"},
 			},
 			want: vocab.ItemCollection{
-				vocab.Object{ID: "good1"},
-				vocab.Object{ID: "good2"},
+				vocab.Object{ID: "not-1"},
+				vocab.Object{ID: "not-2"},
 			},
 		},
 		{
@@ -407,8 +407,8 @@ func Test_paginationFromValues(t *testing.T) {
 				vocab.Object{ID: "not-4"},
 			},
 			want: vocab.ItemCollection{
-				vocab.Object{ID: "good1"},
-				vocab.Object{ID: "good2"},
+				vocab.Object{ID: "maxItems=2"},
+				vocab.Object{ID: "not-3"},
 			},
 		},
 	}

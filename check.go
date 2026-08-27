@@ -81,7 +81,7 @@ func (ff Checks) runOnItems(col vocab.ItemCollection) vocab.ItemCollection {
 	if len(ff) == 0 {
 		return col
 	}
-	result := make(vocab.ItemCollection, 0)
+	result := make(vocab.ItemCollection, 0, len(col))
 	for _, it := range col {
 		if vocab.IsNil(it) || !checkFn(ff)(it) {
 			continue
