@@ -102,8 +102,8 @@ func getCollectionProperty(it vocab.CollectionInterface, colFn func(*vocab.IRI, 
 	}
 
 	// NOTE(marius): we don't need to mess with the item's type
-	// Additionally the OrderedCollection is compatible with the memory layout of the Collection
-	// so we can use a single branch here.
+	//  Additionally the OrderedCollection is compatible with the memory layout of the Collection
+	//  so we can use a single branch here.
 	_ = vocab.OnCollection(it, func(c *vocab.Collection) error {
 		return colFn(&iri, c)
 	})
@@ -307,9 +307,10 @@ func filterCollection(col vocab.ItemCollection, fns ...Check) (vocab.ItemCollect
 	var lastPage vocab.ItemCollection
 	var result vocab.ItemCollection
 
-	filteredNotPaginated := FilterChecks(fns...).runOnItems(col)
-	if len(filteredNotPaginated) == 0 {
-		return filteredNotPaginated, pp, np
+	if ff := FilterChecks(fns...); len(ff) > 0 {
+		if col = ff.runOnItems(col); len(col) == 0 {
+			return col, pp, np
+		}
 	}
 
 	maxItems := MaxCount(fns...)
@@ -325,7 +326,7 @@ func filterCollection(col vocab.ItemCollection, fns ...Check) (vocab.ItemCollect
 	resetAfter(fns...)
 	resetBefore(fns...)
 
-	result = filteredNotPaginated
+	result = col
 	after := AfterChecks(fns...)
 	if len(after) > 0 {
 		result = Checks{After(after...)}.runOnItems(result)
@@ -345,11 +346,11 @@ func filterCollection(col vocab.ItemCollection, fns ...Check) (vocab.ItemCollect
 	if len(before) > 0 {
 		slices.Reverse(result)
 	}
-	onLastPage := len(after) > 0 && len(filteredNotPaginated) < maxItems
-	onFirstPage := len(after) == 0 && filteredNotPaginated.First().GetLink().Equal(result.First().GetLink())
+	onLastPage := len(after) > 0 && len(col) < maxItems
+	onFirstPage := len(after) == 0 && col.First().GetLink().Equal(result.First().GetLink())
 
 	var firstPage vocab.ItemCollection
-	first := filteredNotPaginated.First()
+	first := col.First()
 	if len(col) <= maxItems {
 		return result, pp, np
 	}
@@ -363,8 +364,8 @@ func filterCollection(col vocab.ItemCollection, fns ...Check) (vocab.ItemCollect
 		}
 	}
 	if !onFirstPage {
-		before := result[0]
-		pp.Add(keyBefore, before.GetLink().String())
+		prev := result[0]
+		pp.Add(keyBefore, prev.GetLink().String())
 	} else {
 		pp = nil
 	}
