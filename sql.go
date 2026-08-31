@@ -154,6 +154,15 @@ func addTypeWheres(s *Stmt, f ...Check) {
 	var os *Stmt
 	andNil := false
 	for _, check := range f {
+		if ands, ok := check.(checkAll); ok {
+			addTypeWheres(s, ands...)
+			continue
+		}
+
+		if ors, ok := check.(checkAny); ok {
+			addTypeWheres(s, ors...)
+			continue
+		}
 		c, ok := check.(withTypes)
 		if !ok {
 			continue
