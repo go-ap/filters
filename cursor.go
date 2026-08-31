@@ -224,7 +224,7 @@ func CursorFromItem(it vocab.Item, filters ...Check) (vocab.Item, vocab.Item, vo
 					new.ID = IRIf(new.ID, filters...)
 					new.Type = vocab.OrderedCollectionPageType
 					items := new.OrderedItems
-					slices.SortFunc(items, TimestampSortFunc)
+					slices.SortStableFunc(items, TimestampSortFunc)
 					new.OrderedItems, prev, next = filterCollection(items, filters...)
 					if len(prev) > 0 {
 						prevIRI = getURL(it.GetLink(), prev)
