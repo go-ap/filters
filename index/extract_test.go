@@ -1,6 +1,7 @@
 package index
 
 import (
+	"bytes"
 	"sort"
 	"testing"
 	"time"
@@ -113,8 +114,7 @@ func NaturalLanguageValueEqual(n, with vocab.NaturalLanguageValues) bool {
 	}
 
 	for l, wv := range with {
-		nv, ok := n[l]
-		if !ok || !vocab.Content.Equal(nv, wv) {
+		if nv, ok := n[l]; !(ok && bytes.Equal(nv, wv)) {
 			return false
 		}
 	}
