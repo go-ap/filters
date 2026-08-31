@@ -4,6 +4,7 @@ import (
 	"net/url"
 	"slices"
 	"strconv"
+	"time"
 
 	vocab "github.com/go-ap/activitypub"
 )
@@ -145,6 +146,32 @@ func PrevPageFromCollection(it vocab.CollectionInterface) vocab.IRI {
 	return getCollectionProperty(it, prefColFn, prevPageFn)
 }
 
+// TimestampSortFunc is used for ordering a ItemCollection slice using the slices.SortFunc function
+// It orders i1 and i2 based on their Published and Updated timestamps, whichever is more recent.
+func TimestampSortFunc(i1, i2 vocab.Item) int {
+	if vocab.IsNil(i1) {
+		return 0
+	} else if vocab.IsNil(i2) {
+		return 0
+	}
+
+	getNewestTimestamp := func(it vocab.Item) time.Time {
+		var t1 time.Time
+		vocab.OnObject(it, func(ob *vocab.Object) error {
+			t1 = ob.Published.Round(0)
+			if ob.Updated.After(t1) {
+				t1 = ob.Updated.Round(0)
+			}
+			return nil
+		})
+		return t1
+	}
+
+	t1 := getNewestTimestamp(i1)
+	t2 := getNewestTimestamp(i2)
+	return int(t2.Sub(t1).Milliseconds())
+}
+
 func CursorFromItem(it vocab.Item, filters ...Check) (vocab.Item, vocab.Item, vocab.Item) {
 	typ := it.GetType()
 
@@ -165,7 +192,7 @@ func CursorFromItem(it vocab.Item, filters ...Check) (vocab.Item, vocab.Item, vo
 		_ = vocab.OnOrderedCollectionPage(it, func(new *vocab.OrderedCollectionPage) error {
 			new.ID = IRIf(new.ID, filters...)
 			items := new.OrderedItems
-			slices.SortStableFunc(items, vocab.TimestampSortFunc)
+			slices.SortStableFunc(items, TimestampSortFunc)
 			new.OrderedItems, prev, next = filterCollection(items, filters...)
 			if len(prev) > 0 {
 				prevIRI = getURL(it.GetLink(), prev)
@@ -197,7 +224,7 @@ func CursorFromItem(it vocab.Item, filters ...Check) (vocab.Item, vocab.Item, vo
 					new.ID = IRIf(new.ID, filters...)
 					new.Type = vocab.OrderedCollectionPageType
 					items := new.OrderedItems
-					slices.SortStableFunc(items, vocab.TimestampSortFunc)
+					slices.SortFunc(items, TimestampSortFunc)
 					new.OrderedItems, prev, next = filterCollection(items, filters...)
 					if len(prev) > 0 {
 						prevIRI = getURL(it.GetLink(), prev)
@@ -215,7 +242,7 @@ func CursorFromItem(it vocab.Item, filters ...Check) (vocab.Item, vocab.Item, vo
 			_ = vocab.OnOrderedCollection(it, func(new *vocab.OrderedCollection) error {
 				new.ID = IRIf(new.ID, filters...)
 				items := new.OrderedItems
-				slices.SortStableFunc(items, vocab.TimestampSortFunc)
+				slices.SortStableFunc(items, TimestampSortFunc)
 				new.OrderedItems, prev, next = filterCollection(items, filters...)
 				if len(next) > 0 {
 					new.First = getURL(it.GetLink(), next)
@@ -259,7 +286,7 @@ func CursorFromItem(it vocab.Item, filters ...Check) (vocab.Item, vocab.Item, vo
 	case vocab.CollectionOfItems.Match(typ):
 		_ = vocab.OnItemCollection(it, func(col *vocab.ItemCollection) error {
 			items := *col
-			slices.SortStableFunc(items, vocab.TimestampSortFunc)
+			slices.SortStableFunc(items, TimestampSortFunc)
 			it, prev, next = filterCollection(items, filters...)
 			if len(prev) > 0 {
 				prevIRI = getURL(it.GetLink(), prev)
