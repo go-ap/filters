@@ -146,3 +146,73 @@ func Test_withTypes_Match(t *testing.T) {
 		})
 	}
 }
+
+func Test_noType_Match(t *testing.T) {
+	tests := []struct {
+		name string
+		it   vocab.Item
+		want bool
+	}{
+		{
+			name: "empty",
+		},
+		{
+			name: "nil type does not match on item collection",
+			it:   vocab.ItemCollection{},
+			want: false,
+		},
+		{
+			name: "nil type does not match on iris",
+			it:   vocab.IRIs{},
+			want: false,
+		},
+		{
+			name: "nil type does not match on iri",
+			it:   vocab.IRI("http://example.com"),
+			want: false,
+		},
+		{
+			name: "Create type doesn't match",
+			it:   vocab.Activity{Type: vocab.CreateType},
+			want: false,
+		},
+		{
+			name: "not empty type slice does not match",
+			it:   vocab.Object{Type: vocab.ActivityVocabularyTypes{vocab.NilType}},
+			want: true,
+		},
+		{
+			name: "multiple types don't match",
+			it:   vocab.Activity{Type: vocab.ActivityVocabularyTypes{vocab.UpdateType, "CustomUpdate"}},
+			want: false,
+		},
+		{
+			name: "empty type matches",
+			it:   vocab.Object{Type: vocab.NilType},
+			want: true,
+		},
+		{
+			name: "empty type slice matches",
+			it:   vocab.Object{Type: vocab.ActivityVocabularyTypes{}},
+			want: true,
+		},
+		{
+			name: "nil type matches",
+			it:   vocab.Object{},
+			want: true,
+		},
+		{
+			name: "nil type matches on ptr",
+			it:   &vocab.Object{},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			n := noType{}
+			if got := n.Match(tt.it); got != tt.want {
+				t.Errorf("Match() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

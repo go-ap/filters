@@ -56,3 +56,19 @@ func (tt withTypes) GoString() string {
 	ss.WriteRune(']')
 	return ss.String()
 }
+
+var NoType = noType{}
+
+type noType struct{}
+
+func (n noType) Match(it vocab.Item) bool {
+	if vocab.IsNil(it) {
+		return false
+	}
+	typ := it.GetType()
+	return typ == nil || len(typ.AsTypes()) == 0
+}
+
+func (n noType) GoString() string {
+	return "nilType"
+}
