@@ -41,16 +41,7 @@ func (tt withTypes) Match(it vocab.Item) bool {
 		return vocab.AnyTypes(tt...).Match(withType...)
 	}
 
-	if !vocab.IsItemCollection(it) {
-		return matchFn(it)
-	}
-
-	itemsHaveType := false
-	_ = vocab.OnItem(it, func(it vocab.Item) error {
-		itemsHaveType = itemsHaveType || matchFn(it)
-		return nil
-	})
-	return itemsHaveType
+	return matchFn(it)
 }
 
 func (tt withTypes) GoString() string {

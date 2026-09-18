@@ -129,7 +129,7 @@ func Test_withTypes_Match(t *testing.T) {
 			name:  "t1 matches item collection with item with type {t1}",
 			types: withTypes{"t1"},
 			it:    vocab.ItemCollection{&vocab.Object{Type: vocab.ActivityVocabularyTypes{"t1"}}},
-			want:  true,
+			want:  false,
 		},
 		{
 			name:  "t1 does not match item collection with item with type {t2}",
