@@ -48,7 +48,7 @@ func Test_tagChecks_Match(t *testing.T) {
 		{
 			name: "item matches name tag filter",
 			a:    tagChecks{NameIs("#tag")},
-			it:   &vocab.Object{ID: "http://example.com", Tag: vocab.ItemCollection{&vocab.Object{Name: vocab.DefaultNaturalLanguage("#tag")}}},
+			it:   &vocab.Object{ID: "http://example.com", Tag: vocab.ItemCollection{&vocab.Object{Name: vocab.DefaultLangValue("#tag")}}},
 			want: true,
 		},
 	}

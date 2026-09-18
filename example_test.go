@@ -32,7 +32,7 @@ func Example_checkAll_Match() {
 			Type: ty("Create"),
 			Actor: vocab.Person{
 				ID:   "https://example.com/jdoe1",
-				Name: vocab.DefaultNaturalLanguage("JohnDoe"),
+				Name: vocab.DefaultLangValue("JohnDoe"),
 			},
 			Object: vocab.IRI("https//example.com/test"),
 		},
