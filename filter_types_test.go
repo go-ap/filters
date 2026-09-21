@@ -461,6 +461,26 @@ func TestIntransitiveActivityChecks(t *testing.T) {
 			args: Checks{SameID("http://example.com"), Target(NameIs("test"))},
 			want: Checks{NameIs("test")},
 		},
+		{
+			name: "all with actor checks",
+			args: Checks{All(SameID("http://example.com"), Actor(HasType("t1"), SameInReplyTo("http://example.com/~jdoe")))},
+			want: Checks{HasType("t1"), SameInReplyTo("http://example.com/~jdoe")},
+		},
+		{
+			name: "any with actor checks",
+			args: Checks{Any(SameID("http://example.com"), Actor(HasType("t1"), SameInReplyTo("http://example.com/~jdoe")))},
+			want: Checks{HasType("t1"), SameInReplyTo("http://example.com/~jdoe")},
+		},
+		{
+			name: "all with target checks",
+			args: Checks{All(SameID("http://example.com"), Target(HasType("t1"), SameInReplyTo("http://example.com/~jdoe")))},
+			want: Checks{HasType("t1"), SameInReplyTo("http://example.com/~jdoe")},
+		},
+		{
+			name: "any with target checks",
+			args: Checks{Any(SameID("http://example.com"), Target(HasType("t1"), SameInReplyTo("http://example.com/~jdoe")))},
+			want: Checks{HasType("t1"), SameInReplyTo("http://example.com/~jdoe")},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -522,6 +542,36 @@ func TestActivityChecks(t *testing.T) {
 			args: Checks{SameID("http://example.com"), Object(HasType("t1"), SameInReplyTo("http://example.com/~jdoe"))},
 			want: Checks{HasType("t1"), SameInReplyTo("http://example.com/~jdoe")},
 		},
+		{
+			name: "all with object check",
+			args: Checks{All(SameID("http://example.com"), Object(HasType("t1"), SameInReplyTo("http://example.com/~jdoe")))},
+			want: Checks{HasType("t1"), SameInReplyTo("http://example.com/~jdoe")},
+		},
+		{
+			name: "any with object check",
+			args: Checks{Any(SameID("http://example.com"), Object(HasType("t1"), SameInReplyTo("http://example.com/~jdoe")))},
+			want: Checks{HasType("t1"), SameInReplyTo("http://example.com/~jdoe")},
+		},
+		{
+			name: "all with actor checks",
+			args: Checks{All(SameID("http://example.com"), Actor(HasType("t1"), SameInReplyTo("http://example.com/~jdoe")))},
+			want: Checks{HasType("t1"), SameInReplyTo("http://example.com/~jdoe")},
+		},
+		{
+			name: "any with actor checks",
+			args: Checks{Any(SameID("http://example.com"), Actor(HasType("t1"), SameInReplyTo("http://example.com/~jdoe")))},
+			want: Checks{HasType("t1"), SameInReplyTo("http://example.com/~jdoe")},
+		},
+		{
+			name: "all with target checks",
+			args: Checks{All(SameID("http://example.com"), Target(HasType("t1"), SameInReplyTo("http://example.com/~jdoe")))},
+			want: Checks{HasType("t1"), SameInReplyTo("http://example.com/~jdoe")},
+		},
+		{
+			name: "any with target checks",
+			args: Checks{Any(SameID("http://example.com"), Target(HasType("t1"), SameInReplyTo("http://example.com/~jdoe")))},
+			want: Checks{HasType("t1"), SameInReplyTo("http://example.com/~jdoe")},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -561,6 +611,16 @@ func TestObjectChecks(t *testing.T) {
 		{
 			name: "with multiple object check",
 			args: Checks{SameID("http://example.com"), Object(HasType("t1"), SameInReplyTo("http://example.com/~jdoe"))},
+			want: Checks{HasType("t1"), SameInReplyTo("http://example.com/~jdoe")},
+		},
+		{
+			name: "all with object check",
+			args: Checks{All(SameID("http://example.com"), Object(HasType("t1"), SameInReplyTo("http://example.com/~jdoe")))},
+			want: Checks{HasType("t1"), SameInReplyTo("http://example.com/~jdoe")},
+		},
+		{
+			name: "any with object check",
+			args: Checks{Any(SameID("http://example.com"), Object(HasType("t1"), SameInReplyTo("http://example.com/~jdoe")))},
 			want: Checks{HasType("t1"), SameInReplyTo("http://example.com/~jdoe")},
 		},
 	}
@@ -604,6 +664,16 @@ func TestActorChecks(t *testing.T) {
 			args: Checks{SameID("http://example.com"), Actor(HasType("t1"), SameInReplyTo("http://example.com/~jdoe"))},
 			want: Checks{HasType("t1"), SameInReplyTo("http://example.com/~jdoe")},
 		},
+		{
+			name: "all with actor checks",
+			args: Checks{All(SameID("http://example.com"), Actor(HasType("t1"), SameInReplyTo("http://example.com/~jdoe")))},
+			want: Checks{HasType("t1"), SameInReplyTo("http://example.com/~jdoe")},
+		},
+		{
+			name: "any with actor checks",
+			args: Checks{Any(SameID("http://example.com"), Actor(HasType("t1"), SameInReplyTo("http://example.com/~jdoe")))},
+			want: Checks{HasType("t1"), SameInReplyTo("http://example.com/~jdoe")},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -643,6 +713,16 @@ func TestTargetChecks(t *testing.T) {
 		{
 			name: "with multiple target check",
 			args: Checks{SameID("http://example.com"), Target(HasType("t1"), SameInReplyTo("http://example.com/~jdoe"))},
+			want: Checks{HasType("t1"), SameInReplyTo("http://example.com/~jdoe")},
+		},
+		{
+			name: "all with target checks",
+			args: Checks{All(SameID("http://example.com"), Target(HasType("t1"), SameInReplyTo("http://example.com/~jdoe")))},
+			want: Checks{HasType("t1"), SameInReplyTo("http://example.com/~jdoe")},
+		},
+		{
+			name: "any with target checks",
+			args: Checks{Any(SameID("http://example.com"), Target(HasType("t1"), SameInReplyTo("http://example.com/~jdoe")))},
 			want: Checks{HasType("t1"), SameInReplyTo("http://example.com/~jdoe")},
 		},
 	}

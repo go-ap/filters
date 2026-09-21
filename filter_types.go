@@ -187,6 +187,10 @@ func ObjectChecks(fns ...Check) Checks {
 	c := make([]Check, 0)
 	for _, fn := range fns {
 		switch fns := fn.(type) {
+		case checkAll:
+			c = append(c, ObjectChecks(fns...)...)
+		case checkAny:
+			c = append(c, ObjectChecks(fns...)...)
 		case objectChecks:
 			c = append(c, fns...)
 		}
@@ -201,6 +205,10 @@ func ActorChecks(fns ...Check) Checks {
 	c := make([]Check, 0)
 	for _, fn := range fns {
 		switch fns := fn.(type) {
+		case checkAll:
+			c = append(c, ActorChecks(fns...)...)
+		case checkAny:
+			c = append(c, ActorChecks(fns...)...)
 		case actorChecks:
 			c = append(c, fns...)
 		}
@@ -215,6 +223,10 @@ func TargetChecks(fns ...Check) Checks {
 	c := make([]Check, 0)
 	for _, fn := range fns {
 		switch fns := fn.(type) {
+		case checkAll:
+			c = append(c, TargetChecks(fns...)...)
+		case checkAny:
+			c = append(c, TargetChecks(fns...)...)
 		case targetChecks:
 			c = append(c, fns...)
 		}
@@ -229,6 +241,10 @@ func ActivityChecks(fns ...Check) Checks {
 	c := make([]Check, 0)
 	for _, fn := range fns {
 		switch fns := fn.(type) {
+		case checkAll:
+			c = append(c, ActivityChecks(fns...)...)
+		case checkAny:
+			c = append(c, ActivityChecks(fns...)...)
 		case targetChecks:
 			c = append(c, fns...)
 		case objectChecks:
@@ -246,11 +262,15 @@ func IntransitiveActivityChecks(fns ...Check) Checks {
 	}
 	c := make([]Check, 0, 2)
 	for _, fn := range fns {
-		switch f := fn.(type) {
+		switch fns := fn.(type) {
+		case checkAll:
+			c = append(c, IntransitiveActivityChecks(fns...)...)
+		case checkAny:
+			c = append(c, IntransitiveActivityChecks(fns...)...)
 		case targetChecks:
-			c = append(c, f...)
+			c = append(c, fns...)
 		case actorChecks:
-			c = append(c, f...)
+			c = append(c, fns...)
 		}
 	}
 	return c
@@ -262,9 +282,13 @@ func TypeChecks(fns ...Check) Checks {
 	}
 	c := make([]Check, 0)
 	for _, fn := range fns {
-		switch t := fn.(type) {
+		switch fns := fn.(type) {
+		case checkAll:
+			c = append(c, TypeChecks(fns...)...)
+		case checkAny:
+			c = append(c, TypeChecks(fns...)...)
 		case withTypes:
-			c = append(c, t)
+			c = append(c, fns)
 		}
 	}
 	return c
@@ -276,9 +300,13 @@ func TagChecks(fns ...Check) Checks {
 	}
 	c := make([]Check, 0)
 	for _, fn := range fns {
-		switch t := fn.(type) {
+		switch fns := fn.(type) {
+		case checkAll:
+			c = append(c, TagChecks(fns...)...)
+		case checkAny:
+			c = append(c, TagChecks(fns...)...)
 		case tagChecks:
-			c = append(c, t)
+			c = append(c, fns)
 		}
 	}
 	return c
