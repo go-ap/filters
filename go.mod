@@ -4,7 +4,7 @@ go 1.26.0
 
 require (
 	github.com/RoaringBitmap/roaring v1.9.4
-	github.com/go-ap/activitypub v0.0.0-20260918155011-090adf72874a
+	github.com/go-ap/activitypub v0.0.0-20260924153054-b014c6959a68
 	github.com/google/go-cmp v0.7.0
 	github.com/jdkato/prose v1.2.1
 	github.com/leporo/sqlf v1.4.0
@@ -37,7 +37,7 @@ require (
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	golang.org/x/mod v0.41.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
-	golang.org/x/term v0.32.0 // indirect
+	golang.org/x/term v0.45.0 // indirect
 	golang.org/x/tools v0.49.0 // indirect
 	gopkg.in/neurosnap/sentences.v1 v1.0.7 // indirect
 )
