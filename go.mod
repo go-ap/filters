@@ -4,12 +4,12 @@ go 1.26.0
 
 require (
 	github.com/RoaringBitmap/roaring v1.9.4
-	github.com/go-ap/activitypub v0.0.0-20261005161154-ddfb80ed6f31
+	github.com/go-ap/activitypub v0.0.0-20261009094116-0162bfb5d21b
 	github.com/google/go-cmp v0.7.0
 	github.com/jdkato/prose v1.2.1
 	github.com/leporo/sqlf v1.4.0
 	github.com/spaolacci/murmur3 v1.1.0
-	golang.org/x/text v0.42.0
+	golang.org/x/text v0.43.0
 	quamina.net/go/quamina/v2 v2.0.2
 )
 
@@ -36,9 +36,9 @@ require (
 	github.com/valyala/fastjson v1.6.10 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	golang.org/x/mod v0.41.0 // indirect
-	golang.org/x/sys v0.47.0 // indirect
+	golang.org/x/sys v0.48.0 // indirect
 	golang.org/x/term v0.45.0 // indirect
-	golang.org/x/tools v0.49.0 // indirect
+	golang.org/x/tools v0.51.0 // indirect
 	gopkg.in/neurosnap/sentences.v1 v1.0.7 // indirect
 )
 

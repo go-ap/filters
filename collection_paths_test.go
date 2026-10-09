@@ -65,7 +65,7 @@ func TestValidObjectCollection(t *testing.T) {
 		{
 			name: "replies",
 			typ:  activitypub.Replies,
-			want: false,
+			want: true,
 		},
 		{
 			name: "actors",
@@ -186,7 +186,7 @@ func TestValidActivityCollection(t *testing.T) {
 		{
 			name: "replies",
 			typ:  activitypub.Replies,
-			want: true,
+			want: false,
 		},
 	}
 	for _, tt := range tests {
