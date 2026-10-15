@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	vocab "github.com/go-ap/activitypub"
+	"github.com/go-ap/activitypub/build"
 )
 
 func Test_Authorized_Match(t *testing.T) {
@@ -20,178 +21,157 @@ func Test_Authorized_Match(t *testing.T) {
 		{
 			name: "example.com is not allowed when not matching To",
 			a:    "https://example.com",
-			it:   &vocab.Object{To: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
+			it:   build.Object(build.WithTo(vocab.IRI("https://example.com/jdoe"))),
 			want: false,
 		},
 		{
 			name: "example.com is allowed when matching To",
 			a:    "https://example.com/jdoe",
-			it:   &vocab.Object{To: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
+			it:   build.Object(build.WithTo(vocab.IRI("https://example.com/jdoe"))),
 			want: true,
 		},
 		{
 			name: "example.com is allowed if object has public To",
 			a:    "https://example.com",
-			it:   &vocab.Object{To: vocab.ItemCollection{vocab.PublicNS}},
+			it:   build.Object(build.WithTo(vocab.PublicNS)),
 			want: true,
 		},
 		{
 			name: "example.com is not allowed when not matching CC",
 			a:    "https://example.com",
-			it:   &vocab.Object{CC: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
+			it:   build.Object(build.WithCC(vocab.IRI("https://example.com/jdoe"))),
 			want: false,
 		},
 		{
 			name: "example.com is allowed when matching CC",
 			a:    "https://example.com/jdoe",
-			it:   &vocab.Object{CC: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
+			it:   build.Object(build.WithCC(vocab.IRI("https://example.com/jdoe"))),
 			want: true,
 		},
 		{
 			name: "example.com is allowed if object has public CC",
 			a:    "https://example.com",
-			it:   &vocab.Object{CC: vocab.ItemCollection{vocab.PublicNS}},
+			it:   build.Object(build.WithCC(vocab.PublicNS)),
 			want: true,
 		},
 		{
 			name: "example.com is not allowed when not matching Bto",
 			a:    "https://example.com",
-			it:   &vocab.Object{Bto: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
+			it:   build.Object(build.WithBto(vocab.IRI("https://example.com/jdoe"))),
 			want: false,
 		},
 		{
 			name: "example.com is allowed when matching Bto",
 			a:    "https://example.com/jdoe",
-			it:   &vocab.Object{Bto: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
+			it:   build.Object(build.WithBto(vocab.IRI("https://example.com/jdoe"))),
 			want: true,
 		},
 		{
 			name: "example.com is allowed if object has public Bto",
 			a:    "https://example.com",
-			it:   &vocab.Object{Bto: vocab.ItemCollection{vocab.PublicNS}},
+			it:   build.Object(build.WithBto(vocab.PublicNS)),
 			want: true,
 		},
 		{
 			name: "example.com is not allowed when not matching BCC",
 			a:    "https://example.com",
-			it:   &vocab.Object{BCC: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
+			it:   build.Object(build.WithBCC(vocab.IRI("https://example.com/jdoe"))),
 			want: false,
 		},
 		{
 			name: "example.com is allowed when matching BCC",
 			a:    "https://example.com/jdoe",
-			it:   &vocab.Object{BCC: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
+			it:   build.Object(build.WithBCC(vocab.IRI("https://example.com/jdoe"))),
 			want: true,
 		},
 		{
 			name: "example.com is allowed if object has public BCC",
 			a:    "https://example.com",
-			it:   &vocab.Object{BCC: vocab.ItemCollection{vocab.PublicNS}},
+			it:   build.Object(build.WithBCC(vocab.PublicNS)),
 			want: true,
 		},
 		{
 			name: "example.com is not allowed when not matching audience",
 			a:    "https://example.com",
-			it:   &vocab.Object{Audience: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
+			it:   build.Object(build.WithAudience(vocab.IRI("https://example.com/jdoe"))),
 			want: false,
 		},
 		{
 			name: "example.com is allowed when matching Audience",
 			a:    "https://example.com/jdoe",
-			it:   &vocab.Object{Audience: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
+			it:   build.Object(build.WithAudience(vocab.IRI("https://example.com/jdoe"))),
 			want: true,
 		},
 		{
 			name: "example.com is allowed if object has public Audience",
 			a:    "https://example.com",
-			it:   &vocab.Object{Audience: vocab.ItemCollection{vocab.PublicNS}},
+			it:   build.Object(build.WithAudience(vocab.PublicNS)),
 			want: true,
 		},
 		{
 			name: "PublicNS should *NOT* be authorized for object with empty recipients list",
 			a:    vocab.PublicNS,
-			it:   &vocab.Object{Type: vocab.TombstoneType},
+			it:   build.Tombstone(),
 			want: false,
 		},
 		{
 			name: "attributedTo should be checked for objects",
 			a:    "https://example.com/~jdoe",
-			it:   &vocab.Object{Type: vocab.TombstoneType, AttributedTo: vocab.IRI("https://example.com/~jdoe")},
+			it:   build.Tombstone(build.WithAttributedTo(vocab.IRI("https://example.com/~jdoe"))),
 			want: true,
 		},
 		{
 			name: "attributedTo with multiple values should be checked for objects",
 			a:    "https://example.com/~jdoe",
-			it: &vocab.Object{
-				Type:         vocab.TombstoneType,
-				AttributedTo: vocab.ItemCollection{vocab.IRI("https://example.com/~jdoe")},
-			},
+			it:   build.Tombstone(build.WithAttributedTo(vocab.IRI("https://example.com/~jdoe"))),
 			want: true,
 		},
 		{
 			name: "actor with single values should be checked",
 			a:    "https://example.com/~jdoe",
-			it: &vocab.Activity{
-				Type:  vocab.UpdateType,
-				Actor: vocab.IRI("https://example.com/~jdoe"),
-			},
+			it:   build.Update(build.WithActor(vocab.IRI("https://example.com/~jdoe"))),
 			want: true,
 		},
 		{
 			name: "actor with multiple values should be checked",
 			a:    "https://example.com/~jdoe",
-			it: &vocab.Activity{
-				Type:  vocab.UndoType,
-				Actor: vocab.ItemCollection{vocab.IRI("https://example.com/~jdoe")},
-			},
+			it:   build.Undo(build.WithActor(vocab.IRI("https://example.com/~jdoe"))),
 			want: true,
 		},
 		{
 			name: "object with single values should be checked",
 			a:    "https://example.com/~jdoe",
-			it: &vocab.Activity{
-				Type:   vocab.FollowType,
-				Object: vocab.IRI("https://example.com/~jdoe"),
-			},
+			it:   build.Follow(build.WithObject(vocab.IRI("https://example.com/~jdoe"))),
 			want: true,
 		},
 		{
 			name: "object with multiple values should be checked",
 			a:    "https://example.com/~jdoe",
-			it: &vocab.Activity{
-				Type:   vocab.FollowType,
-				Object: vocab.ItemCollection{vocab.IRI("https://example.com/~jdoe")},
-			},
+			it:   build.Follow(build.WithObject(vocab.IRI("https://example.com/~jdoe"))),
 			want: true,
 		},
 		{
 			name: "link matches any IRI",
 			a:    "https://example.com/~jdoe",
-			it:   &vocab.Link{},
+			it:   build.Link(),
 			want: true,
 		},
 		{
 			name: "link matches public collection",
 			a:    vocab.PublicNS,
-			it:   &vocab.Link{},
+			it:   build.Link(),
 			want: true,
 		},
 		{
 			name: "object of block",
 			a:    "https://example.com/~jdoe",
-			it: &vocab.Activity{
-				Type:   vocab.BlockType,
-				Object: vocab.IRI("https://example.com/~jdoe"),
-			},
+			it:   build.Block(build.WithObject(vocab.IRI("https://example.com/~jdoe"))),
 			want: false,
 		},
 		{
 			name: "object with multiple values of block",
 			a:    "https://example.com/~jdoe",
-			it: &vocab.Activity{
-				Type:   vocab.BlockType,
-				Object: vocab.ItemCollection{vocab.IRI("https://example.com/~jdoe"), vocab.IRI("https://example.com/~alice")},
-			},
+			it:   build.Block(build.WithObject(vocab.IRI("https://example.com/~jdoe"), vocab.IRI("https://example.com/~alice"))),
 			want: false,
 		},
 	}
@@ -257,67 +237,67 @@ func Test_IsPublic_Match(t *testing.T) {
 		},
 		{
 			name: "object does not have public To",
-			it:   &vocab.Object{To: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
+			it:   build.Object(build.WithTo(vocab.IRI("https://example.com/jdoe"))),
 			want: false,
 		},
 		{
 			name: "object has public To",
-			it:   &vocab.Object{To: vocab.ItemCollection{vocab.PublicNS}},
+			it:   build.Object(build.WithTo(vocab.PublicNS)),
 			want: true,
 		},
 		{
 			name: "object does not have public CC",
-			it:   &vocab.Object{CC: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
+			it:   build.Object(build.WithCC(vocab.IRI("https://example.com/jdoe"))),
 			want: false,
 		},
 		{
 			name: "object has public CC",
-			it:   &vocab.Object{CC: vocab.ItemCollection{vocab.PublicNS}},
+			it:   build.Object(build.WithCC(vocab.PublicNS)),
 			want: true,
 		},
 		{
 			name: "object does not have public Bto",
-			it:   &vocab.Object{Bto: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
+			it:   build.Object(build.WithBto(vocab.IRI("https://example.com/jdoe"))),
 			want: false,
 		},
 		{
 			name: "object has public Bto",
-			it:   &vocab.Object{Bto: vocab.ItemCollection{vocab.PublicNS}},
+			it:   build.Object(build.WithBto(vocab.PublicNS)),
 			want: true,
 		},
 		{
 			name: "object does not have public BCC",
-			it:   &vocab.Object{BCC: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
+			it:   build.Object(build.WithBCC(vocab.IRI("https://example.com/jdoe"))),
 			want: false,
 		},
 		{
 			name: "object has public BCC",
-			it:   &vocab.Object{BCC: vocab.ItemCollection{vocab.PublicNS}},
+			it:   build.Object(build.WithBCC(vocab.PublicNS)),
 			want: true,
 		},
 		{
 			name: "object does not have public Audience",
-			it:   &vocab.Object{Audience: vocab.ItemCollection{vocab.IRI("https://example.com/jdoe")}},
+			it:   build.Object(build.WithAudience(vocab.IRI("https://example.com/jdoe"))),
 			want: false,
 		},
 		{
 			name: "object has public Audience",
-			it:   &vocab.Object{Audience: vocab.ItemCollection{vocab.PublicNS}},
+			it:   build.Object(build.WithAudience(vocab.PublicNS)),
 			want: true,
 		},
 		{
 			name: "empty recipients is not public",
-			it:   &vocab.Object{Type: vocab.TombstoneType},
+			it:   build.Tombstone(),
 			want: false,
 		},
 		{
 			name: "link matches any IRI",
-			it:   &vocab.Link{},
+			it:   build.Link(),
 			want: true,
 		},
 		{
 			name: "link matches public collection",
-			it:   &vocab.Link{},
+			it:   build.Link(),
 			want: true,
 		},
 	}

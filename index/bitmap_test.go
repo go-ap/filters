@@ -7,6 +7,7 @@ import (
 
 	"github.com/RoaringBitmap/roaring/roaring64"
 	vocab "github.com/go-ap/activitypub"
+	"github.com/go-ap/activitypub/build"
 )
 
 func Test_IRI_NewTokenIndex(t *testing.T) {
@@ -140,13 +141,13 @@ func Test_IRI_index_Add(t *testing.T) {
 		{
 			name: "iri attributedTo",
 			i:    tokenMap[uint64]{m: make(map[uint64]*roaring64.Bitmap), tokensExtractFn: ExtractAttributedTo},
-			arg:  &vocab.Object{ID: "https://example.com/1", AttributedTo: vocab.IRI("https://example.com/~jane")},
+			arg:  build.Object(build.WithID("https://example.com/1"), build.WithAttributedTo(vocab.IRI("https://example.com/~jane"))),
 			want: tMap(tk(getRef("https://example.com/~jane"), vocab.IRI("https://example.com/1"))),
 		},
 		{
 			name: "iri Actor",
 			i:    tokenMap[uint64]{m: make(map[uint64]*roaring64.Bitmap), tokensExtractFn: ExtractActor},
-			arg:  &vocab.Activity{ID: "https://example.com/2", Actor: vocab.IRI("https://example.com/~jane")},
+			arg:  build.Activity(build.WithID("https://example.com/2"), build.WithActor(vocab.IRI("https://example.com/~jane"))),
 			want: tMap(tk(getRef("https://example.com/~jane"), vocab.IRI("https://example.com/2"))),
 		},
 	}
@@ -176,7 +177,7 @@ func Test_Stringy_index_Add(t *testing.T) {
 		{
 			name: "type",
 			i:    tokenMap[string]{m: make(map[string]*roaring64.Bitmap), tokensExtractFn: ExtractType},
-			arg:  &vocab.Object{ID: "https://example.com/1", Type: vocab.NoteType},
+			arg:  build.Note(build.WithID("https://example.com/1")),
 			want: tMap(tk("Note", vocab.IRI("https://example.com/1"))),
 		},
 	}
@@ -257,11 +258,10 @@ var iriIndex = tokenMap[uint64]{
 	tokensExtractFn: ExtractRecipients,
 }
 
-var Ob = &vocab.Object{
-	ID:   "https://example.com/666",
-	Type: vocab.CreateType,
-	To:   vocab.ItemCollection{vocab.IRI("https://example.com")},
-}
+var Ob = build.Create(
+	build.WithID("https://example.com/666"),
+	build.WithTo(vocab.IRI("https://example.com")),
+)
 
 func Test_Stringy_index_MarshalBinary(t *testing.T) {
 	_ = strIndex.Add(Ob)
