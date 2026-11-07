@@ -10,8 +10,11 @@ This project is part of the [GoActivityPub](https://github.com/go-ap) library wh
 It represents a type safe filter builder for the the storage backends of the library.
 It also provides functionality to translate to and from URL query parameters into said filters.
 
-<!-- Expanded [documentation](https://man.sr.ht/~mariusor/go-activitypub/lib/index.md) -->
-For more details you can have a look at [the expanded documentation](https://go-activitypub.federated.id/lib).
+## Extended documentation
+
+For more information about how the module works in the scope of the
+GoActivityPub library, see the [expanded
+documentation](https://go-activitypub.federated.id/lib/modules/#auth).
 
 For discussions about the projects you can write to the discussions mailing list: [~mariusor/go-activitypub-discuss@lists.sr.ht](mailto:~mariusor/go-activitypub-discuss@lists.sr.ht)
 
